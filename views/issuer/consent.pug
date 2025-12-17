@@ -1,0 +1,95 @@
+extends ../layout.pug
+block layout-content
+
+	.main-container
+		form#DiplomaSelection(method="POST")
+
+			p Consent
+			// Container for the spinner (initially hidden)
+			#spinner-container
+				.spinner
+					.spinner-circle
+
+			section.layout(style="display: none;")
+				section.container-header
+					section.consent-description The following credentials have been found. Please review their details and select the one you want to receive.
+					if grant_type == "authorization_code"
+						button.Btn.Small.SelectMultiBtn(type="button" id="selectVc" style="display: none;") Select
+
+				section.MainLayout
+					dialog#qrDialog
+						.dialog-header
+							h4 Credential Offer
+							button#closeDialogBtn.Btn.Close(type="button")
+								i.fa.fa-times
+						.dialog-body
+							div#userPinTextElement
+							img#qrImage(src="" alt="QR Code" style="width:-webkit-fill-available;")
+							.centered
+								div
+									button#qrURLwwwallet.Btn.Dialog.openwithwalletbutton Open with wwWallet
+								div
+									button#qrURLnative.Btn.Dialog.openwithwalletbuttonnative Open with a Native Wallet
+
+
+					section.CredentialsArea
+						//- form.diplomas(name='selectDiplomas' method="post")
+						for credential, index in credentialViewList
+							.credential-card
+								input(type="hidden" name="selected_credential_id_list[]" id=`${credential.credential_id}_${index}` value=`${credential.credential_id}`)
+								a.credential.toggle-card.selected(id=`${credential.credential_id}_${index}`)
+									if grant_type == "authorization_code"
+										i.is-selected.fa.fa-check-square-o(aria-hidden="true")
+										i.is-not-selected.fa.fa-square-o(aria-hidden="true" style="display: none;")
+									img(src=credential.credential_image alt="Credential image" loading="lazy")
+								a.toggle-details(id=`${credential.credential_id}_${index}` style="display:inline;")
+									span.show-text
+										| Show Details
+										i.fa.fa-angle-down(aria-hidden="true")
+									span.hide-text(style="display:none;")
+										| Hide Details
+										i.fa.fa-angle-up(aria-hidden="true")
+								.details
+									i.arrowDown.fa.fa-angle-down(aria-hidden="true")
+									//- button.Btn.Small.GetSingleBtn(type="submit") Get credential
+									table
+										for row of credential.view.rows
+											tr
+												td
+													b #{row.name}
+												td
+													div #{row.value}
+												td
+													input(type="checkbox" class="scopeCheckbox" id=row.name name=row.name value=row.value checked disabled)
+									br
+								if grant_type != "authorization_code"
+									button.Btn.Small(type='button' onclick=`openDialog('${credential.credentialOfferQR}', '${credential.credentialOfferURL}', '${credential.user_pin_required}', '${credential.user_pin}')`) Get credential
+				.GetMultiBtnArea
+					p.Errors.Hidden#NoCredentialSelectedError Please select at least one Credential to be issued
+					if grant_type == "authorization_code"
+						button.Btn.Small.GetMultiBtn(type="submit") Get credentials
+				if grant_type == "authorization_code"
+					.DetailsArea
+						section.DetailsLayout
+							h4 Details of authorization
+							.ConsentDetails
+								table
+									tr
+										td
+											b Client
+										td
+											div #{redirect_uri}
+									tr
+										td
+											b Expiration
+										td
+											div 1 year
+	.BarBtnContainer
+		button#BarBtn.Btn.Large.GetMultiBtn(type="submit") Get credentials
+	input(id='wwwalletURL' type='hidden' value=wwwalletURL)
+
+	link(rel="stylesheet" href="/styles/verifier/spinner.css")
+	link(rel="stylesheet" href="/styles/consent.css")
+	link(rel="stylesheet" href="/styles/inspect.css")
+	script(src='/js/consent.js')
+	script(src='/js/qr-popup.js')

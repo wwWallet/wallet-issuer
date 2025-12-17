@@ -1,0 +1,28 @@
+# EditorConfig: https://EditorConfig.org
+
+[*]
+charset = utf-8
+# Type of newline is managed by git in .gitattributes
+insert_final_newline = true
+trim_trailing_whitespace = true
+indent_style = tab
+
+[LICENSE]
+indent_style = space
+
+# YAML does not allow tab indentation
+[*.{md,yml,yaml}]
+indent_style = space
+indent_size = 2
+
+[{package.json,tsconfig.json,.vscode/settings.json}]
+indent_style = space
+indent_size = 2
+
+[src/locales/*.json]
+# `npm run translations` does not insert final newline
+insert_final_newline = false
+
+[nginx.conf]
+indent_style = space
+indent_size = 4
