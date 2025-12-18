@@ -8,5 +8,11 @@ npm-debug.log
 node_modules
 combined.log
 error.log
-*.gz
-./dist
+node_modules
+keys
+dist
+.DS_Store
+.env
+public/.well-known/*
+certs/*
+

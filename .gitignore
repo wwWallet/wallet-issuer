@@ -3,4 +3,5 @@ keys
 dist
 .DS_Store
 .env
-
+public/.well-known/*
+certs/*
