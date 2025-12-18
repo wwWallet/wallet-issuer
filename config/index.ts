@@ -1,9 +1,10 @@
 import dotenv from 'dotenv';
 dotenv.config({ quiet: true });
 
+const url = String(process.env.SERVICE_URL || "default_url");
 export const config = {
-  url: String(process.env.SERVICE_URL || "default_url"),
-  port: parseInt(process.env.SERVICE_PORT || "3000"),
+  url: url,
+  port: parseInt(process.env.SERVICE_PORT || "8003"),
   authorizationServerUrl: String(process.env.AUTHORIZATION_SERVER_URL || "default_url"),
   credentialIssuanceBatchSize: parseInt(process.env.CREDENTIAL_ISSUANCE_BATCH_SIZE || "1", 10),
   introspectionEndpointBearerAuthToken: String(process.env.INTROSPECTION_ENDPOINT_BEARER_AUTH_TOKEN || "default_url"),
@@ -13,7 +14,7 @@ export const config = {
       name: String(process.env.DISPLAY_NAME || "wwWallet Issuer"),
       locale: String(process.env.DISPLAY_LOCALE || "en-US"),
       logo: {
-      	uri: String(process.env.DISPLAY_LOGO_URI || "http://"),
+      	uri: String(process.env.DISPLAY_LOGO_URI || url + '/images/'),
       },
     },
   ],
