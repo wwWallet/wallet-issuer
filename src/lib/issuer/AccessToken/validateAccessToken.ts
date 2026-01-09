@@ -1,9 +1,9 @@
 import { OpenidCredentialIssuerMetadata } from "wallet-common";
 import { err, ok, Result } from "../../core/Result";
-import { CredentialIssuerCreateOptions } from "../createIssuerOpenID4VCI";
+import { CredentialIssuerCreateOptions } from "../IssuerOpenID4VCI";
 import { CredentialRequestError, CredentialRequestErrors } from "../CredentialRequest/CredentialRequestError";
-import { PlainIssueCredentialRequestOptions } from "../IssuerOpenID4VCI";
 import { validateDpopProof } from "./validateDpopProof";
+import { PlainIssueCredentialRequestOptions } from "../IssuerOpenID4VCITypes";
 
 
 /**

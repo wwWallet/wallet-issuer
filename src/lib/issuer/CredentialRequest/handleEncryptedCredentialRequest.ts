@@ -1,5 +1,5 @@
-import { IssueCredentialRequestOptions, PlainIssueCredentialRequestOptions } from "../IssuerOpenID4VCI";
 import { err, ok, Result } from "../../core/Result";
+import { IssueCredentialRequestOptions, PlainIssueCredentialRequestOptions } from "../IssuerOpenID4VCITypes";
 import { CredentialRequestError, CredentialRequestErrors } from "./CredentialRequestError";
 import { compactDecrypt, importJWK, JWK } from "jose";
 import { OpenidCredentialIssuerMetadata } from "wallet-common";

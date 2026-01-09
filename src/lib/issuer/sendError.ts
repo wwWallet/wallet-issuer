@@ -1,5 +1,5 @@
 import { CredentialRequestError } from "./CredentialRequest/CredentialRequestError";
-import { PlainIssueCredentialResponse } from "./IssuerOpenID4VCI";
+import { PlainIssueCredentialResponse } from "./IssuerOpenID4VCITypes";
 
 export function sendError(error: CredentialRequestError, error_description?: string): PlainIssueCredentialResponse {
 	return {

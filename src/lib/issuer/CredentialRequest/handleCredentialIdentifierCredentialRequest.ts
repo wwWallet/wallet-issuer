@@ -1,8 +1,8 @@
-import { PlainIssueCredentialRequestOptions } from "../IssuerOpenID4VCI";
+import { PlainIssueCredentialRequestOptions } from "../IssuerOpenID4VCITypes";
 import { CredentialRequestErrors } from "./CredentialRequestError";
 
 export async function handleCredentialIdentifierCredentialRequest(opts: PlainIssueCredentialRequestOptions) {
-	if (opts.request.data.credential_identifier !== undefined) {
+	if ('credential_identifier' in opts.request.data && opts.request.data.credential_identifier !== undefined) {
 		return {
 			headers: { 'Content-Type': 'application/json' },
 			status: 500,

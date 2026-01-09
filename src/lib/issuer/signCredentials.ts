@@ -1,20 +1,22 @@
 import { OpenidCredentialIssuerMetadata } from "wallet-common";
-import { CredentialIssuerCreateOptions } from "./createIssuerOpenID4VCI";
-import { PlainIssueCredentialRequestOptions } from "./IssuerOpenID4VCI";
 import { err, ok, Result } from "../core/Result";
 import { CredentialRequestError, CredentialRequestErrors } from "./CredentialRequest/CredentialRequestError";
 import { VerifiableCredentialFormat } from "wallet-common/dist/types";
 import { JWK } from "jose";
+import { PlainIssueCredentialRequestOptions } from "./IssuerOpenID4VCITypes";
+import { CredentialIssuerCreateOptions } from "./IssuerOpenID4VCI";
+import { GenericClaims } from "./CredentialRequestHelper";
+
 
 export async function signCredentials(
 		metadata: OpenidCredentialIssuerMetadata,
-		claims: Record<string, unknown>,
+		claims: GenericClaims,
 		attestedKeys: JWK[],
 		requestOpts: PlainIssueCredentialRequestOptions,
 		createOpts: CredentialIssuerCreateOptions,
 	): Promise<Result<string[], CredentialRequestError>> {
 
-	const configurationId = requestOpts.request.data.credential_configuration_id;
+	const configurationId = 'credential_configuration_id' in requestOpts.request.data ? requestOpts.request.data.credential_configuration_id : null;
 	if (!configurationId) {
 		return err(CredentialRequestErrors.InternalServerError, "'credential_configuration_id' is undefined");
 	}
@@ -24,13 +26,16 @@ export async function signCredentials(
 		return err(CredentialRequestErrors.InternalServerError, `Credential Configuration supported for id '${configurationId}' could not be resolved`);
 	}
 
+	const spreadedClaims = Object.values(claims).reduce((acc, current) =>
+		({ ...(acc as Record<string, unknown>), ...(current as Record<string, unknown>) })
+	) as Record<string, unknown>;
 	// add error handling for signature generation
 	switch (credentialConfigurationSupported.format) {
 		case VerifiableCredentialFormat.DC_SDJWT:
-			if (requestOpts.request.data.proofs) {
+			if ('proofs' in requestOpts.request.data && requestOpts.request.data.proofs) {
 				const signedCredentials = await Promise.all(attestedKeys.map((key) =>
 					// todo: dynamically generate disclosure frame based on metadata parameter
-					createOpts.credentialSigner.signSdJwtVc({ ...claims, cnf: { jwk: key } }, {}, {})
+					createOpts.credentialSigner.signSdJwtVc({ ...spreadedClaims, cnf: { jwk: key } }, {}, {})
 				));
 				return ok(signedCredentials.map((c) => c.credential));
 			}
@@ -39,7 +44,7 @@ export async function signCredentials(
 				return ok([credential]);
 			}
 		case VerifiableCredentialFormat.MSO_MDOC:
-			if (requestOpts.request.data.proofs) {
+			if ('proofs' in requestOpts.request.data && requestOpts.request.data.proofs) {
 				const signedCredentials = await Promise.all(attestedKeys.map((key) =>
 					createOpts.credentialSigner.signMsoMdoc(
 						credentialConfigurationSupported.doctype,

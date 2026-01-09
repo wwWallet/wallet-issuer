@@ -1,9 +1,9 @@
 import { err, ok, Result } from "../../core/Result";
-import { IssueCredentialResponse, PlainIssueCredentialRequestOptions, PlainIssueCredentialResponse } from "../IssuerOpenID4VCI";
 import { CredentialRequestError, CredentialRequestErrors } from "./CredentialRequestError";
 import { OpenidCredentialIssuerMetadata } from "wallet-common";
 import { CompactEncrypt, importJWK } from "jose";
-import { CredentialIssuerCreateOptions } from "../createIssuerOpenID4VCI";
+import { IssueCredentialResponse, PlainIssueCredentialRequestOptions, PlainIssueCredentialResponse } from "../IssuerOpenID4VCITypes";
+import { CredentialIssuerCreateOptions } from "../IssuerOpenID4VCI";
 
 export async function sendCredentialResponse(
 	metadata: OpenidCredentialIssuerMetadata,
