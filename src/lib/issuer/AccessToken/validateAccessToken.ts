@@ -31,7 +31,7 @@ export async function validateAccessToken(
 				method: 'POST',
 				headers: {
 					"Content-Type": "application/x-www-form-urlencoded",
-					"Authorization": `Bearer ${createOpts.introspectionEndpointBearerAuthToken}`
+					"Authorization": `Basic ${createOpts.introspectionEndpointBasicAuthString}`
 				},
 				body: new URLSearchParams({ token: accessToken, token_type_hint: tokenType, }),
 			});
@@ -39,6 +39,7 @@ export async function validateAccessToken(
 
 			const { scope, sub, cnf, client_id } = introspectionPayload as { sub: string, scope: string, client_id: string, cnf?: { jkt?: string } };
 
+			console.log("Introspection response: ", introspectionPayload)
 			if (tokenType === 'DPoP' && dpopProof !== undefined) {
 				const response = await validateDpopProof(dpopProof, cnf);
 				if (!response.ok) {

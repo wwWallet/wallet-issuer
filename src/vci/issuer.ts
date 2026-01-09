@@ -46,7 +46,7 @@ export const issuer = createIssuerOpenID4VCI(config.url + '/openid', {
 	x5c: [
 		pemToBase64(fs.readFileSync(path.join(__dirname, "../../../keys/pem.crt"), 'utf-8')),
 	],
-	introspectionEndpointBearerAuthToken: config.introspectionEndpointBearerAuthToken,
+	introspectionEndpointBasicAuthString: config.introspectionEndpointBasicAuthString,
 	credentialRequestEncryption: {
 		encryptionRequired: false,
 		keypair: {

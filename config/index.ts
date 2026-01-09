@@ -7,7 +7,7 @@ export const config = {
   port: parseInt(process.env.SERVICE_PORT || "8003"),
   authorizationServerUrl: String(process.env.AUTHORIZATION_SERVER_URL || "default_url"),
   credentialIssuanceBatchSize: parseInt(process.env.CREDENTIAL_ISSUANCE_BATCH_SIZE || "1", 10),
-  introspectionEndpointBearerAuthToken: String(process.env.INTROSPECTION_ENDPOINT_BEARER_AUTH_TOKEN || "default_url"),
+  introspectionEndpointBasicAuthString: String(process.env.INTROSPECTION_ENDPOINT_BASIC_AUTH_HEADER || "default_url"),
   jweEncryptionAlg: String(process.env.JWE_ENCRYPTION_ALG || "ECDH-ES"),
   display: [
     {

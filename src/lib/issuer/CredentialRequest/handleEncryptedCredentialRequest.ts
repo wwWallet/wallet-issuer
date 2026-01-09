@@ -20,7 +20,6 @@ export async function handleEncryptedCredentialRequest(
 		},
 	}): Promise<Result<PlainIssueCredentialRequestOptions, CredentialRequestError>> {
 
-	console.log("requestOpts.request.headers: ", requestOpts.request.headers)
 
 	const decoder = new TextDecoder();
 	if (requestOpts.request.headers["content-type"] === 'application/jwt' &&

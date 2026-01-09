@@ -50,7 +50,7 @@ export type CredentialIssuerCreateOptions = {
 	},
 	requireKeyBindingInCredentialConfigurationIds: string[],
 	x5c: string[],
-	introspectionEndpointBearerAuthToken: string,
+	introspectionEndpointBasicAuthString: string,
 	display?: OpenidCredentialIssuerMetadata["display"],
 	vctDocumentProvider?: VctDocumentProvider,
 	deferredCredentialResponseInterval?: number,
