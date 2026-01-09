@@ -34,4 +34,8 @@ export class MemoryStore<TKey, TValue> implements GenericStore<TKey, TValue> {
 			this.map.delete(oldestKey);
 		}
 	}
+
+	async getAll(): Promise<TValue[]> {
+		return Array.from(this.map.values());
+	}
 }
