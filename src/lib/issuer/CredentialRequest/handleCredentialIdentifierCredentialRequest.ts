@@ -4,7 +4,7 @@ import { CredentialRequestErrors } from "./CredentialRequestError";
 export async function handleCredentialIdentifierCredentialRequest(opts: PlainIssueCredentialRequestOptions) {
 	if ('credential_identifier' in opts.request.data && opts.request.data.credential_identifier !== undefined) {
 		return {
-			headers: { 'Content-Type': 'application/json' },
+			headers: { 'content-type': 'application/json' },
 			status: 500,
 			data: {
 				error: CredentialRequestErrors.CredentialRequestDenied,

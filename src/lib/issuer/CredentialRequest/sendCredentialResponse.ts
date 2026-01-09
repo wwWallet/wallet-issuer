@@ -32,7 +32,7 @@ export async function sendCredentialResponse(
 			})
 			.encrypt(clientPublicKey);
 		return ok({
-			headers: { 'Content-Type': 'application/jwt' },
+			headers: { 'content-type': 'application/jwt' },
 			data: jwe,
 			status: 200,
 		});

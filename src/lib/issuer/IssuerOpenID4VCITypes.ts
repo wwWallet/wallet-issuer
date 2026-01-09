@@ -18,7 +18,7 @@ export type IssueCredentialRequestProofsExtension = {
 
 export type PlainIssueCredentialRequestOptions = {
 	request: {
-		headers: { 'Content-Type': 'application/json', 'Authorization': string, 'DPoP': string },
+		headers: { 'content-type': 'application/json', 'authorization': string, 'dpop': string },
 		data: ({ credential_identifier: string; } & IssueCredentialRequestProofsExtension & IssueCredentialRequestBase) |
 		({ credential_configuration_id: string; } & IssueCredentialRequestProofsExtension & IssueCredentialRequestBase) |
 		({ transaction_id: string; } & IssueCredentialRequestBase);
@@ -28,14 +28,14 @@ export type PlainIssueCredentialRequestOptions = {
 
 export type EncryptedIssueCredentialRequestOptions = {
 	request: {
-		headers: { 'Content-Type': 'application/jwt', 'Authorization': string, 'DPoP': string },
+		headers: { 'content-type': 'application/jwt', 'authorization': string, 'dpop': string },
 		data: string,
 	};
 };
 
 export type IssueCredentialRequestOptions = EncryptedIssueCredentialRequestOptions | PlainIssueCredentialRequestOptions;
 
-export type PlainIssueCredentialResponse = ResponseMessage & { headers: { 'Content-Type': 'application/json' } } & ({
+export type PlainIssueCredentialResponse = ResponseMessage & { headers: { 'content-type': 'application/json' } } & ({
 	data: { credentials: string[] },
 	status: 200,
 } | {
@@ -50,7 +50,7 @@ export type PlainIssueCredentialResponse = ResponseMessage & { headers: { 'Conte
 	})
 
 export type EncryptedIssueCredentialResponse = ResponseMessage & {
-	headers: { 'Content-Type': 'application/jwt' },
+	headers: { 'content-type': 'application/jwt' },
 	data: string,
 }
 

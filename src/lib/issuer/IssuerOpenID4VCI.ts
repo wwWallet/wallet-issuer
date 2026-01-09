@@ -276,7 +276,7 @@ export function createIssuerOpenID4VCI(url: string, credentialIssuerCreateOption
 				credentialOfferUrlContainer: null,
 				attestedKeys: null,
 				scope: scope,
-				transactionId: null
+				transactionId: null,
 			} as State;
 			await store.set(stateId, state);
 
@@ -324,7 +324,7 @@ export function createIssuerOpenID4VCI(url: string, credentialIssuerCreateOption
 				await store.set(stateId, state);
 
 				if (claimsFuture.status === 'pending') { // if not resolved then respond with transaction_id
-					const responseOpts: PlainIssueCredentialResponse = { status: 200, headers: { "Content-Type": "application/json" }, data: { transaction_id: claimsFuture.transaction_id, interval: deferredCredentialResponseInterval } };
+					const responseOpts: PlainIssueCredentialResponse = { status: 200, headers: { "content-type": "application/json" }, data: { transaction_id: claimsFuture.transaction_id, interval: deferredCredentialResponseInterval } };
 					const send = await sendCredentialResponse(metadata, issueCredentialOptions, responseOpts, credentialIssuerCreateOptions);
 					if (!send.ok) {
 						return sendError(send.error, send.error_description);
@@ -346,7 +346,7 @@ export function createIssuerOpenID4VCI(url: string, credentialIssuerCreateOption
 					return sendError(credentialsBindingResult.error, credentialsBindingResult.error_description);
 				}
 				const credentials = credentialsBindingResult.value;
-				const responseOpts: PlainIssueCredentialResponse = { status: 200, headers: { "Content-Type": "application/json" }, data: { credentials } };
+				const responseOpts: PlainIssueCredentialResponse = { status: 200, headers: { "content-type": "application/json" }, data: { credentials } };
 				const send = await sendCredentialResponse(metadata, issueCredentialOptions, responseOpts, credentialIssuerCreateOptions);
 				if (!send.ok) {
 					return sendError(send.error, send.error_description);

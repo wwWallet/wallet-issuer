@@ -20,9 +20,10 @@ export async function handleEncryptedCredentialRequest(
 		},
 	}): Promise<Result<PlainIssueCredentialRequestOptions, CredentialRequestError>> {
 
+	console.log("requestOpts.request.headers: ", requestOpts.request.headers)
 
 	const decoder = new TextDecoder();
-	if (requestOpts.request.headers["Content-Type"] === 'application/jwt' &&
+	if (requestOpts.request.headers["content-type"] === 'application/jwt' &&
 		typeof requestOpts.request.data === 'string') {
 
 		if (!credentialRequestEncryption) {
@@ -48,7 +49,7 @@ export async function handleEncryptedCredentialRequest(
 		}
 
 	}
-	else if (requestOpts.request.headers["Content-Type"] === 'application/jwt' ||
+	else if (requestOpts.request.headers["content-type"] === 'application/jwt' ||
 		typeof requestOpts.request.data === 'string') {
 
 		return err(CredentialRequestErrors.InvalidRequest, "Invalid header or request body");
@@ -57,7 +58,7 @@ export async function handleEncryptedCredentialRequest(
 		credentialRequestEncryption.encryptionRequired) {
 		return err(CredentialRequestErrors.InvalidRequest, "Request is expected to be encrypted");
 	}
-	else if (requestOpts.request.headers["Content-Type"] === 'application/json' &&
+	else if (requestOpts.request.headers["content-type"] === 'application/json' &&
 		typeof requestOpts.request.data === 'object') {
 
 		return ok(requestOpts as PlainIssueCredentialRequestOptions);

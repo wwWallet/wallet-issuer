@@ -22,8 +22,8 @@ export async function validateAccessToken(
 		const authorizationServerMetadataResponse = await fetch(createOpts.authorizationServerUrl + '/.well-known/oauth-authorization-server');
 		const authorizationServerMetadata = await authorizationServerMetadataResponse.json();
 		const { introspection_endpoint } = authorizationServerMetadata as { introspection_endpoint: string };
-		const [tokenType, accessToken] = issueRequestOpts.request.headers["Authorization"].split(' ');
-		const dpopProof = issueRequestOpts.request.headers["DPoP"] as string | undefined;
+		const [tokenType, accessToken] = issueRequestOpts.request.headers["authorization"].split(' ');
+		const dpopProof = issueRequestOpts.request.headers["dpop"] as string | undefined;
 
 		try {
 			// RFC7662
@@ -45,7 +45,7 @@ export async function validateAccessToken(
 					return response;
 				}
 			}
-			else if (tokenType === 'DPoP' && dpopProof === undefined) {
+			else if (tokenType.toLocaleLowerCase() === 'DPoP'.toLowerCase() && dpopProof === undefined) {
 				return err(CredentialRequestErrors.InvalidRequest, "DPoP proof is missing");
 			}
 
