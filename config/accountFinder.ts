@@ -1,6 +1,7 @@
 import { FindAccount } from "../src/lib/issuer/Account/FindAccount";
 import fs from 'node:fs/promises';
 import path from 'path';
+import { createClaimsFuture } from "../src/lib/issuer/CredentialRequestHelper";
 
 type AccountEntry = {
 	id: string;
@@ -15,16 +16,29 @@ const getAccountEntryById = async (id: string): Promise<AccountEntry | null> => 
 	return (JSON.parse(data.toString()).filter(((r: AccountEntry) => r.id === id))[0] ?? null) as AccountEntry | null;
 }
 
-export const findAccount: FindAccount = async (_ctx, sub, _token) => {
+
+export const findAccount: FindAccount = async (ctx, sub, _token) => {
 
 	const acc = await getAccountEntryById(sub);
 	if (!acc) {
 		return undefined;
 	}
 
+
 	return {
 		accountId: acc.id,
-		async claims(_use, scope, _claims, _rejected) {
+		async claims(_use, scope, _claims) {
+			if (ctx.request.transactionId) {
+				const claimsFuture = await ctx.credentialRequestHelper.getCredentialRequest(ctx.request.transactionId);
+				if (claimsFuture) {
+					return claimsFuture;
+				}
+			}
+
+
+			if (scope.split(' ').includes('por')) {
+				return ctx.credentialRequestHelper.submitCredentialRequest({ sub: acc.id, scope: scope });
+			}
 			let releasedClaims = { };
 			if (scope.split(' ').includes('pid')) {
 				releasedClaims = { pid: acc.pid };
@@ -35,15 +49,13 @@ export const findAccount: FindAccount = async (_ctx, sub, _token) => {
 			if (scope.split(' ').includes('diploma')) {
 				releasedClaims = { ...releasedClaims, diploma: acc.diploma };
 			}
-			if (scope.split(' ').includes('por')) {
-				releasedClaims = { ...releasedClaims, por: acc.por };
-			}
-		    // you can pick which claims to return based on `use`, `scope`, etc.
-		    // For example, return email & name when scope allows it:
-		    return {
-			    sub: acc.id,
-				...releasedClaims,
-		    };
+
+			return createClaimsFuture<{ sub: string, [key: string]: unknown }>({
+				claims: {
+			    	sub: acc.id,
+					...releasedClaims,
+				},
+			});
 		},
 	};
 }
