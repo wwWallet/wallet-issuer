@@ -14,7 +14,7 @@ export const config = {
       name: String(process.env.DISPLAY_NAME || "wwWallet Issuer"),
       locale: String(process.env.DISPLAY_LOCALE || "en-US"),
       logo: {
-      	uri: String(process.env.DISPLAY_LOGO_URI || url + '/images/'),
+      	uri: String(process.env.DISPLAY_LOGO_URI || url + '/images/logo.png'),
       },
     },
   ],
