@@ -1,7 +1,14 @@
+import { JWK } from "jose";
 
 export type State = {
 	id: string;
 
+	credentialOfferUrlContainer: string | null;
 
-	credentialOfferUrlContainer?: string;
+	sub: string | null;
+	clientId: string | null;
+	attestedKeys: JWK[] | null;
+	credentialConfigurationId: string | null;
+	transactionId: string | null;
+	scope: string | null;
 }

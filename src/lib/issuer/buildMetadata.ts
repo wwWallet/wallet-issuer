@@ -1,9 +1,10 @@
 import { OpenidCredentialIssuerMetadata } from "wallet-common";
-import { CredentialIssuerCreateOptions } from "./createIssuerOpenID4VCI";
+import { CredentialIssuerCreateOptions } from "./IssuerOpenID4VCI";
 
 export function buildMetadata(url: string, credentialIssuerCreateOptions: CredentialIssuerCreateOptions): OpenidCredentialIssuerMetadata {
 	return {
 		credential_issuer: url,
+		authorization_servers: [credentialIssuerCreateOptions.authorizationServerUrl],
 		credential_endpoint: url + '/credential',
 		deferred_credential_endpoint: url + '/deferred-credential',
 		nonce_endpoint: url + '/nonce',

@@ -9,6 +9,9 @@ import { supportedCredentialConfigurations } from "../../config/supportedCredent
 import { pemToBase64 } from "../util/pemToBase64";
 import * as fsPromises from 'fs/promises';
 import { JWK } from "jose";
+import { vctDocumentProvider } from "../../config/vctDocumentProvider";
+import { MemoryStore } from "../lib/core/MemoryStore";
+import { createCredentialRequestHelper, CredentialRequestWithClaims } from "../lib/issuer/CredentialRequestHelper";
 
 const { writeFile } = fsPromises;
 
@@ -26,9 +29,14 @@ const publicKeyJwk = JSON.parse(fs.readFileSync(path.join(__dirname, "../../../k
 	.toString()
 	.trim()) as JWK;
 
+const credentialRequestStore = new MemoryStore<string, CredentialRequestWithClaims>(10000);
+
+export const credentialRequestHelper = createCredentialRequestHelper(credentialRequestStore);
+
 export const issuer = createIssuerOpenID4VCI(config.url + '/openid', {
 	clockTolerance: config.clockTolerance,
 	findAccount: findAccount,
+	credentialRequestHelper,
 	proofTypesSupported: [ProofTypesSupported.JWT, ProofTypesSupported.ATTESTATION],
 	requireKeyBindingInCredentialConfigurationIds: [],
 	getAllTrustedPemCertificates: localTrustedCertsManager.getAllPemCertificates,
@@ -48,6 +56,7 @@ export const issuer = createIssuerOpenID4VCI(config.url + '/openid', {
 		},
 	},
 	display: config.display,
+	vctDocumentProvider: vctDocumentProvider,
 });
 
 Object.entries(supportedCredentialConfigurations).map(([credentialConfigurationId, conf]) =>
@@ -55,6 +64,6 @@ Object.entries(supportedCredentialConfigurations).map(([credentialConfigurationI
 );
 
 
-issuer.getMetadata().then((async (metadata) => {
+issuer.getMetadata().then((async (metadata: any) => {
 	await writeFile(path.join(__dirname, "../../../public/.well-known/openid-credential-issuer"), JSON.stringify(metadata));
 }))
