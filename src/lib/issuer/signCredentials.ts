@@ -12,6 +12,7 @@ export async function signCredentials(
 		metadata: OpenidCredentialIssuerMetadata,
 		claims: GenericClaims,
 		attestedKeys: JWK[],
+		disclosureFrameMap: Map<string, Record<string, unknown>>,
 		requestOpts: PlainIssueCredentialRequestOptions,
 		createOpts: CredentialIssuerCreateOptions,
 	): Promise<Result<string[], CredentialRequestError>> {
@@ -26,16 +27,13 @@ export async function signCredentials(
 		return err(CredentialRequestErrors.InternalServerError, `Credential Configuration supported for id '${configurationId}' could not be resolved`);
 	}
 
-	const spreadedClaims = Object.values(claims).reduce((acc, current) =>
-		({ ...(acc as Record<string, unknown>), ...(current as Record<string, unknown>) })
-	) as Record<string, unknown>;
 	// add error handling for signature generation
 	switch (credentialConfigurationSupported.format) {
 		case VerifiableCredentialFormat.DC_SDJWT:
 			if ('proofs' in requestOpts.request.data && requestOpts.request.data.proofs) {
+				const disclosureFrame = disclosureFrameMap.get(configurationId);
 				const signedCredentials = await Promise.all(attestedKeys.map((key) =>
-					// todo: dynamically generate disclosure frame based on metadata parameter
-					createOpts.credentialSigner.signSdJwtVc({ ...spreadedClaims, cnf: { jwk: key } }, {}, {})
+					createOpts.credentialSigner.signSdJwtVc({ ...claims, cnf: { jwk: key } }, {}, disclosureFrame ?? {})
 				));
 				return ok(signedCredentials.map((c) => c.credential));
 			}

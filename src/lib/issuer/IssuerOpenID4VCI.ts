@@ -67,7 +67,7 @@ export interface IssuerOpenID4VCI {
 	getCredentialOffer(credentialOfferId: string, revoke: boolean): Promise<CredentialOffer | null>;
 
 
-	registerSupportedCredentialConfiguration(credentialConfigurationId: string, credConf: CredentialConfigurationSupported): void;
+	registerSupportedCredentialConfiguration(credentialConfigurationId: string, credConf: CredentialConfigurationSupported, discloseFrame?: Record<string, unknown>): void;
 
 	getMetadata(): Promise<OpenidCredentialIssuerMetadata>;
 	issueNonce(): Promise<ResponseMessage>;
@@ -102,6 +102,8 @@ export function createIssuerOpenID4VCI(url: string, credentialIssuerCreateOption
 	}
 
 	const metadata = buildMetadata(url, credentialIssuerCreateOptions);
+
+	const disclosureFrameMap = new Map<string, Record<string, unknown>>();
 
 	return {
 		generateCredentialOffer: async (credentialOfferCreateOptions: {
@@ -167,7 +169,7 @@ export function createIssuerOpenID4VCI(url: string, credentialIssuerCreateOption
 			}
 		},
 
-		registerSupportedCredentialConfiguration: (credentialConfigurationId, credConf) => {
+		registerSupportedCredentialConfiguration: (credentialConfigurationId, credConf, disclosureFrame) => {
 			metadata.credential_configurations_supported[credentialConfigurationId] = {
 				...credConf,
 				proof_types_supported: {
@@ -181,6 +183,9 @@ export function createIssuerOpenID4VCI(url: string, credentialIssuerCreateOption
 					} : undefined,
 				},
 			};
+			if (disclosureFrame) {
+				disclosureFrameMap.set(credentialConfigurationId, disclosureFrame);
+			}
 		},
 
 		getMetadata: async (signMetadata: boolean = true) => {
@@ -316,7 +321,7 @@ export function createIssuerOpenID4VCI(url: string, credentialIssuerCreateOption
 				if (claimsFuture === null) {
 					return sendError(CredentialRequestErrors.CredentialRequestDenied, "Could not retrieve claims for this account");
 				}
-				
+
 				// update credential_configuration_id from request and (attestedKeys, transactionid) from claimsFuture
 				state.attestedKeys = attested_keys;
 				state.transactionId = claimsFuture.transaction_id;
@@ -339,6 +344,7 @@ export function createIssuerOpenID4VCI(url: string, credentialIssuerCreateOption
 					metadata,
 					claimsFuture.data.claims,
 					attested_keys,
+					disclosureFrameMap,
 					issueCredentialOptions,
 					credentialIssuerCreateOptions
 				);
@@ -346,7 +352,7 @@ export function createIssuerOpenID4VCI(url: string, credentialIssuerCreateOption
 					return sendError(credentialsBindingResult.error, credentialsBindingResult.error_description);
 				}
 				const credentials = credentialsBindingResult.value;
-				const responseOpts: PlainIssueCredentialResponse = { status: 200, headers: { "content-type": "application/json" }, data: { credentials } };
+				const responseOpts: PlainIssueCredentialResponse = { status: 200, headers: { "content-type": "application/json" }, data: { credentials: credentials.map((credential: string) => ({ credential })) } };
 				const send = await sendCredentialResponse(metadata, issueCredentialOptions, responseOpts, credentialIssuerCreateOptions);
 				if (!send.ok) {
 					return sendError(send.error, send.error_description);

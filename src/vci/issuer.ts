@@ -5,15 +5,13 @@ import { LocalTrustedCertificatesManager } from "./LocalTrustedCertificatesManag
 import fs from 'fs';
 import path from 'path';
 import { signer } from "../signer";
-import { supportedCredentialConfigurations } from "../../config/supportedCredentialConfigurations";
+import { disclosureFrameMap, supportedCredentialConfigurations } from "../../config/supportedCredentialConfigurations";
 import { pemToBase64 } from "../util/pemToBase64";
-import * as fsPromises from 'fs/promises';
 import { JWK } from "jose";
 import { vctDocumentProvider } from "../../config/vctDocumentProvider";
 import { MemoryStore } from "../lib/core/MemoryStore";
 import { createCredentialRequestHelper, CredentialRequestWithClaims } from "../lib/issuer/CredentialRequestHelper";
 
-const { writeFile } = fsPromises;
 
 const localTrustedCertsManager = LocalTrustedCertificatesManager();
 
@@ -60,10 +58,5 @@ export const issuer = createIssuerOpenID4VCI(config.url + '/openid', {
 });
 
 Object.entries(supportedCredentialConfigurations).map(([credentialConfigurationId, conf]) =>
-	issuer.registerSupportedCredentialConfiguration(credentialConfigurationId, conf)
+	issuer.registerSupportedCredentialConfiguration(credentialConfigurationId, conf, disclosureFrameMap[credentialConfigurationId])
 );
-
-
-issuer.getMetadata().then((async (metadata: any) => {
-	await writeFile(path.join(__dirname, "../../../public/.well-known/openid-credential-issuer"), JSON.stringify(metadata));
-}))

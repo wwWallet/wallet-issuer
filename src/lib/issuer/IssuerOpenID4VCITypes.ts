@@ -36,7 +36,7 @@ export type EncryptedIssueCredentialRequestOptions = {
 export type IssueCredentialRequestOptions = EncryptedIssueCredentialRequestOptions | PlainIssueCredentialRequestOptions;
 
 export type PlainIssueCredentialResponse = ResponseMessage & { headers: { 'content-type': 'application/json' } } & ({
-	data: { credentials: string[] },
+	data: { credentials: { credential: string }[] },
 	status: 200,
 } | {
 	data: { transaction_id: string, interval: number },

@@ -46,13 +46,15 @@ export async function verifyProofKeyAttestation(attestation: string, options: Ve
 			-----END CERTIFICATE-----`;
 			const publicKey = await importX509(leafCertPem, parsedHeader.alg);
 			try {
-				await jwtVerify(attestation, publicKey, { clockTolerance: options.clockTolerance, audience: options.credentialIssuerIdentifier });
+				await jwtVerify(attestation, publicKey, { clockTolerance: options.clockTolerance });
 			}
-			catch {
+			catch (e) {
 				return err(CredentialRequestErrors.InvalidProof, "key attestation signature is invalid");
 			}
 		}
-		return err(CredentialRequestErrors.CredentialRequestDenied, "'x5c' header missing from key attestation");
+		else {
+			return err(CredentialRequestErrors.CredentialRequestDenied, "'x5c' header missing from key attestation");
+		}
 	}
 
 	// verify validity of 'attested_keys' payload attribute

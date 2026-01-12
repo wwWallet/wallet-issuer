@@ -2,7 +2,6 @@ import { Router } from "express";
 import { logger } from "../logger";
 import express from 'express';
 import { issuer } from "./issuer";
-import path from "path";
 export const vciRouter = Router();
 
 
@@ -31,6 +30,7 @@ vciRouter.post('/credential', express.json(), async (req, res) => {
 		},
 	});
 
+	logger.info("New credential has been issued");
 	Object.entries(response.headers).map(([k, v]) => res.setHeader(k, v));
 	res.status(response.status).send(response.data);
 });
@@ -44,16 +44,18 @@ vciRouter.post('/deferred-credential', express.json(), async (req, res) => {
 		},
 	});
 
+	logger.info("Deferred response sent");
 	Object.entries(response.headers).map(([k, v]) => res.setHeader(k, v));
 	res.status(response.status).send(response.data);
 });
 
 
-vciRouter.use(
-	'/.well-known',
-	(_, res, next) => {
-		res.setHeader('Content-Type', 'application/json')
-		next();
-	},
-	express.static(path.join(__dirname, '../../../public/.well-known/'))
-);
+let metadata: any = undefined;
+
+vciRouter.get('/.well-known/openid-credential-issuer', async (_req, res) => {
+	if (!metadata) {
+		metadata = await issuer.getMetadata();
+	}
+	res.status(200).send(metadata);
+});	
+

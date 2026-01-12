@@ -13,16 +13,19 @@ export async function sendCredentialResponse(
 ): Promise<Result<IssueCredentialResponse, CredentialRequestError>> {
 
 	const encoder = new TextEncoder();
-	if (createOpts.credentialResponseEncryption?.encryptionRequired ||
+
+	if (createOpts.credentialResponseEncryption?.encryptionRequired &&
 		requestOpts.request.data.credential_response_encryption === undefined) {
 
 		return err(CredentialRequestErrors.InvalidEncryptionParameters, "Encryption params not received");
 	}
-	if (!metadata.credential_response_encryption?.enc_values_supported.includes(requestOpts.request.data.credential_response_encryption?.enc as string)) {
+	
+	const encParamIsSupported = metadata.credential_response_encryption?.enc_values_supported.includes(requestOpts.request.data.credential_response_encryption?.enc as string) ?? false;
+	if (requestOpts.request.data.credential_response_encryption && !encParamIsSupported) {
 		return err(CredentialRequestErrors.InvalidEncryptionParameters, "Received not supported 'enc' credential_response_encryption value");
 	}
 
-	if (requestOpts.request.data.credential_response_encryption) {
+	if (requestOpts.request.data.credential_response_encryption && encParamIsSupported && metadata.credential_response_encryption) {
 		const { jwk, enc } = requestOpts.request.data.credential_response_encryption;
 		const clientPublicKey = await importJWK(jwk, jwk.alg)
 		const jwe = await new CompactEncrypt(encoder.encode(JSON.stringify(responseOpts.data)))
