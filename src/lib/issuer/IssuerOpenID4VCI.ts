@@ -7,6 +7,7 @@ import { State } from "./State";
 import { MemoryStore } from "../core/MemoryStore";
 import { FindAccount } from "./Account/FindAccount";
 import { convertSdjwtvcToOpenid4vciClaims, CredentialConfigurationSupported, CredentialOffer, CredentialOfferSchema, OpenidCredentialIssuerMetadata, OpenidCredentialIssuerMetadataSchema } from "wallet-common";
+import { convertSdjwtvcToOpenid4vciDisplay } from "wallet-common/dist/functions/convertSdjwtvcToOpenid4vciDisplay";
 import { CredentialRequestErrors } from "./CredentialRequest/CredentialRequestError";
 import { handleEncryptedCredentialRequest } from "./CredentialRequest/handleEncryptedCredentialRequest";
 import { createMemorySecretManager } from "./MemorySecretManager";
@@ -199,6 +200,8 @@ export function createIssuerOpenID4VCI(url: string, credentialIssuerCreateOption
 						if (doc) {
 							const claims = convertSdjwtvcToOpenid4vciClaims(doc.claims);
 							conf.claims = claims;
+							const display = convertSdjwtvcToOpenid4vciDisplay(doc.display);
+							conf.display = display;
 							return;
 						}
 						return;

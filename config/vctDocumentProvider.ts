@@ -1,6 +1,7 @@
 import { TypeMetadata } from "wallet-common/dist/schemas/SdJwtVcTypeMetadataSchema";
 import { VctDocumentProvider } from "../src/lib/core/VctDocumentProvider";
 import { config } from './index';
+import { logger } from "../src/logger";
 
 
 export const vctDocumentProvider: VctDocumentProvider = {
@@ -9,10 +10,12 @@ export const vctDocumentProvider: VctDocumentProvider = {
 			const url = new URL(config.vctRegistryUrl);
 			url.searchParams.append('vct', vct);
 			const result = await fetch(url);
-			const parsed = TypeMetadata.parse(result.json());
+			const json = await result.json();
+			const parsed = TypeMetadata.parse(json);
 			return parsed;	
 		}
-		catch {
+		catch (err) {
+			logger.error("Error in VCT SDJWT Metadata retrieval: " + JSON.stringify(err));
 			return null;
 		}
 	}

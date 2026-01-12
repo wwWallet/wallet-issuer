@@ -26,5 +26,5 @@ export const config = {
     theme_color: process.env.SITE_THEME_COLOR || "#4d7e3e",
     background_color: process.env.SITE_BACKGROUND_COLOR || "#4d7e3e",
   },
-  vctRegistryUrl: process.env.VCT_REGISTRY_URL || "default_url",
+  vctRegistryUrl: process.env.VCT_REGISTRY_URL || "http://localhost:8097/type-metadata",
 }
