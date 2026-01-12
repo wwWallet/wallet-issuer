@@ -12,8 +12,9 @@ type AccountEntry = {
 };
 
 const getAccountEntryById = async (id: string): Promise<AccountEntry | null> => {
-	const data = await fs.readFile(path.join(__dirname, "../dataset/dataset.json"), 'utf-8');
-	return (JSON.parse(data.toString()).filter(((r: AccountEntry) => r.id === id))[0] ?? null) as AccountEntry | null;
+	const data = await fs.readFile(path.join(__dirname, "../../dataset/accounts.json"), 'utf-8');
+	const parsedData = JSON.parse(data.toString());
+	return parsedData.accounts.filter((r: AccountEntry) => r.id === id)[0] ?? null;
 }
 
 
@@ -36,18 +37,21 @@ export const findAccount: FindAccount = async (ctx, sub, _token) => {
 			}
 
 
-			if (scope.split(' ').includes('por')) {
+			if (scope.split(' ').includes('por:sd_jwt_vc:deferred')) {
 				return ctx.credentialRequestHelper.submitCredentialRequest({ sub: acc.id, scope: scope });
 			}
 			let releasedClaims = { };
-			if (scope.split(' ').includes('pid')) {
-				releasedClaims = { pid: acc.pid };
+			if (scope.split(' ').includes('pid:sd_jwt_dc') || scope.split(' ').includes('pid:mso_mdoc')) {
+				releasedClaims = { ...acc.pid };
 			}
 			if (scope.split(' ').includes('ehic')) {
-				releasedClaims = { ...releasedClaims, ehic: acc.ehic };
+				releasedClaims = { ...releasedClaims, ...acc.ehic };
 			}
 			if (scope.split(' ').includes('diploma')) {
-				releasedClaims = { ...releasedClaims, diploma: acc.diploma };
+				releasedClaims = { ...releasedClaims, ...acc.diploma };
+			}
+			if (scope.split(' ').includes('por:sd_jwt_vc')) {
+				releasedClaims = { ...releasedClaims, ...acc.por };
 			}
 
 			return createClaimsFuture<{ sub: string, [key: string]: unknown }>({
