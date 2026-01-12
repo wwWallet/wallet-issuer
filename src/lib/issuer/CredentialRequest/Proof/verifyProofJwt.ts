@@ -39,7 +39,16 @@ export async function verifyProofJwt(jwt: string, options: VerifyProofOptions): 
 	if (parsedHeader.jwk) {
 		const publicKey = await importJWK(parsedHeader.jwk);
 		try {
-			await jwtVerify(jwt, publicKey, { clockTolerance: options.clockTolerance });
+			const { payload, protectedHeader } = await jwtVerify(jwt, publicKey, { clockTolerance: options.clockTolerance });
+			if (protectedHeader.jwk) {
+				attestedKeys.push(protectedHeader.jwk);
+			}
+			if (!payload.nonce) {
+				return err(CredentialRequestErrors.InvalidProof, "missing 'nonce' from payload of jwt proof");
+			}
+			if (options.expectedNonce && payload.nonce !== options.expectedNonce) {
+				return err(CredentialRequestErrors.InvalidProof, "invalid 'nonce' on payload of jwt proof");
+			}
 		}
 		catch {
 			return err(CredentialRequestErrors.InvalidProof, "proof jwt signature is invalid");
@@ -56,7 +65,13 @@ export async function verifyProofJwt(jwt: string, options: VerifyProofOptions): 
 		-----END CERTIFICATE-----`;
 		const publicKey = await importX509(leafCertPem, parsedHeader.alg);
 		try {
-			await jwtVerify(jwt, publicKey, { clockTolerance: options.clockTolerance, audience: options.credentialIssuerIdentifier });
+			const { payload } = await jwtVerify(jwt, publicKey, { clockTolerance: options.clockTolerance, audience: options.credentialIssuerIdentifier });
+			if (!payload.nonce) {
+				return err(CredentialRequestErrors.InvalidProof, "missing 'nonce' from payload of jwt proof");
+			}
+			if (options.expectedNonce && payload.nonce !== options.expectedNonce) {
+				return err(CredentialRequestErrors.InvalidProof, "invalid 'nonce' on payload of jwt proof");
+			}
 		}
 		catch {
 			return err(CredentialRequestErrors.InvalidProof, "proof jwt signature is invalid");

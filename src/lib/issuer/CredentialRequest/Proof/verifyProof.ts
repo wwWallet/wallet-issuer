@@ -13,24 +13,30 @@ export type VerifyProofOptions = {
 	clockTolerance?: number,
 }
 
-export async function verifyProof(proof: { jwt: string } | { attestation: string }, options: VerifyProofOptions): Promise<Result<{ attested_keys: JWK[] }, CredentialRequestError>> {
 
-	if ('attestation' in proof) {
-		return verifyProofKeyAttestation(proof.attestation, options);
+export async function verifyProofsWrapper(proofs: ({ jwt: string[] } | { attestation: string[] }), options: VerifyProofOptions): Promise<Result<{ attested_keys: JWK[] }, CredentialRequestError>> {
+	const verifyProofResults = await (async () => {
+		if ('jwt' in proofs) {
+			return Promise.all(
+				proofs.jwt.map(async (proof) =>
+					verifyProofJwt(proof, options)
+				)
+			);
+		}
+		else if ('attestation' in proofs) {
+			return Promise.all(
+				proofs.attestation.map(async (proof) =>
+					verifyProofKeyAttestation(proof, options)
+				)
+			);
+		}
+		return undefined;
+	})();
+
+	if (!verifyProofResults) {
+		return err(CredentialRequestErrors.InvalidProof, "'proofs' object does not contain neither 'jwt' nor 'attestation' key");
 	}
-	else if ('jwt' in proof) {
-		return verifyProofJwt(proof.jwt, options);
-	}
-	return err(CredentialRequestErrors.InvalidRequest, "Proof object does not include 'jwt' or 'attestation' JSON attribute");
-}
 
-export async function verifyProofsWrapper(proofs: ({ jwt: string } | { attestation: string })[], options: VerifyProofOptions): Promise<Result<{ attested_keys: JWK[] }, CredentialRequestError>> {
-
-	const verifyProofResults = await Promise.all(
-		proofs.map(async (proof) => {
-			return verifyProof(proof, options);
-		})
-	);
 	// if at least one error detected, reject the whole request
 	for (const res of verifyProofResults) {
 		if (!res.ok) {

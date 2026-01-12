@@ -13,7 +13,7 @@ export type IssueCredentialRequestBase = {
 }
 
 export type IssueCredentialRequestProofsExtension = {
-	proofs?: ({ jwt: string } | { attestation: string })[],
+	proofs?: ({ jwt: string[] } | { attestation: string[] }),
 }
 
 export type PlainIssueCredentialRequestOptions = {

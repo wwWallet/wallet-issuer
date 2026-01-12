@@ -42,7 +42,6 @@ export const signer: CredentialSigner = {
 		for (const [ns, nsData] of namespaces) {
 			document.addIssuerNameSpace(ns, { ...nsData })
 		}
-		console.log("Cert = ", importX509(issuerCertPem, 'ES256'))
 
 		const issuerPrivateKeyJwk = await exportJWK(key);
 		const signed = new Date();
@@ -70,7 +69,6 @@ export const signer: CredentialSigner = {
 
 		const prepared = signedDocument.prepare();
 		const issuerSigned = prepared.get('issuerSigned');
-		console.log("Issuer signed = ", issuerSigned)
 		const issuedSignedCborEncoded = cborEncode(issuerSigned);
 		const credential = base64url.encode(issuedSignedCborEncoded as any);
 		return { credential: credential };
