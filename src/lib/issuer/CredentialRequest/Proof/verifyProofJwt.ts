@@ -37,7 +37,7 @@ export async function verifyProofJwt(jwt: string, options: VerifyProofOptions): 
 	}
 
 	if (parsedHeader.jwk) {
-		const publicKey = await importJWK(parsedHeader.jwk);
+		const publicKey = await importJWK(parsedHeader.jwk, (parsedHeader.jwk as JWK).alg ?? parsedHeader.alg);
 		try {
 			const { payload, protectedHeader } = await jwtVerify(jwt, publicKey, { clockTolerance: options.clockTolerance });
 			if (protectedHeader.jwk) {
