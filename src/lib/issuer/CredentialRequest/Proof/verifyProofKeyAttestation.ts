@@ -64,7 +64,7 @@ export async function verifyProofKeyAttestation(attestation: string, options: Ve
 	try {
 		await Promise.all(
 			parsedPayload.attested_keys.map((jwk: JWK) =>
-				importJWK(jwk)
+				importJWK(jwk, jwk.alg ?? "ES256")
 			)
 		);
 	}

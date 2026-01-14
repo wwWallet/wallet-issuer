@@ -80,6 +80,7 @@ export const signer: CredentialSigner = {
 		expirationDate.setFullYear(expirationDate.getFullYear() + 1);
 
 		headers.x5c = issuerX5C;
+		headers.typ = "dc+sd-jwt";
 
 		if (!disclosureFrame) {
 			throw new Error("Could not generate signature");

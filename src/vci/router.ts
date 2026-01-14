@@ -42,7 +42,7 @@ vciRouter.post('/credential', express.json(), async (req, res) => {
 				data: req.body,
 			},
 		});
-
+		
 		logger.info("New credential has been issued");
 		Object.entries(response.headers).map(([k, v]) => res.setHeader(k, v));
 		res.status(response.status).send(response.data);
