@@ -3,6 +3,7 @@ import fs from 'node:fs/promises';
 import path from 'path';
 import { createClaimsFuture } from "../src/lib/issuer/CredentialRequestHelper";
 import { supportedCredentialConfigurations } from "./supportedCredentialConfigurations";
+import { credentialRequestHelper } from "../src/vci/issuer";
 
 type AccountEntry = {
 	id: string;
@@ -39,20 +40,14 @@ export const findAccount: FindAccount = async (ctx, sub, _token) => {
 		accountId: acc.id,
 		async claims(_use, scope, _claims) {
 			if (ctx.request.transactionId) {
-				const claimsFuture = await ctx.credentialRequestHelper.getCredentialRequest(ctx.request.transactionId);
-				if (claimsFuture) {
-					return claimsFuture;
+				const claimsFutures = await ctx.credentialRequestHelper.getCredentialRequests(ctx.request.transactionId);
+				if (claimsFutures[0]) {
+					return claimsFutures[0];
 				}
 			}
 
-
-			if (scope.split(' ').includes('por:sd_jwt_vc:deferred')) {
-				const supportedConf = findSupportedCredentialByScope('pid:sd_jwt_dc');
-				let claimsToRelease = {};
-				if (supportedConf && 'vct' in supportedConf) {
-					claimsToRelease = { vct: supportedConf.vct };
-				}
-				return ctx.credentialRequestHelper.submitCredentialRequest({ sub: acc.id, scope: scope, ...claimsToRelease });
+			if (scope.split(' ').includes('por:sd_jwt_vc:deferred')) { // submit credential request for later approval
+				return ctx.credentialRequestHelper.submitCredentialRequest({ sub: acc.id, scope: scope });
 			}
 			let releasedClaims = { };
 			if (scope.split(' ').includes('pid:sd_jwt_dc') || scope.split(' ').includes('pid:mso_mdoc')) {
@@ -84,7 +79,7 @@ export const findAccount: FindAccount = async (ctx, sub, _token) => {
 				releasedClaims = { ...releasedClaims, ...acc.por };
 			}
 
-			return createClaimsFuture<{ sub: string, [key: string]: unknown }>({
+			return createClaimsFuture<{ sub: string, [key: string]: unknown }>(acc.id, scope, {
 				claims: {
 			    	sub: acc.id,
 					...releasedClaims,
@@ -93,3 +88,51 @@ export const findAccount: FindAccount = async (ctx, sub, _token) => {
 		},
 	};
 }
+
+var loopRunning = false;
+
+/**
+ * 
+ * This loop will be used to auto-fullfil the POR Deferred Credential Requests to
+ * simulate asynchronous credential issuance.
+ */
+async function runLoop() {
+	if (loopRunning) {
+		return;
+	}
+	loopRunning = true;
+
+	while (true) {
+		try {
+			await new Promise(r => setTimeout(r, 5000));
+			const requests = await credentialRequestHelper.getCredentialRequests();
+			if (!requests) {
+				continue;
+			}
+			await Promise.all(requests.filter((req) =>
+				req.status === 'pending' && req.scope.split(' ').includes('por:sd_jwt_vc:deferred')
+			).map(async (r) => {
+				const supportedConf = findSupportedCredentialByScope('por:sd_jwt_vc:deferred');
+				if (!supportedConf || !('vct' in supportedConf)) {
+					return null;
+				}
+				const acc = await getAccountEntryById(r.sub);
+				if (!acc) {
+					return null;
+				}
+				await credentialRequestHelper.fulfilCredentialRequest(r.transaction_id, {
+					sub: r.sub,
+					vct: supportedConf.vct,
+					...acc.por,
+				})
+			}));
+			
+		} catch (err) {
+		    console.error(err);
+		}
+		
+		await new Promise(resolve => setImmediate(resolve));
+	}
+}
+
+runLoop();

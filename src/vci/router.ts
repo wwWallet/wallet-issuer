@@ -43,11 +43,13 @@ vciRouter.post('/credential', express.json(), async (req, res) => {
 			},
 		});
 		
-		logger.info("New credential has been issued");
+		console.log("RES: ", response);
+		logger.info("Credential response sent");
 		Object.entries(response.headers).map(([k, v]) => res.setHeader(k, v));
 		res.status(response.status).send(response.data);
 	}
 	catch (e) {
+		console.error(e)
 		logger.error(JSON.stringify(e));
 		res.status(500).send({ error: "internal_server_error" });
 	}
@@ -68,6 +70,7 @@ vciRouter.post('/deferred-credential', express.json(), async (req, res) => {
 		res.status(response.status).send(response.data);
 	}
 	catch (e) {
+		console.error(e)
 		logger.error(JSON.stringify(e));
 		res.status(500).send({ error: "internal_server_error" });
 	}

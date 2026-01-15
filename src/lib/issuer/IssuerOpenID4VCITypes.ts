@@ -40,7 +40,7 @@ export type PlainIssueCredentialResponse = ResponseMessage & { headers: { 'conte
 	status: 200,
 } | {
 	data: { transaction_id: string, interval: number },
-	status: 200,
+	status: 202,
 } |{
 		data: {
 			error: CredentialRequestError,

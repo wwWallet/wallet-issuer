@@ -9,29 +9,26 @@ import { GenericClaims } from "./CredentialRequestHelper";
 
 
 export async function signCredentials(
+		credentialConfigurationId: string,
 		metadata: OpenidCredentialIssuerMetadata,
 		claims: GenericClaims,
 		attestedKeys: JWK[],
 		disclosureFrameMap: Map<string, Record<string, unknown>>,
-		requestOpts: PlainIssueCredentialRequestOptions,
+		_requestOpts: PlainIssueCredentialRequestOptions,
 		createOpts: CredentialIssuerCreateOptions,
 	): Promise<Result<string[], CredentialRequestError>> {
 
-	const configurationId = 'credential_configuration_id' in requestOpts.request.data ? requestOpts.request.data.credential_configuration_id : null;
-	if (!configurationId) {
-		return err(CredentialRequestErrors.InternalServerError, "'credential_configuration_id' is undefined");
-	}
 
-	const credentialConfigurationSupported = metadata.credential_configurations_supported[configurationId];
+	const credentialConfigurationSupported = metadata.credential_configurations_supported[credentialConfigurationId];
 	if (!credentialConfigurationSupported) {
-		return err(CredentialRequestErrors.InternalServerError, `Credential Configuration supported for id '${configurationId}' could not be resolved`);
+		return err(CredentialRequestErrors.InternalServerError, `Credential Configuration supported for id '${credentialConfigurationId}' could not be resolved`);
 	}
 
 	// add error handling for signature generation
 	switch (credentialConfigurationSupported.format) {
 		case VerifiableCredentialFormat.DC_SDJWT:
-			if ('proofs' in requestOpts.request.data && requestOpts.request.data.proofs) {
-				const disclosureFrame = disclosureFrameMap.get(configurationId);
+			if (attestedKeys.length) {
+				const disclosureFrame = disclosureFrameMap.get(credentialConfigurationId);
 				const signedCredentials = await Promise.all(attestedKeys.map((key) =>
 					createOpts.credentialSigner.signSdJwtVc({ ...claims, cnf: { jwk: key } }, {}, disclosureFrame ?? {})
 				));
@@ -42,7 +39,7 @@ export async function signCredentials(
 				return ok([credential]);
 			}
 		case VerifiableCredentialFormat.MSO_MDOC:
-			if ('proofs' in requestOpts.request.data && requestOpts.request.data.proofs) {
+			if (attestedKeys.length) {
 				const signedCredentials = await Promise.all(attestedKeys.map((key) =>
 					createOpts.credentialSigner.signMsoMdoc(
 						credentialConfigurationSupported.doctype,

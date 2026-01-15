@@ -10,6 +10,7 @@ import { base64url, calculateJwkThumbprint, exportJWK, importX509 } from 'jose';
 import { Document } from '@auth0/mdl';
 import { cborEncode } from "@auth0/mdl/lib/cbor";
 import { pemToBase64 } from './util/pemToBase64';
+import { logger } from "./logger";
 
 const issuerPrivateKeyPem = fs.readFileSync(path.join(__dirname, "../../keys/pem.key"), 'utf-8').toString();
 const issuerCertPem = fs.readFileSync(path.join(__dirname, "../../keys/pem.crt"), 'utf-8').toString() as string;;
@@ -88,6 +89,10 @@ export const signer: CredentialSigner = {
 
 		payload.iat = Math.floor(issuanceDate.getTime() / 1000);
 		payload.exp = Math.floor(expirationDate.getTime() / 1000);
+		if (!payload?.cnf?.jwk) {
+			logger.error("payload.cnf.jwk is required in signSdJwtVc function call");
+			throw new Error("payload.cnf.jwk is required in signSdJwtVc function call");
+		}
 		payload.sub = await calculateJwkThumbprint(payload.cnf.jwk);
 		payload.iss = config.url;
 
