@@ -70,7 +70,7 @@ export interface IssuerOpenID4VCI {
 
 	registerSupportedCredentialConfiguration(credentialConfigurationId: string, credConf: CredentialConfigurationSupported, discloseFrame?: Record<string, unknown>): void;
 
-	getMetadata(): Promise<OpenidCredentialIssuerMetadata>;
+	getMetadata(requestMetadataSigning: boolean): Promise<OpenidCredentialIssuerMetadata>;
 	issueNonce(): Promise<ResponseMessage>;
 
 	issueCredential(issueCredentialOptions: IssueCredentialRequestOptions): Promise<IssueCredentialResponse>;
@@ -190,7 +190,7 @@ export function createIssuerOpenID4VCI(url: string, credentialIssuerCreateOption
 			}
 		},
 
-		getMetadata: async (signMetadata: boolean = true) => {
+		getMetadata: async (requestMetadataSigning: boolean = true) => {
 			const m = OpenidCredentialIssuerMetadataSchema.parse(metadata);
 			// use credentialIssuerCreateOptions.vctDocumentProvider to override the claims from VCT Document
 			await Promise.all(Object.values(m.credential_configurations_supported).map(async (conf) => {
@@ -212,7 +212,7 @@ export function createIssuerOpenID4VCI(url: string, credentialIssuerCreateOption
 				return;
 			}));
 
-			if (signMetadata) {
+			if (requestMetadataSigning) {
 				const signer = credentialIssuerCreateOptions.credentialSigner.signer();
 				const publicKeyJwk = await credentialIssuerCreateOptions.credentialSigner.getPublicKeyJwk();
 				const [header, payload] = [

@@ -43,7 +43,6 @@ vciRouter.post('/credential', express.json(), async (req, res) => {
 			},
 		});
 		
-		console.log("RES: ", response);
 		logger.info("Credential response sent");
 		Object.entries(response.headers).map(([k, v]) => res.setHeader(k, v));
 		res.status(response.status).send(response.data);
@@ -77,13 +76,11 @@ vciRouter.post('/deferred-credential', express.json(), async (req, res) => {
 });
 
 
-let metadata: any = undefined;
 
 vciRouter.get('/.well-known/openid-credential-issuer', async (_req, res) => {
 	try {
-		if (!metadata) {
-			metadata = await issuer.getMetadata();
-		}
+		const metadata = await issuer.getMetadata(false);
+
 		res.status(200).send(metadata);	
 	}
 	catch (e) {
