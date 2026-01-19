@@ -1,4 +1,4 @@
-import { err, ok, Result } from "../../core/Result";
+import { err, ok, Result } from "wallet-common";
 import { IssueCredentialRequestOptions, PlainIssueCredentialRequestOptions } from "../IssuerOpenID4VCITypes";
 import { CredentialRequestError, CredentialRequestErrors } from "./CredentialRequestError";
 import { compactDecrypt, importJWK, JWK } from "jose";

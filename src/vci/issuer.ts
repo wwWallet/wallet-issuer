@@ -9,7 +9,7 @@ import { disclosureFrameMap, supportedCredentialConfigurations } from "../../con
 import { pemToBase64 } from "../util/pemToBase64";
 import { JWK } from "jose";
 import { vctDocumentProvider } from "../../config/vctDocumentProvider";
-import { MemoryStore } from "../lib/core/MemoryStore";
+import { MemoryStore } from "wallet-common";
 import { createCredentialRequestHelper, CredentialRequestWithClaims } from "../lib/issuer/CredentialRequestHelper";
 
 

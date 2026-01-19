@@ -1,5 +1,5 @@
 import { OpenidCredentialIssuerMetadata } from "wallet-common";
-import { err, ok, Result } from "../core/Result";
+import { err, ok, Result } from "wallet-common";
 import { CredentialRequestError, CredentialRequestErrors } from "./CredentialRequest/CredentialRequestError";
 import { VerifiableCredentialFormat } from "wallet-common/dist/types";
 import { JWK } from "jose";

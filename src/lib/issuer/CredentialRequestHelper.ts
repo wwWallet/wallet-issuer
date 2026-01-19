@@ -1,5 +1,5 @@
-import { GenericStore } from "../core/Store";
-import { generateRandomIdentifier } from "../core/generateRandomIdentifier";
+import { GenericStore } from "wallet-common";
+import { generateRandomIdentifier } from "wallet-common";
 
 
 type PendingClaims = {

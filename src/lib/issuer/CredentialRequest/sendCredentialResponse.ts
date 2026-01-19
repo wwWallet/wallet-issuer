@@ -1,4 +1,4 @@
-import { err, ok, Result } from "../../core/Result";
+import { err, ok, Result } from "wallet-common";
 import { CredentialRequestError, CredentialRequestErrors } from "./CredentialRequestError";
 import { OpenidCredentialIssuerMetadata } from "wallet-common";
 import { CompactEncrypt, importJWK } from "jose";

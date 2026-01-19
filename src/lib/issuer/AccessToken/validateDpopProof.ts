@@ -1,5 +1,5 @@
 import { fromBase64Url } from "wallet-common/dist/utils/util";
-import { ok, err, Result } from "../../core/Result";
+import { ok, err, Result } from "wallet-common";
 import { CredentialRequestError, CredentialRequestErrors } from "../CredentialRequest/CredentialRequestError";
 import { calculateJwkThumbprint, JWK } from "jose";
 

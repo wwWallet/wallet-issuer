@@ -1,5 +1,5 @@
 import { TypeMetadata } from "wallet-common/dist/schemas/SdJwtVcTypeMetadataSchema";
-import { createVctDocumentResolutionEngine, VctDocumentProvider } from "../src/lib/core/VctDocumentProvider";
+import { createVctDocumentResolutionEngine, VctDocumentProvider } from "wallet-common";
 import { config } from './index';
 import { logger } from "../src/logger";
 

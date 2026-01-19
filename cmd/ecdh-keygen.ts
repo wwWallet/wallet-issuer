@@ -1,4 +1,4 @@
-import { generateECDHKeypair } from "../src/lib/core/ECDH-ES";
+import { generateECDHKeypair } from "wallet-common";
 import fs from 'fs';
 import path from 'path';
 

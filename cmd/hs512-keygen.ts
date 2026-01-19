@@ -1,4 +1,4 @@
-import { generateHS512Key } from '../src/lib/core/HS512';
+import { generateHS512Key } from 'wallet-common';
 import fs from 'fs';
 import path from 'path';
 

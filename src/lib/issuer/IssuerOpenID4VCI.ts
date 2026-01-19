@@ -2,9 +2,9 @@ import { JWK } from "jose";
 import { ProofTypeSupported } from "./types/ProofTypeSupported";
 import { CredentialSigner } from "./CredentialSigner";
 import { CredentialOfferCreateSuccess, IssueCredentialRequestOptions, IssueCredentialResponse, PlainIssueCredentialResponse } from "./IssuerOpenID4VCITypes";
-import { GenericStore } from "../core/Store";
+import { GenericStore } from "wallet-common";
 import { State } from "./State";
-import { MemoryStore } from "../core/MemoryStore";
+import { MemoryStore } from "wallet-common";
 import { FindAccount } from "./Account/FindAccount";
 import { convertSdjwtvcToOpenid4vciClaims, CredentialConfigurationSupported, CredentialOffer, CredentialOfferSchema, OpenidCredentialIssuerMetadata, OpenidCredentialIssuerMetadataSchema } from "wallet-common";
 import { convertSdjwtvcToOpenid4vciDisplay } from "wallet-common/dist/functions/convertSdjwtvcToOpenid4vciDisplay";
@@ -17,12 +17,12 @@ import { validateAccessToken } from "./AccessToken/validateAccessToken";
 import { verifyProofsWrapper } from "./CredentialRequest/Proof/verifyProof";
 import { signCredentials } from "./signCredentials";
 import { sendCredentialResponse } from "./CredentialRequest/sendCredentialResponse";
-import { generateRandomIdentifier } from "../core/generateRandomIdentifier";
+import { generateRandomIdentifier } from "wallet-common";
 import { sendError } from "./sendError";
 import { buildMetadata } from "./buildMetadata";
-import { VctDocumentProvider } from "../core/VctDocumentProvider";
+import { VctDocumentProvider } from "wallet-common";
 import { VerifiableCredentialFormat } from "wallet-common/dist/types";
-import { ResponseMessage } from "../core/communication/ResponseMessage";
+import { ResponseMessage } from "wallet-common";
 import { CredentialRequestHelper } from "./CredentialRequestHelper";
 
 export type CredentialIssuerCreateOptions = {

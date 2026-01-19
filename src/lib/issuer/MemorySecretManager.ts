@@ -1,6 +1,6 @@
 import { jwtVerify, SignJWT } from "jose";
-import { importHS512Key } from "../core/HS512";
-import { generateRandomIdentifier } from "../core/generateRandomIdentifier";
+import { importHS512Key } from "wallet-common";
+import { generateRandomIdentifier } from "wallet-common";
 
 
 

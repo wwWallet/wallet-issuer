@@ -1,5 +1,5 @@
 import { JWK } from "jose";
-import { ResponseMessage } from "../core/communication/ResponseMessage";
+import { ResponseMessage } from "wallet-common";
 import { CredentialRequestError } from "./CredentialRequest/CredentialRequestError";
 
 export type CredentialOfferCreateSuccess = { credentialOfferId: string, credentialOfferUrlContainer: URL };

@@ -1,5 +1,5 @@
 import { JWK } from "jose";
-import { err, ok, Result } from "../../../core/Result";
+import { err, ok, Result } from "wallet-common";
 import { CredentialRequestError, CredentialRequestErrors } from "../CredentialRequestError";
 import { verifyProofJwt } from "./verifyProofJwt";
 import { verifyProofKeyAttestation } from "./verifyProofKeyAttestation";
