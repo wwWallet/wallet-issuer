@@ -1,4 +1,4 @@
-import { JWK } from "jose";
+import { JWK } from 'jose';
 
 export type State = {
 	id: string;
@@ -11,6 +11,6 @@ export type State = {
 	credentialConfigurationId: string | null;
 	transactionId: string | null;
 	scope: string | null;
-	
+
 	iso_datetime_created: string;
-}
+};

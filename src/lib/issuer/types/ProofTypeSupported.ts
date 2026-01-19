@@ -1,6 +1,6 @@
 export const ProofTypesSupported = {
-	JWT: "jwt",
-	ATTESTATION: "attestation",
+	JWT: 'jwt',
+	ATTESTATION: 'attestation',
 } as const;
 
-export type ProofTypeSupported = typeof ProofTypesSupported[keyof typeof ProofTypesSupported];
+export type ProofTypeSupported = (typeof ProofTypesSupported)[keyof typeof ProofTypesSupported];

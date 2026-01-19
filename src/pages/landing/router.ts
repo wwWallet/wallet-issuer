@@ -1,6 +1,5 @@
-import { Router } from "express";
-import { issuer } from "../../vci/issuer";
-
+import { Router } from 'express';
+import { issuer } from '../../vci/issuer';
 
 export const landingRouter = Router();
 

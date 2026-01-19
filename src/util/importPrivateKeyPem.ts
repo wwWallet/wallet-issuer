@@ -1,4 +1,4 @@
-import { importPKCS8 } from "jose";
+import { importPKCS8 } from 'jose';
 
 export async function importPrivateKeyPem(privateKeyPEM: string, algorithm: string) {
 	try {

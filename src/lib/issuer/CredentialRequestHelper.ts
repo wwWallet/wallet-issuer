@@ -1,6 +1,5 @@
-import { GenericStore } from "wallet-common";
-import { generateRandomIdentifier } from "wallet-common";
-
+import { GenericStore } from 'wallet-common';
+import { generateRandomIdentifier } from 'wallet-common';
 
 type PendingClaims = {
 	sub: string;
@@ -28,40 +27,39 @@ export type ResolvedClaims<Claims> = {
 	};
 };
 
-export type ClaimsFuture<Claims> =
-	| PendingClaims
-	| RejectedClaims
-	| ResolvedClaims<Claims>;
+export type ClaimsFuture<Claims> = PendingClaims | RejectedClaims | ResolvedClaims<Claims>;
 
 export function createClaimsFuture<Claims>(sub: string, scope: string, data?: { claims: Claims }): ClaimsFuture<Claims> {
 	const transaction_id = generateRandomIdentifier(12);
-	return data !== undefined ? {
-		scope,
-		sub,
-		transaction_id: transaction_id,
-		status: 'resolved',
-		data: data,
-	} : {
-		scope,
-		sub,
-		transaction_id: transaction_id,
-		status: 'pending',
-		data: null,
-	};
+	return data !== undefined
+		? {
+				scope,
+				sub,
+				transaction_id: transaction_id,
+				status: 'resolved',
+				data: data,
+			}
+		: {
+				scope,
+				sub,
+				transaction_id: transaction_id,
+				status: 'pending',
+				data: null,
+			};
 }
 
 type CredentialRequest = {
 	transaction_id: string;
 	sub: string;
 	scope: string; // all scopes separated by space character
-}
+};
 
 export type GenericClaims = {
 	sub: string;
 	[key: string]: unknown;
-}
+};
 
-type CredentialRequestWithoutTransactionId = Omit<CredentialRequest, "transaction_id">;
+type CredentialRequestWithoutTransactionId = Omit<CredentialRequest, 'transaction_id'>;
 
 export interface CredentialRequestHelper {
 	submitCredentialRequest(request: CredentialRequestWithoutTransactionId): Promise<ClaimsFuture<GenericClaims>>;
@@ -69,16 +67,11 @@ export interface CredentialRequestHelper {
 	getCredentialRequests(transaction_id?: string): Promise<ClaimsFuture<GenericClaims>[]>;
 }
 
-
-
 export type CredentialRequestWithClaims = CredentialRequest & { claims: GenericClaims; status: 'resolved' | 'rejected' | 'pending' };
 
-
 export function createCredentialRequestHelper(store: GenericStore<string, CredentialRequestWithClaims>): CredentialRequestHelper {
-	
 	return {
 		submitCredentialRequest: async (request) => {
-			
 			const transaction_id = generateRandomIdentifier(12);
 			await store.set(transaction_id, { ...request, transaction_id, status: 'pending', claims: {} as GenericClaims });
 			return {
@@ -89,7 +82,7 @@ export function createCredentialRequestHelper(store: GenericStore<string, Creden
 				transaction_id: transaction_id,
 			};
 		},
-		
+
 		fulfilCredentialRequest: async (transaction_id, claims) => {
 			const transaction = await store.get(transaction_id);
 			if (!transaction) {
@@ -129,24 +122,27 @@ export function createCredentialRequestHelper(store: GenericStore<string, Creden
 			}
 
 			if (transaction.status === 'resolved') {
-				return [{
+				return [
+					{
+						scope: transaction.scope,
+						sub: transaction.sub,
+						status: 'resolved',
+						data: {
+							claims: transaction.claims,
+						},
+						transaction_id: transaction_id,
+					},
+				] satisfies ClaimsFuture<GenericClaims>[];
+			}
+			return [
+				{
 					scope: transaction.scope,
 					sub: transaction.sub,
-					status: 'resolved',
-					data: {
-						claims: transaction.claims,
-					},
+					status: transaction.status,
 					transaction_id: transaction_id,
-				}] satisfies ClaimsFuture<GenericClaims>[];
-			}
-			return [{
-				scope: transaction.scope,
-				sub: transaction.sub,
-				status: transaction.status,
-				transaction_id: transaction_id,
-				data: null,
-			}] satisfies ClaimsFuture<GenericClaims>[];
+					data: null,
+				},
+			] satisfies ClaimsFuture<GenericClaims>[];
 		},
-
-	}
+	};
 }

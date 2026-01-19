@@ -1,0 +1,6 @@
+useEditorConfig: true
+
+singleQuote: true
+trailingComma: "all"
+printWidth: 1000
+useTabs: true

@@ -1,5 +1,5 @@
-import { HasherAndAlg, Signer } from "@sd-jwt/types";
-import { JWK } from "jose";
+import { HasherAndAlg, Signer } from '@sd-jwt/types';
+import { JWK } from 'jose';
 
 export interface CredentialSigner {
 	/**
