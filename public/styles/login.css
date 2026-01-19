@@ -73,7 +73,7 @@
 	z-index: 1;
 }
 
-.login-select-flex{
+.login-select-flex {
 	display: flex;
 	flex-direction: row;
 	align-items: center;
@@ -81,9 +81,9 @@
 	padding-top: 15px;
 }
 
-.login-select-flex span{
-	opacity: .85;
-	font-size: .9rem;
+.login-select-flex span {
+	opacity: 0.85;
+	font-size: 0.9rem;
 }
 
 .select2-container {
@@ -98,15 +98,16 @@ button[disabled] {
 	cursor: not-allowed;
 }
 
-.select2-container .select2-selection--single{
-	height: 35px!important;
+.select2-container .select2-selection--single {
+	height: 35px !important;
 	padding: 3px 0px;
 }
 
 .select2-container--default .select2-selection--single .select2-selection__arrow {
-	height: 35px!important;
+	height: 35px !important;
 }
 
-#Login a, #Login a:visited {
+#Login a,
+#Login a:visited {
 	color: var(--link-light-blue);
 }

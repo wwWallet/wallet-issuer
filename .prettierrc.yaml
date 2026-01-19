@@ -1,6 +1,5 @@
 useEditorConfig: true
 
 singleQuote: true
-trailingComma: "all"
+trailingComma: 'all'
 printWidth: 1000
-useTabs: true

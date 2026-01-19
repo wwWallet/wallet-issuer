@@ -9,7 +9,8 @@ table {
 	/* margin-top: 40px; */
 }
 
-th, td {
+th,
+td {
 	text-align: left;
 	padding: 16px;
 }
@@ -27,7 +28,6 @@ tr td:last-child {
 	width: 16px;
 	height: 16px;
 }
-
 
 section.layout {
 	display: flex;

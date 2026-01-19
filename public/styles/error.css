@@ -1,9 +1,5 @@
 #Error {
-
 }
-
-
-
 
 #Error .Back {
 	background-color: inherit;
@@ -39,7 +35,6 @@
 	margin-right: 10px;
 	opacity: 0.5;
 }
-
 
 #Error .navigation {
 	margin-top: 80px;

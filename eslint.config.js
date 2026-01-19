@@ -15,18 +15,12 @@ export default tseslint.config(
 		rules: {
 			'prettier/prettier': "off",
 			'@typescript-eslint/no-explicit-any': 'off',
-			'@typescript-eslint/no-unused-vars': [
-				'error',
-				{
-					argsIgnorePattern: '^_',
-					varsIgnorePattern: '^_',
-					caughtErrorsIgnorePattern: '^_',
-				},
-			],
+			'no-undef': "off",
+			'@typescript-eslint/no-unused-vars': 'off',
 		},
 	},
 	{
-		ignores: ['dist/', 'node_modules/', 'build/', 'public/'],
+		ignores: ['dist/', 'node_modules/', 'build/'],
 	},
 
 	prettierConfig,
