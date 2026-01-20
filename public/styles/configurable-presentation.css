@@ -21,12 +21,12 @@
 	text-align: left;
 }
 
-.checkbox-wrapper input[type="checkbox"] {
+.checkbox-wrapper input[type='checkbox'] {
 	transform: scale(1.5);
 	accent-color: var(--primary-color);
 }
 
-input[type="checkbox"]:disabled + label {
+input[type='checkbox']:disabled + label {
 	color: gray;
 	cursor: not-allowed;
 }
@@ -118,7 +118,7 @@ textarea {
 	margin-right: 10px;
 }
 
-.title{
+.title {
 	margin-bottom: 5px;
 }
 

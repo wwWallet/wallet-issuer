@@ -96,7 +96,6 @@ th {
 	background-color: #f1f1f1;
 }
 
-
 textarea.wide,
 #jsoneditor.wide {
 	width: 60% !important;
@@ -158,7 +157,6 @@ textarea.wide,
 }
 
 @media (max-width: 768px) {
-
 	#json-textarea,
 	#jsoneditor,
 	#jsoneditor.wide {

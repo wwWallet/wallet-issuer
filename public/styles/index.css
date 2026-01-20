@@ -78,7 +78,6 @@
 #Index .VerifierSection {
 	background-color: rgb(219, 219, 219);
 	/* float: right; */
-
 }
 
 #Index .IssuerSection {
@@ -94,7 +93,6 @@
 	color: var(--secondary-color);
 	margin-top: 30px;
 }
-
 
 .image-container {
 	position: relative;
@@ -200,7 +198,7 @@
 }
 
 /* Custom Checkbox Style */
-.checkbox input[type="checkbox"] {
+.checkbox input[type='checkbox'] {
 	display: none;
 }
 
@@ -226,11 +224,11 @@
 	background-color: white;
 }
 
-.checkbox input[type="checkbox"]:checked+label:before {
+.checkbox input[type='checkbox']:checked + label:before {
 	background-color: var(--primary-color);
 }
 
-.checkbox input[type="checkbox"]:disabled+label:before {
+.checkbox input[type='checkbox']:disabled + label:before {
 	background-color: gray;
 }
 
@@ -247,6 +245,6 @@
 	display: none;
 }
 
-.checkbox input[type="checkbox"]:checked+label:after {
+.checkbox input[type='checkbox']:checked + label:after {
 	display: block;
 }

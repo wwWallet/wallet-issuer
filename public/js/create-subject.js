@@ -50,7 +50,7 @@ function showStep(currentStep) {
 function createSubjectFormControl(currentStep) {
 
 	switch(currentStep) {
-		case 1:	// presentation definition cannot be empty
+		case 1: { // presentation definition cannot be empty
 
 			const schemas = document.querySelectorAll('.Schema');
 
@@ -66,16 +66,20 @@ function createSubjectFormControl(currentStep) {
 				return 1;
 			}
 			break;
-		case 2:	// title cannot be empty
-			if(document.getElementById('title').value.length === 0 ) {
+		}
+		case 2: { // title cannot be empty
+			if (document.getElementById('title').value.length === 0) {
 				errorFeedback('title');
 				return 1;
-				}
+			}
 			break;
-		case 3:	// no form control on third step
+		}
+		case 3: {	// no form control on third step
 			break;
-		default:
+		}
+		default: {
 			break;
+		}
 	}
 	return 0;
 }

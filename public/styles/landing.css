@@ -12,7 +12,6 @@
 	margin: 2rem 5%;
 }
 
-
 p.title {
 	margin: 10px 0;
 	font-size: 30px;
@@ -20,7 +19,6 @@ p.title {
 
 p.description {
 	padding-bottom: 3%;
-
 }
 
 .flex-box {
@@ -75,7 +73,7 @@ p.description {
 .specs-table,
 tr {
 	border: 1px solid black;
-	border-collapse: collapse
+	border-collapse: collapse;
 }
 
 .specs-table thead tr {

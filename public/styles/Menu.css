@@ -12,7 +12,7 @@
 .Menu .item .header {
 	color: var(--primary-color);
 	opacity: 1;
-	font-size: 18px!important;
+	font-size: 18px !important;
 	padding-left: 10px;
 }
 
@@ -39,7 +39,7 @@
 	margin-top: 7% !important;
 	border: 1px solid #353f55 !important;
 	background-color: transparent;
-	background-image: linear-gradient(#fafafa,#fafafa 50%,hsla(0,0%,85.5%,.288) 0,hsla(0,0%,85.5%,.288))!important;
+	background-image: linear-gradient(#fafafa, #fafafa 50%, hsla(0, 0%, 85.5%, 0.288) 0, hsla(0, 0%, 85.5%, 0.288)) !important;
 	background-size: 100% 200% !important;
 	cursor: pointer;
 }
