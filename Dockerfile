@@ -5,10 +5,10 @@ WORKDIR /app
 COPY package.json yarn.lock ./
 
 RUN apt-get update && apt-get install -y \
-    build-essential \
-    git \
-    ca-certificates \
-    && rm -rf /var/lib/apt/lists/*
+	build-essential \
+	git \
+	ca-certificates \
+	&& rm -rf /var/lib/apt/lists/*
 
 COPY . .
 RUN yarn cache clean && yarn install && yarn build && rm -rf node_modules/ && yarn install --production
