@@ -1,5 +1,5 @@
-import { PlainIssueCredentialRequestOptions } from "../IssuerOpenID4VCITypes";
-import { CredentialRequestErrors } from "./CredentialRequestError";
+import { PlainIssueCredentialRequestOptions } from '../IssuerOpenID4VCITypes';
+import { CredentialRequestErrors } from './CredentialRequestError';
 
 export async function handleCredentialIdentifierCredentialRequest(opts: PlainIssueCredentialRequestOptions) {
 	if ('credential_identifier' in opts.request.data && opts.request.data.credential_identifier !== undefined) {
@@ -9,7 +9,7 @@ export async function handleCredentialIdentifierCredentialRequest(opts: PlainIss
 			data: {
 				error: CredentialRequestErrors.CredentialRequestDenied,
 				error_description: "HTTP body parameter 'credential_identifier' is currently not supported",
-			}
+			},
 		};
 	}
 }

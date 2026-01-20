@@ -26,7 +26,6 @@ h5 {
 }
 
 @media only screen and (max-width: 600px) {
-
 	h1,
 	h2,
 	h3,
@@ -195,7 +194,6 @@ a.link:hover {
 	}
 }
 
-
 section.layout {
 	flex-direction: column;
 	align-items: flex-start;
@@ -284,7 +282,9 @@ section.layout {
 	color: inherit;
 	text-decoration: none;
 	box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-	transition: box-shadow 0.2s ease, transform 0.2s ease;
+	transition:
+		box-shadow 0.2s ease,
+		transform 0.2s ease;
 	cursor: pointer;
 }
 
@@ -348,7 +348,6 @@ section.layout {
 }
 
 @media (max-width: 768px) {
-
 	.option-card,
 	.or {
 		width: 100%;

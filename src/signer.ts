@@ -1,47 +1,44 @@
-import { config } from "../config";
-import { CredentialSigner } from "./lib/issuer/CredentialSigner";
+import { config } from '../config';
+import { CredentialSigner } from './lib/issuer/CredentialSigner';
 import fs from 'fs';
-import path from "path";
-import { SDJwtInstance } from "@sd-jwt/core";
-import { digest as hasher } from "@sd-jwt/crypto-nodejs";
-import { sign, randomBytes, KeyObject } from "crypto";
+import path from 'path';
+import { SDJwtInstance } from '@sd-jwt/core';
+import { digest as hasher } from '@sd-jwt/crypto-nodejs';
+import { sign, randomBytes, KeyObject } from 'crypto';
 import { importPrivateKeyPem } from './util/importPrivateKeyPem';
 import { base64url, calculateJwkThumbprint, exportJWK, importX509 } from 'jose';
 import { Document } from '@auth0/mdl';
-import { cborEncode } from "@auth0/mdl/lib/cbor";
+import { cborEncode } from '@auth0/mdl/lib/cbor';
 import { pemToBase64 } from './util/pemToBase64';
-import { logger } from "./logger";
+import { logger } from './logger';
 
-const issuerPrivateKeyPem = fs.readFileSync(path.join(__dirname, "../../keys/pem.key"), 'utf-8').toString();
-const issuerCertPem = fs.readFileSync(path.join(__dirname, "../../keys/pem.crt"), 'utf-8').toString() as string;;
+const issuerPrivateKeyPem = fs.readFileSync(path.join(__dirname, '../../keys/pem.key'), 'utf-8').toString();
+const issuerCertPem = fs.readFileSync(path.join(__dirname, '../../keys/pem.crt'), 'utf-8').toString() as string;
 
-const issuerX5C = [
-	pemToBase64(issuerCertPem),
-];
+const issuerX5C = [pemToBase64(issuerCertPem)];
 
-importPrivateKeyPem(issuerPrivateKeyPem, 'ES256') // attempt to import the key
+importPrivateKeyPem(issuerPrivateKeyPem, 'ES256'); // attempt to import the key
 importX509(issuerCertPem, 'ES256'); // attempt to import the public key
 
-const issuerJwkKid = "8636af04-5796-4f46-a73e-d690d7d4e7f3";
+const issuerJwkKid = '8636af04-5796-4f46-a73e-d690d7d4e7f3';
 
 const key = async function () {
 	const key = await importPrivateKeyPem(issuerPrivateKeyPem, 'ES256');
 	if (!key) {
-		throw new Error("Could not import private key");
+		throw new Error('Could not import private key');
 	}
 	return key as any;
-}
+};
 
 export const signer: CredentialSigner = {
 	signMsoMdoc: async function (doctype, namespaces, holderPublicKeyJwk) {
-
 		const key = await importPrivateKeyPem(issuerPrivateKeyPem, 'ES256');
 		if (!key) {
-			throw new Error("Could not import private key");
+			throw new Error('Could not import private key');
 		}
-		const document = new Document(doctype)
+		const document = new Document(doctype);
 		for (const [ns, nsData] of namespaces) {
-			document.addIssuerNameSpace(ns, { ...nsData })
+			document.addIssuerNameSpace(ns, { ...nsData });
 		}
 
 		const issuerPrivateKeyJwk = await exportJWK(key);
@@ -56,7 +53,7 @@ export const signer: CredentialSigner = {
 				validUntil: expirationDate,
 				validFrom: validFromDate,
 			})
-			.addDeviceKeyInfo({ deviceKey: {...holderPublicKeyJwk, kid: cborEncode(holderPublicKeyJwk.kid) } as any })
+			.addDeviceKeyInfo({ deviceKey: { ...holderPublicKeyJwk, kid: cborEncode(holderPublicKeyJwk.kid) } as any })
 			.sign({
 				issuerPrivateKey: {
 					...issuerPrivateKeyJwk,
@@ -73,7 +70,6 @@ export const signer: CredentialSigner = {
 		const issuedSignedCborEncoded = cborEncode(issuerSigned);
 		const credential = base64url.encode(issuedSignedCborEncoded as any);
 		return { credential: credential };
-
 	},
 	signSdJwtVc: async function (payload, headers, disclosureFrame) {
 		const issuanceDate = new Date();
@@ -81,17 +77,17 @@ export const signer: CredentialSigner = {
 		expirationDate.setFullYear(expirationDate.getFullYear() + 1);
 
 		headers.x5c = issuerX5C;
-		headers.typ = "dc+sd-jwt";
+		headers.typ = 'dc+sd-jwt';
 
 		if (!disclosureFrame) {
-			throw new Error("Could not generate signature");
+			throw new Error('Could not generate signature');
 		}
 
 		payload.iat = Math.floor(issuanceDate.getTime() / 1000);
 		payload.exp = Math.floor(expirationDate.getTime() / 1000);
 		if (!payload?.cnf?.jwk) {
-			logger.error("payload.cnf.jwk is required in signSdJwtVc function call");
-			throw new Error("payload.cnf.jwk is required in signSdJwtVc function call");
+			logger.error('payload.cnf.jwk is required in signSdJwtVc function call');
+			throw new Error('payload.cnf.jwk is required in signSdJwtVc function call');
 		}
 		payload.sub = await calculateJwkThumbprint(payload.cnf.jwk);
 		payload.iss = config.url;
@@ -118,7 +114,7 @@ export const signer: CredentialSigner = {
 			}
 
 			if (sd.length > 0) {
-				result["_sd"] = sd;
+				result['_sd'] = sd;
 			}
 
 			return result;
@@ -130,19 +126,19 @@ export const signer: CredentialSigner = {
 	getPublicKeyJwk: async function () {
 		const publicKey = await importX509(issuerCertPem, 'ES256');
 		if (!publicKey) {
-			throw new Error("Could not import issuer publicKey");
+			throw new Error('Could not import issuer publicKey');
 		}
-		const jwk = await exportJWK(publicKey)
+		const jwk = await exportJWK(publicKey);
 		return { kid: issuerJwkKid, ...jwk, alg: 'ES256' };
 	},
 	signer: function () {
 		return async (input: string) => {
 			const result = sign(null, new Uint8Array(Buffer.from(input)), {
 				dsaEncoding: 'ieee-p1363',
-				key: await key() as KeyObject
-			})
-			return result.toString('base64url')
-		}
+				key: (await key()) as KeyObject,
+			});
+			return result.toString('base64url');
+		};
 	},
 	hasherAndAlgorithm: {
 		hasher,
@@ -150,9 +146,6 @@ export const signer: CredentialSigner = {
 	},
 	saltGenerator: () => {
 		const buffer = randomBytes(16);
-		return buffer.toString('base64')
-			.replace(/\+/g, '-')
-			.replace(/\//g, '_')
-			.replace(/=/g, '');
+		return buffer.toString('base64').replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
 	},
-}
+};

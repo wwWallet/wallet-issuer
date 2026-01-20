@@ -1,1 +1,1 @@
-export * from "./ProofTypeSupported";
+export * from './ProofTypeSupported';

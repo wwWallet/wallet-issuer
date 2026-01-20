@@ -1,8 +1,6 @@
-
 #InstitutionSelection .university-selection {
 	width: 75%;
 }
-
 
 #InstitutionSelection .proceed {
 	background-color: #fff;
@@ -37,12 +35,9 @@
 	margin-left: 10px;
 }
 
-
 #InstitutionSelection .navigation {
 	margin-top: 80px;
 }
-
-
 
 #InstitutionSelection .warning {
 	color: rgb(255, 34, 34);

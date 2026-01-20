@@ -1,9 +1,9 @@
-import { FindAccount } from "../src/lib/issuer/Account/FindAccount";
+import { FindAccount } from '../src/lib/issuer/Account/FindAccount';
 import fs from 'node:fs/promises';
 import path from 'path';
-import { createClaimsFuture } from "../src/lib/issuer/CredentialRequestHelper";
-import { supportedCredentialConfigurations } from "./supportedCredentialConfigurations";
-import { credentialRequestHelper } from "../src/vci/issuer";
+import { createClaimsFuture } from '../src/lib/issuer/CredentialRequestHelper';
+import { supportedCredentialConfigurations } from './supportedCredentialConfigurations';
+import { credentialRequestHelper } from '../src/vci/issuer';
 
 type AccountEntry = {
 	id: string;
@@ -14,10 +14,10 @@ type AccountEntry = {
 };
 
 const getAccountEntryById = async (id: string): Promise<AccountEntry | null> => {
-	const data = await fs.readFile(path.join(__dirname, "../../dataset/accounts.json"), 'utf-8');
+	const data = await fs.readFile(path.join(__dirname, '../../dataset/accounts.json'), 'utf-8');
 	const parsedData = JSON.parse(data.toString());
 	return parsedData.accounts.filter((r: AccountEntry) => r.id === id)[0] ?? null;
-}
+};
 
 const findSupportedCredentialByScope = (scope: string) => {
 	const result = Object.entries(supportedCredentialConfigurations).filter(([_k, v]) => v.scope === scope)[0];
@@ -26,15 +26,13 @@ const findSupportedCredentialByScope = (scope: string) => {
 	}
 	const [_credentialConfigurationId, credentialConfiguration] = result;
 	return credentialConfiguration;
-}
+};
 
 export const findAccount: FindAccount = async (ctx, sub, _token) => {
-
 	const acc = await getAccountEntryById(sub);
 	if (!acc) {
 		return undefined;
 	}
-
 
 	return {
 		accountId: acc.id,
@@ -46,16 +44,17 @@ export const findAccount: FindAccount = async (ctx, sub, _token) => {
 				}
 			}
 
-			if (scope.split(' ').includes('por:sd_jwt_vc:deferred')) { // submit credential request for later approval
+			if (scope.split(' ').includes('por:sd_jwt_vc:deferred')) {
+				// submit credential request for later approval
 				return ctx.credentialRequestHelper.submitCredentialRequest({ sub: acc.id, scope: scope });
 			}
-			let releasedClaims = { };
+			let releasedClaims = {};
 			if (scope.split(' ').includes('pid:sd_jwt_dc') || scope.split(' ').includes('pid:mso_mdoc')) {
 				const supportedConf = findSupportedCredentialByScope('pid:sd_jwt_dc');
 				if (supportedConf && 'vct' in supportedConf) {
 					releasedClaims = { ...releasedClaims, vct: supportedConf.vct };
 				}
-				releasedClaims = { ...releasedClaims, ...acc.pid};
+				releasedClaims = { ...releasedClaims, ...acc.pid };
 			}
 			if (scope.split(' ').includes('ehic')) {
 				const supportedConf = findSupportedCredentialByScope('ehic');
@@ -79,20 +78,20 @@ export const findAccount: FindAccount = async (ctx, sub, _token) => {
 				releasedClaims = { ...releasedClaims, ...acc.por };
 			}
 
-			return createClaimsFuture<{ sub: string, [key: string]: unknown }>(acc.id, scope, {
+			return createClaimsFuture<{ sub: string; [key: string]: unknown }>(acc.id, scope, {
 				claims: {
-			    	sub: acc.id,
+					sub: acc.id,
 					...releasedClaims,
 				},
 			});
 		},
 	};
-}
+};
 
-var loopRunning = false;
+let loopRunning = false;
 
 /**
- * 
+ *
  * This loop will be used to auto-fullfil the POR Deferred Credential Requests to
  * simulate asynchronous credential issuance.
  */
@@ -104,34 +103,35 @@ async function runLoop() {
 
 	while (true) {
 		try {
-			await new Promise(r => setTimeout(r, 5000));
+			await new Promise((r) => setTimeout(r, 5000));
 			const requests = await credentialRequestHelper.getCredentialRequests();
 			if (!requests) {
 				continue;
 			}
-			await Promise.all(requests.filter((req) =>
-				req.status === 'pending' && req.scope.split(' ').includes('por:sd_jwt_vc:deferred')
-			).map(async (r) => {
-				const supportedConf = findSupportedCredentialByScope('por:sd_jwt_vc:deferred');
-				if (!supportedConf || !('vct' in supportedConf)) {
-					return null;
-				}
-				const acc = await getAccountEntryById(r.sub);
-				if (!acc) {
-					return null;
-				}
-				await credentialRequestHelper.fulfilCredentialRequest(r.transaction_id, {
-					sub: r.sub,
-					vct: supportedConf.vct,
-					...acc.por,
-				})
-			}));
-			
+			await Promise.all(
+				requests
+					.filter((req) => req.status === 'pending' && req.scope.split(' ').includes('por:sd_jwt_vc:deferred'))
+					.map(async (r) => {
+						const supportedConf = findSupportedCredentialByScope('por:sd_jwt_vc:deferred');
+						if (!supportedConf || !('vct' in supportedConf)) {
+							return null;
+						}
+						const acc = await getAccountEntryById(r.sub);
+						if (!acc) {
+							return null;
+						}
+						await credentialRequestHelper.fulfilCredentialRequest(r.transaction_id, {
+							sub: r.sub,
+							vct: supportedConf.vct,
+							...acc.por,
+						});
+					}),
+			);
 		} catch (err) {
-		    console.error(err);
+			console.error(err);
 		}
-		
-		await new Promise(resolve => setImmediate(resolve));
+
+		await new Promise((resolve) => setImmediate(resolve));
 	}
 }
 

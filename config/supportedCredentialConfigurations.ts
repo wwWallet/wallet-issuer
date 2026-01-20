@@ -1,12 +1,12 @@
-import { OpenidCredentialIssuerMetadata } from "wallet-common";
-import { VerifiableCredentialFormat } from "wallet-common/dist/types";
+import { OpenidCredentialIssuerMetadata } from 'wallet-common';
+import { VerifiableCredentialFormat } from 'wallet-common/dist/types';
 
 // In this object, all the cryptographic-related attributes can be ommited
 // because default values will be used by the issuer module
-export const supportedCredentialConfigurations: OpenidCredentialIssuerMetadata["credential_configurations_supported"] = {
-	"urn:eudi:pid:1:dc": {
-		scope: "pid:sd_jwt_dc",
-		vct: "urn:eudi:pid:1",
+export const supportedCredentialConfigurations: OpenidCredentialIssuerMetadata['credential_configurations_supported'] = {
+	'urn:eudi:pid:1:dc': {
+		scope: 'pid:sd_jwt_dc',
+		vct: 'urn:eudi:pid:1',
 		format: VerifiableCredentialFormat.DC_SDJWT,
 
 		// define proof_types_supported only to require attestations
@@ -16,342 +16,339 @@ export const supportedCredentialConfigurations: OpenidCredentialIssuerMetadata["
 			} as any, // force 'any' to avoid re-defining other elements of "proof_types_supported"
 		},
 	},
-	"eu.europa.ec.eudi.pid.1": {
-		scope: "pid:mso_mdoc",
-		doctype: "eu.europa.ec.eudi.pid.1",
+	'eu.europa.ec.eudi.pid.1': {
+		scope: 'pid:mso_mdoc',
+		doctype: 'eu.europa.ec.eudi.pid.1',
 		display: [
 			{
-				name: "PID mDoc",
-				description: "Person Identification Data",
+				name: 'PID mDoc',
+				description: 'Person Identification Data',
 				background_image: {
-					uri: "https://demo-issuer.wwwallet.org/images/background-image.png",
+					uri: 'https://demo-issuer.wwwallet.org/images/background-image.png',
 				},
-				background_color: "#4CC3DD",
-				text_color: "#000000",
-				locale: "en-US",
+				background_color: '#4CC3DD',
+				text_color: '#000000',
+				locale: 'en-US',
 			},
 		],
 		format: VerifiableCredentialFormat.MSO_MDOC,
 		claims: [
 			{
-				path: ["eu.europa.ec.eudi.pid.1", "family_name"],
+				path: ['eu.europa.ec.eudi.pid.1', 'family_name'],
 				mandatory: true,
 				display: [
 					{
-						name: "Family Name",
-						locale: "en-US",
+						name: 'Family Name',
+						locale: 'en-US',
 					},
 				],
 			},
 			{
-				path: ["eu.europa.ec.eudi.pid.1", "given_name"],
+				path: ['eu.europa.ec.eudi.pid.1', 'given_name'],
 				mandatory: true,
 				display: [
 					{
-						name: "Given Name(s)",
-						locale: "en-US",
+						name: 'Given Name(s)',
+						locale: 'en-US',
 					},
 				],
 			},
 			{
-				path: ["eu.europa.ec.eudi.pid.1", "birth_date"],
+				path: ['eu.europa.ec.eudi.pid.1', 'birth_date'],
 				mandatory: true,
 				display: [
 					{
-						name: "Birth Date",
-						locale: "en-US",
+						name: 'Birth Date',
+						locale: 'en-US',
 					},
 				],
 			},
 			{
-				path: ["eu.europa.ec.eudi.pid.1", "birth_place"],
+				path: ['eu.europa.ec.eudi.pid.1', 'birth_place'],
 				mandatory: true,
 				display: [
 					{
-						name: "Birth Place",
-						locale: "en-US",
+						name: 'Birth Place',
+						locale: 'en-US',
 					},
 				],
 			},
 			{
-				path: ["eu.europa.ec.eudi.pid.1", "nationality"],
+				path: ['eu.europa.ec.eudi.pid.1', 'nationality'],
 				mandatory: true,
 				display: [
 					{
-						name: "Nationality",
-						locale: "en-US",
+						name: 'Nationality',
+						locale: 'en-US',
 					},
 				],
 			},
 			{
-				path: ["eu.europa.ec.eudi.pid.1", "resident_address"],
+				path: ['eu.europa.ec.eudi.pid.1', 'resident_address'],
 				mandatory: false,
 				display: [
 					{
-						name: "Resident Address",
-						locale: "en-US",
+						name: 'Resident Address',
+						locale: 'en-US',
 					},
 				],
 			},
 			{
-				path: ["eu.europa.ec.eudi.pid.1", "resident_country"],
+				path: ['eu.europa.ec.eudi.pid.1', 'resident_country'],
 				mandatory: false,
 				display: [
 					{
-						name: "Resident Country",
-						locale: "en-US",
+						name: 'Resident Country',
+						locale: 'en-US',
 					},
 				],
 			},
 			{
-				path: ["eu.europa.ec.eudi.pid.1", "resident_state"],
+				path: ['eu.europa.ec.eudi.pid.1', 'resident_state'],
 				mandatory: false,
 				display: [
 					{
-						name: "Resident State",
-						locale: "en-US",
+						name: 'Resident State',
+						locale: 'en-US',
 					},
 				],
 			},
 			{
-				path: ["eu.europa.ec.eudi.pid.1", "resident_city"],
+				path: ['eu.europa.ec.eudi.pid.1', 'resident_city'],
 				mandatory: false,
 				display: [
 					{
-						name: "Resident City",
-						locale: "en-US",
+						name: 'Resident City',
+						locale: 'en-US',
 					},
 				],
 			},
 			{
-				path: ["eu.europa.ec.eudi.pid.1", "resident_postal_code"],
+				path: ['eu.europa.ec.eudi.pid.1', 'resident_postal_code'],
 				mandatory: false,
 				display: [
 					{
-						name: "Resident Postal Code",
-						locale: "en-US",
+						name: 'Resident Postal Code',
+						locale: 'en-US',
 					},
 				],
 			},
 			{
-				path: ["eu.europa.ec.eudi.pid.1", "resident_street"],
+				path: ['eu.europa.ec.eudi.pid.1', 'resident_street'],
 				mandatory: false,
 				display: [
 					{
-						name: "Resident Street",
-						locale: "en-US",
+						name: 'Resident Street',
+						locale: 'en-US',
 					},
 				],
 			},
 			{
-				path: ["eu.europa.ec.eudi.pid.1", "resident_house_number"],
+				path: ['eu.europa.ec.eudi.pid.1', 'resident_house_number'],
 				mandatory: false,
 				display: [
 					{
-						name: "Resident House Number",
-						locale: "en-US",
+						name: 'Resident House Number',
+						locale: 'en-US',
 					},
 				],
 			},
 			{
-				path: [
-					"eu.europa.ec.eudi.pid.1",
-					"personal_administrative_number",
-				],
+				path: ['eu.europa.ec.eudi.pid.1', 'personal_administrative_number'],
 				mandatory: false,
 				display: [
 					{
-						name: "Personal Administrative Number",
-						locale: "en-US",
+						name: 'Personal Administrative Number',
+						locale: 'en-US',
 					},
 				],
 			},
 			{
-				path: ["eu.europa.ec.eudi.pid.1", "portrait"],
+				path: ['eu.europa.ec.eudi.pid.1', 'portrait'],
 				mandatory: false,
 				display: [
 					{
-						name: "Portrait Image",
-						locale: "en-US",
+						name: 'Portrait Image',
+						locale: 'en-US',
 					},
 				],
 			},
 			{
-				path: ["eu.europa.ec.eudi.pid.1", "family_name_birth"],
+				path: ['eu.europa.ec.eudi.pid.1', 'family_name_birth'],
 				mandatory: false,
 				display: [
 					{
-						name: "Birth Family Name(s)",
-						locale: "en-US",
+						name: 'Birth Family Name(s)',
+						locale: 'en-US',
 					},
 				],
 			},
 			{
-				path: ["eu.europa.ec.eudi.pid.1", "given_name_birth"],
+				path: ['eu.europa.ec.eudi.pid.1', 'given_name_birth'],
 				mandatory: false,
 				display: [
 					{
-						name: "Birth Given Name(s)",
-						locale: "en-US",
+						name: 'Birth Given Name(s)',
+						locale: 'en-US',
 					},
 				],
 			},
 			{
-				path: ["eu.europa.ec.eudi.pid.1", "sex"],
+				path: ['eu.europa.ec.eudi.pid.1', 'sex'],
 				mandatory: false,
 				display: [
 					{
-						name: "Sex",
-						locale: "en-US",
+						name: 'Sex',
+						locale: 'en-US',
 					},
 				],
 			},
 			{
-				path: ["eu.europa.ec.eudi.pid.1", "email_address"],
+				path: ['eu.europa.ec.eudi.pid.1', 'email_address'],
 				mandatory: false,
 				display: [
 					{
-						name: "Email Address",
-						locale: "en-US",
+						name: 'Email Address',
+						locale: 'en-US',
 					},
 				],
 			},
 			{
-				path: ["eu.europa.ec.eudi.pid.1", "mobile_phone_number"],
+				path: ['eu.europa.ec.eudi.pid.1', 'mobile_phone_number'],
 				mandatory: false,
 				display: [
 					{
-						name: "Mobile Phone Number",
-						locale: "en-US",
+						name: 'Mobile Phone Number',
+						locale: 'en-US',
 					},
 				],
 			},
 			{
-				path: ["eu.europa.ec.eudi.pid.1", "expiry_date"],
+				path: ['eu.europa.ec.eudi.pid.1', 'expiry_date'],
 				mandatory: true,
 				display: [
 					{
-						name: "Expiry Date",
-						locale: "en-US",
+						name: 'Expiry Date',
+						locale: 'en-US',
 					},
 				],
 			},
 			{
-				path: ["eu.europa.ec.eudi.pid.1", "issuing_authority"],
+				path: ['eu.europa.ec.eudi.pid.1', 'issuing_authority'],
 				mandatory: true,
 				display: [
 					{
-						name: "Issuance Authority",
-						locale: "en-US",
+						name: 'Issuance Authority',
+						locale: 'en-US',
 					},
 				],
 			},
 			{
-				path: ["eu.europa.ec.eudi.pid.1", "issuing_country"],
+				path: ['eu.europa.ec.eudi.pid.1', 'issuing_country'],
 				mandatory: true,
 				display: [
 					{
-						name: "Issuing Country",
-						locale: "en-US",
+						name: 'Issuing Country',
+						locale: 'en-US',
 					},
 				],
 			},
 			{
-				path: ["eu.europa.ec.eudi.pid.1", "document_number"],
+				path: ['eu.europa.ec.eudi.pid.1', 'document_number'],
 				mandatory: false,
 				display: [
 					{
-						name: "Document Number",
-						locale: "en-US",
+						name: 'Document Number',
+						locale: 'en-US',
 					},
 				],
 			},
 			{
-				path: ["eu.europa.ec.eudi.pid.1", "issuing_jurisdiction"],
+				path: ['eu.europa.ec.eudi.pid.1', 'issuing_jurisdiction'],
 				mandatory: false,
 				display: [
 					{
-						name: "Issuing Jurisdiction",
-						locale: "en-US",
+						name: 'Issuing Jurisdiction',
+						locale: 'en-US',
 					},
 				],
 			},
 			{
-				path: ["eu.europa.ec.eudi.pid.1", "issuance_date"],
+				path: ['eu.europa.ec.eudi.pid.1', 'issuance_date'],
 				mandatory: false,
 				display: [
 					{
-						name: "Issuance Date",
-						locale: "en-US",
+						name: 'Issuance Date',
+						locale: 'en-US',
 					},
 				],
 			},
 			{
-				path: ["eu.europa.ec.eudi.pid.1", "age_over_18"],
+				path: ['eu.europa.ec.eudi.pid.1', 'age_over_18'],
 				mandatory: false,
 				display: [
 					{
-						name: "Age Over 18",
-						locale: "en-US",
+						name: 'Age Over 18',
+						locale: 'en-US',
 					},
 				],
 			},
 			{
-				path: ["eu.europa.ec.eudi.pid.1", "age_in_years"],
+				path: ['eu.europa.ec.eudi.pid.1', 'age_in_years'],
 				mandatory: false,
 				display: [
 					{
-						name: "Age in Years",
-						locale: "en-US",
+						name: 'Age in Years',
+						locale: 'en-US',
 					},
 				],
 			},
 			{
-				path: ["eu.europa.ec.eudi.pid.1", "age_birth_year"],
+				path: ['eu.europa.ec.eudi.pid.1', 'age_birth_year'],
 				mandatory: false,
 				display: [
 					{
-						name: "Age Year of Birth",
-						locale: "en-US",
+						name: 'Age Year of Birth',
+						locale: 'en-US',
 					},
 				],
 			},
 			{
-				path: ["eu.europa.ec.eudi.pid.1", "trust_anchor"],
+				path: ['eu.europa.ec.eudi.pid.1', 'trust_anchor'],
 				mandatory: false,
 				display: [
 					{
-						name: "Trust Anchor",
-						locale: "en-US",
+						name: 'Trust Anchor',
+						locale: 'en-US',
 					},
 				],
 			},
 		],
 	},
-	"urn:credential:diploma": {
-		scope: "diploma",
-		vct: "urn:credential:diploma",
+	'urn:credential:diploma': {
+		scope: 'diploma',
+		vct: 'urn:credential:diploma',
 		format: VerifiableCredentialFormat.DC_SDJWT,
 	},
-	"urn:eudi:ehic:1": {
-		scope: "ehic",
-		vct: "urn:eudi:ehic:1",
+	'urn:eudi:ehic:1': {
+		scope: 'ehic',
+		vct: 'urn:eudi:ehic:1',
 		format: VerifiableCredentialFormat.DC_SDJWT,
 	},
-	"urn:eu.europa.ec.eudi:por:1": {
-		scope: "por:sd_jwt_vc",
-		vct: "urn:eu.europa.ec.eudi:por:1",
+	'urn:eu.europa.ec.eudi:por:1': {
+		scope: 'por:sd_jwt_vc',
+		vct: 'urn:eu.europa.ec.eudi:por:1',
 		format: VerifiableCredentialFormat.DC_SDJWT,
 	},
-	"urn:eu.europa.ec.eudi:por:1:deferred": {
-		scope: "por:sd_jwt_vc:deferred",
+	'urn:eu.europa.ec.eudi:por:1:deferred': {
+		scope: 'por:sd_jwt_vc:deferred',
 		format: VerifiableCredentialFormat.DC_SDJWT,
-		vct: "urn:eu.europa.ec.eudi:por:1",
+		vct: 'urn:eu.europa.ec.eudi:por:1',
 	},
 };
 
 export const disclosureFrameMap: Record<string, Record<string, unknown>> = {
-	"urn:eudi:pid:1:dc": {
+	'urn:eudi:pid:1:dc': {
 		family_name: true,
 		birth_family_name: true,
 		given_name: true,
@@ -360,7 +357,7 @@ export const disclosureFrameMap: Record<string, Record<string, unknown>> = {
 		place_of_birth: {
 			country: true,
 			region: true,
-			locality: true
+			locality: true,
 		},
 		birthdate: true,
 		address: {
@@ -370,14 +367,14 @@ export const disclosureFrameMap: Record<string, Record<string, unknown>> = {
 			locality: true,
 			postal_code: true,
 			street_address: true,
-			house_number: true
+			house_number: true,
 		},
 		age_equal_or_over: {
-			"14": true,
-			"18": true,
-			"16": true,
-			"65": true,
-			"21": true,
+			'14': true,
+			'18': true,
+			'16': true,
+			'65': true,
+			'21': true,
 		},
 		age_in_years: true,
 		age_birth_year: true,
@@ -394,7 +391,7 @@ export const disclosureFrameMap: Record<string, Record<string, unknown>> = {
 		picture: true,
 		trust_anchor: false,
 	},
-	"urn:credential:diploma": {
+	'urn:credential:diploma': {
 		family_name: true,
 		given_name: true,
 		title: true,
@@ -402,24 +399,24 @@ export const disclosureFrameMap: Record<string, Record<string, unknown>> = {
 		eqf_level: false,
 		graduation_date: true,
 	},
-	"urn:eudi:ehic:1": {
+	'urn:eudi:ehic:1': {
 		personal_administrative_number: true,
 		issuing_country: false,
 		issuing_authority: {
 			id: false,
-			name: false
+			name: false,
 		},
 		authentic_source: {
 			id: false,
-			name: false
+			name: false,
 		},
 		document_number: true,
 		date_of_issuance: false,
 		date_of_expiry: false,
 		starting_date: false,
-		ending_date: false
+		ending_date: false,
 	},
-	"urn:eu.europa.ec.eudi:por:1": {
+	'urn:eu.europa.ec.eudi:por:1': {
 		legal_person_identifier: true,
 		legal_name: true,
 		full_powers: true,
@@ -427,9 +424,9 @@ export const disclosureFrameMap: Record<string, Record<string, unknown>> = {
 		effective_from_date: true,
 		eService: true,
 		issuing_authority: true,
-		issuing_country: true
+		issuing_country: true,
 	},
-	"urn:eu.europa.ec.eudi:por:1:deferred": {
+	'urn:eu.europa.ec.eudi:por:1:deferred': {
 		legal_person_identifier: true,
 		legal_name: true,
 		full_powers: true,
@@ -437,6 +434,6 @@ export const disclosureFrameMap: Record<string, Record<string, unknown>> = {
 		effective_from_date: true,
 		eService: true,
 		issuing_authority: true,
-		issuing_country: true
+		issuing_country: true,
 	},
 };

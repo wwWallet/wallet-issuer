@@ -10,7 +10,7 @@ h1 {
 	text-align: center;
 }
 
-label[for="presentationRequest"],
+label[for='presentationRequest'],
 h4.title {
 	font-size: 16px;
 	font-weight: 600;
@@ -48,7 +48,7 @@ h4.title {
 	resize: vertical;
 }
 
-label[for="dcqlQuery"] {
+label[for='dcqlQuery'] {
 	display: block;
 	font-weight: 600;
 	margin-bottom: 0.5rem;
@@ -59,7 +59,7 @@ label[for="dcqlQuery"] {
 	width: 100%;
 }
 
-textarea[name="dcqlQuery"] {
+textarea[name='dcqlQuery'] {
 	width: 100%;
 	padding: 10px;
 	font-family: monospace;
@@ -77,6 +77,8 @@ textarea[name="dcqlQuery"] {
 	height: 600px;
 }
 
-.jsoneditor-modes, .jsoneditor-menu, .jsoneditor-statusbar {
+.jsoneditor-modes,
+.jsoneditor-menu,
+.jsoneditor-statusbar {
 	display: none !important;
 }

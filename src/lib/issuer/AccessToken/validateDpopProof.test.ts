@@ -1,7 +1,5 @@
-import { describe, it } from "vitest";
+import { describe, it } from 'vitest';
 
-
-describe("Function validateDpopProof", () => {
-	it("should successfuly validate dpop proof", async () => {
-	})
-})
+describe('Function validateDpopProof', () => {
+	it('should successfuly validate dpop proof', async () => {});
+});
