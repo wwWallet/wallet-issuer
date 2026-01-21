@@ -2,17 +2,11 @@ header.site-header
 	.container
 		.header-inner
 			a.brand(href="/")
-				img.brand-logo(src="/images/logo.png" alt="wwWallet")
+				img.brand-logo(src="/images/logo.png" alt=locale.app.title)
 				.brand-texts
 					span.brand-title wwWallet
 					span.brand-subtitle Issuer
 
 			nav.site-nav
-				a(
-					href="/"
-					class=currentPath === "/" ? "is-active" : ""
-				) Home
-				a(
-					href="/about"
-					class=currentPath === "/about" ? "is-active" : ""
-				) About
+				a(href="/" class=currentPath === "/" ? "is-active" : "")= locale.nav.home
+				a(href="/about" class=currentPath === "/about" ? "is-active" : "")= locale.nav.about

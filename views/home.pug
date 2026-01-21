@@ -6,8 +6,8 @@ block head-styles
 block content
 	section.hero
 		.container
-			h1 wwWallet Issuer
-			p.subtitle Choose a credential type to issue.
+			h1= locale.home.title
+			p.subtitle= locale.home.subtitle
 
 	section.catalog
 		.container
@@ -15,7 +15,7 @@ block content
 			- var keys = Object.keys(configs)
 
 			if !keys || keys.length === 0
-				p.empty-state No credential configurations found.
+				p.empty-state= locale.home.empty
 			else
 				.grid
 					each id in keys
@@ -31,4 +31,4 @@ block content
 							p.card-desc= desc
 
 							.card-actions
-								a.btn.btn-primary(href=`/issuer/issue/${scope}`) Issue
+								a.btn.btn-primary(href=`/issuer/issue/${scope}`)= locale.home.issue

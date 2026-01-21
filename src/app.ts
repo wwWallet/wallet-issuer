@@ -4,6 +4,7 @@ import path from 'node:path';
 import { landingRouter } from './pages/landing/router';
 import { aboutRouter } from './pages/about/router';
 import { vciRouter } from './vci/router';
+import { locale } from '../config/locale';
 
 const app: Express = express();
 
@@ -23,6 +24,7 @@ app.set('view engine', 'pug');
 app.set('views', path.join(__dirname, '../../views'));
 
 app.use((req, res, next) => {
+	res.locals.locale = locale;
 	res.locals.currentPath = req.path;
 	next();
 });
