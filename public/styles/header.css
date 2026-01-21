@@ -34,13 +34,6 @@
 	color: var(--brand-main);
 }
 
-.brand-subtitle {
-	font-size: 1.3rem;
-	font-weight: 400;
-	color: var(--brand-light);
-	letter-spacing: 0.04em;
-}
-
 .site-nav {
 	display: flex;
 	gap: 1.25rem;
