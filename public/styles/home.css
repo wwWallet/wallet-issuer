@@ -1,0 +1,70 @@
+/* home.css */
+
+/* Hero */
+.hero {
+	padding: 2rem 0 1.25rem;
+}
+
+.hero h1 {
+	margin-bottom: 0.25rem;
+}
+
+.subtitle {
+	margin: 0;
+	color: var(--muted);
+	font-size: 0.95rem;
+}
+
+/* Catalog */
+.catalog {
+	padding: 1rem 0 2rem;
+}
+
+.empty-state {
+	padding: 1rem;
+	border: 1px solid var(--border);
+	border-radius: var(--radius);
+	color: var(--muted);
+}
+
+/* Grid */
+.grid {
+	display: grid;
+	gap: 1rem;
+	grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+}
+
+/* Card */
+.card {
+	display: flex;
+	justify-content: space-between;
+
+	border: 1px solid var(--border);
+	border-radius: var(--radius);
+	background: var(--bg);
+	padding: 1rem;
+
+	display: flex;
+	flex-direction: column;
+	gap: 0.5rem;
+}
+
+.card-title {
+	margin: 0;
+}
+
+.card-desc {
+	margin: 0;
+	color: var(--muted);
+	font-size: 0.9rem;
+	line-height: 1.45;
+
+	display: -webkit-box;
+	-webkit-line-clamp: 3;
+	-webkit-box-orient: vertical;
+	overflow: hidden;
+}
+
+.card-actions {
+	margin-top: 0.25rem;
+}

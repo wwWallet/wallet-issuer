@@ -1,0 +1,34 @@
+extends ./layout.pug
+
+block head-styles
+	link(rel="stylesheet" href="/styles/home.css")
+
+block content
+	section.hero
+		.container
+			h1 wwWallet Issuer
+			p.subtitle Choose a credential type to issue.
+
+	section.catalog
+		.container
+			- var configs = (metadata && metadata.credential_configurations_supported) ? metadata.credential_configurations_supported : {}
+			- var keys = Object.keys(configs)
+
+			if !keys || keys.length === 0
+				p.empty-state No credential configurations found.
+			else
+				.grid
+					each id in keys
+						- var cfg = configs[id] || {}
+						- var displayArr = (cfg.display && Array.isArray(cfg.display) && cfg.display.length > 0) ? cfg.display : []
+						- var d = displayArr.length ? displayArr[0] : null
+						- var name = (d && d.name) ? d.name : id
+						- var desc = (d && d.description) ? d.description : ""
+						- var scope = cfg.scope
+
+						.card
+							h3.card-title= name
+							p.card-desc= desc
+
+							.card-actions
+								a.btn.btn-primary(href=`/issuer/issue/${scope}`) Issue
