@@ -1,0 +1,96 @@
+extends ./layout.pug
+
+block head-styles
+	link(rel="stylesheet" href="/styles/about.css")
+
+block content
+	section.hero
+		.container
+			h1 wwWallet Issuer
+			p.subtitle About this service
+
+	section.about
+		.container
+			p
+				| The Demo wwWallet Issuer is a proof-of-concept service designed to issue
+				| verifiable credentials (VCs) in SD-JWT or mdoc formats, supporting the
+				| wwWallet ecosystem. It provides demonstrative credentials, including
+				| Personal Identification (PID), European Health Insurance Card (EHIC),
+				| Bachelor Diploma and Power of Representation VCs, strictly for testing
+				| purposes (not valid for real-world use).
+
+			p
+				| The issuer metadata is available at&nbsp;
+				a(href=`${baseUrl}/.well-known/openid-credential-issuer` target="_blank")
+					| #{baseUrl}/.well-known/openid-credential-issuer
+				|  and the JWT VC Issuer Metadata configuration can be found at&nbsp;
+				a(href=`${baseUrl}/.well-known/jwt-vc-issuer` target="_blank")
+					| #{baseUrl}/.well-known/jwt-vc-issuer
+				| .
+
+			p
+				| The Root CA certificate used to sign the issuer's certificate is available at&nbsp;
+				a(href=`${baseUrl}/mdoc-iacas` target="_blank")
+					| #{baseUrl}/mdoc-iacas
+
+			h2 OpenID4VCI Interoperability Profile
+
+			table.spec-table
+				tr
+					th OIDVCI Specification
+					td Draft 15
+				tr
+					th Grant Type
+					td authorization_code [OpenID.Core]
+				tr
+					th Client Authentication
+					td PKCE [RFC 7636], no secret
+				tr
+					th Client Type
+					td Public
+				tr
+					th Dynamic Credential Request
+					td OpenID4VP, OAuth 2.0 for First-Party Applications
+				tr
+					th Scope
+					td Required
+				tr
+					th Authorization Method
+					td Pushed Authorization Request [RFC 9126]
+				tr
+					th Access Token
+					td DPoP Token [RFC 9449]
+				tr
+					th Credential Endpoint Proof Type
+					td jwt [OpenID4VCI]
+				tr
+					th Credential Response Holder Binding
+					td cnf claim [RFC 7800]
+				tr
+					th Batch Credential Endpoint
+					td Supported
+				tr
+					th Credential Format
+					td dc+sd-jwt, mso_mdoc
+
+			p.muted
+				| Notes: Currently, the Notification and Deferred Endpoints are not supported.
+
+			h2 OpenID4VP Interoperability Profile
+
+			table.spec-table
+				tr
+					th OIDVP Specification
+					td Draft 24
+				tr
+					th Response Mode
+					td direct_post.jwt [OpenID4VP]
+				tr
+					th Request Method
+					td request_uri signed [JAR]
+				tr
+					th Client ID Scheme
+					td x509_san_dns
+				tr
+					th Credential Format
+					td dc+sd-jwt, mso_mdoc

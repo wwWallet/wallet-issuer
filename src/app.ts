@@ -2,6 +2,7 @@ import express, { Express } from 'express';
 import { config } from '../config';
 import path from 'node:path';
 import { landingRouter } from './pages/landing/router';
+import { aboutRouter } from './pages/about/router';
 import { vciRouter } from './vci/router';
 
 const app: Express = express();
@@ -22,6 +23,7 @@ app.set('view engine', 'pug');
 app.set('views', path.join(__dirname, '../../views'));
 
 app.use('/', landingRouter);
+app.use('/', aboutRouter);
 
 app.get('/metadata/:filename', (req, res) => {
 	if (req.params.filename !== 'site.webmanifest') {
