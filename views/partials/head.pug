@@ -1,0 +1,23 @@
+head
+	meta(charset="utf-8")
+	meta(name="viewport" content="width=device-width, initial-scale=1")
+	title #{pageTitle || locale.app.title}
+
+	// icons & PWA
+	link(rel="shortcut icon" href="/images/favicon.ico")
+	link(rel="apple-touch-icon" sizes="192x192" href="/images/favicon-192x192.png")
+	link(rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32.png")
+	link(rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16.png")
+	link(rel="manifest" href="/metadata/site.webmanifest")
+	meta(name="theme-color" content="#00246b")
+
+	// security
+	meta(name="csrf-token" content=csrfToken)
+
+	// global styles
+	link(rel="stylesheet" href="/styles/base.css")
+	link(rel="stylesheet" href="/styles/header.css")
+	link(rel="stylesheet" href="/styles/footer.css")
+
+	// page styles
+	block head-styles

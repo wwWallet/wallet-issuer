@@ -5,5 +5,5 @@ export const landingRouter = Router();
 
 landingRouter.get('/', async (_req, res) => {
 	const metadata = await issuer.getMetadata(false);
-	res.render('index', { metadata });
+	res.render('home', { metadata });
 });

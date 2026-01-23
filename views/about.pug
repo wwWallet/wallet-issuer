@@ -1,0 +1,47 @@
+extends ./layout.pug
+
+block head-styles
+	link(rel="stylesheet" href="/styles/about.css")
+
+block content
+	section.hero
+		.container
+			h1= locale.about.title
+			p.subtitle= locale.about.subtitle
+
+	section.about
+		.container
+			p= locale.about.intro
+
+			p
+				| #{locale.about.issuerMetaPrefix}
+				a(href=`${baseUrl}/.well-known/openid-credential-issuer` target="_blank")
+					| #{baseUrl}/.well-known/openid-credential-issuer
+				|  #{locale.about.jwtMetaJoin}
+				a(href=`${baseUrl}/.well-known/jwt-vc-issuer` target="_blank")
+					| #{baseUrl}/.well-known/jwt-vc-issuer
+				| .
+
+			p
+				| #{locale.about.rootCaPrefix}
+				a(href=`${baseUrl}/mdoc-iacas` target="_blank")
+					| #{baseUrl}/mdoc-iacas
+				| .
+
+			h2= locale.about.openid4vciTitle
+
+			table.spec-table
+				each row in Object.values(locale.about.openid4vci)
+					tr
+						th= row[0]
+						td= row[1]
+
+			p.muted= locale.about.notes
+
+			h2= locale.about.openid4vpTitle
+
+			table.spec-table
+				each row in Object.values(locale.about.openid4vp)
+					tr
+						th= row[0]
+						td= row[1]

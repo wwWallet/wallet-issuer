@@ -1,0 +1,11 @@
+header.site-header
+	.container
+		.header-inner
+			a.brand(href="/")
+				img.brand-logo(src="/images/logo.png" alt=locale.app.title)
+				.brand-texts
+					span.brand-title #{locale.app.title}
+
+			nav.site-nav
+				a(href="/" class=currentPath === "/" ? "is-active" : "")= locale.nav.home
+				a(href="/about" class=currentPath === "/about" ? "is-active" : "")= locale.nav.about

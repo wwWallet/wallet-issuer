@@ -1,0 +1,35 @@
+.about {
+	padding: 1rem 0 2rem;
+}
+
+.spec-table {
+	margin: 1rem 0 2rem;
+	width: 100%;
+	max-width: 720px;
+	border-collapse: collapse;
+}
+
+.spec-table th,
+.spec-table td {
+	padding: 0.5rem 0.6rem;
+	border-bottom: 1px solid var(--border);
+	vertical-align: top;
+	text-align: left;
+}
+
+.spec-table th {
+	width: 45%;
+	color: var(--muted);
+	font-weight: 500;
+}
+
+.about a {
+	color: var(--brand-main);
+	text-decoration: underline;
+	text-underline-offset: 3px;
+	text-decoration-thickness: 1px;
+}
+
+.about a:hover {
+	color: var(--brand-light);
+}

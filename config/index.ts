@@ -23,8 +23,8 @@ export const config = {
 	siteConfig: {
 		name: process.env.SITE_NAME || 'wwWallet Issuer',
 		short_name: process.env.SITE_SHORT_NAME || 'wwWallet Issuer',
-		theme_color: process.env.SITE_THEME_COLOR || '#4d7e3e',
-		background_color: process.env.SITE_BACKGROUND_COLOR || '#4d7e3e',
+		theme_color: process.env.SITE_THEME_COLOR || '#00246b',
+		background_color: process.env.SITE_BACKGROUND_COLOR || '#ffffff',
 	},
 	vctRegistryUrl: process.env.VCT_REGISTRY_URL || 'http://localhost:8097/type-metadata',
 };
