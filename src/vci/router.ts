@@ -72,7 +72,7 @@ vciRouter.post('/deferred-credential', express.json(), async (req, res) => {
 
 vciRouter.get('/.well-known/openid-credential-issuer', async (_req, res) => {
 	try {
-		const metadata = await issuer.getMetadata(false);
+		const metadata = await issuer.getMetadata();
 
 		res.status(200).send(metadata);
 	} catch (e) {

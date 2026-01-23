@@ -65,7 +65,7 @@ export interface IssuerOpenID4VCI {
 
 	registerSupportedCredentialConfiguration(credentialConfigurationId: string, credConf: CredentialConfigurationSupported, discloseFrame?: Record<string, unknown>): void;
 
-	getMetadata(requestMetadataSigning: boolean): Promise<OpenidCredentialIssuerMetadata>;
+	getMetadata(): Promise<OpenidCredentialIssuerMetadata>;
 	issueNonce(): Promise<ResponseMessage>;
 
 	issueCredential(issueCredentialOptions: IssueCredentialRequestOptions): Promise<IssueCredentialResponse>;
@@ -92,6 +92,37 @@ export function createIssuerOpenID4VCI(url: string, credentialIssuerCreateOption
 	const metadata = buildMetadata(url, credentialIssuerCreateOptions);
 
 	const disclosureFrameMap = new Map<string, Record<string, unknown>>();
+
+	let metadataLoaded = false;
+
+	const loadMetadata = async () => {
+		if (metadataLoaded) {
+			return;
+		}
+		for (const [confId, conf] of Object.entries(metadata.credential_configurations_supported)) {
+			if (conf.format === VerifiableCredentialFormat.DC_SDJWT || conf.format === VerifiableCredentialFormat.VC_SDJWT) {
+				const vct = conf.vct;
+				if (credentialIssuerCreateOptions.vctDocumentProvider) {
+					const doc = await credentialIssuerCreateOptions.vctDocumentProvider.getVctMetadataDocument(vct);
+					if (doc && confId in metadata.credential_configurations_supported[confId]) {
+						const claims = convertSdjwtvcToOpenid4vciClaims(doc.claims);
+						metadata.credential_configurations_supported[confId].claims = claims;
+						const display = convertSdjwtvcToOpenid4vciDisplay(doc.display);
+						metadata.credential_configurations_supported[confId].display = display;
+					}
+				}
+			}
+		}
+
+		const signer = credentialIssuerCreateOptions.credentialSigner.signer();
+		const publicKeyJwk = await credentialIssuerCreateOptions.credentialSigner.getPublicKeyJwk();
+		const [header, payload] = [encoder.encode(JSON.stringify({ alg: publicKeyJwk.alg as string, x5c: credentialIssuerCreateOptions.x5c, typ: 'openidvci-issuer-metadata+jwt' })), encoder.encode(JSON.stringify({ ...metadata, iat: Math.floor(new Date().getTime() / 1000), sub: url }))];
+		const data = `${toBase64Url(header)}.${toBase64Url(payload)}`;
+		const signature = await signer(data);
+		metadata.signed_metadata = `${data}.${signature}`;
+		OpenidCredentialIssuerMetadataSchema.parse(metadata);
+		metadataLoaded = true;
+	};
 
 	return {
 		generateCredentialOffer: async (credentialOfferCreateOptions: { credentialConfigurationId: string }): Promise<CredentialOfferCreateSuccess> => {
@@ -176,39 +207,9 @@ export function createIssuerOpenID4VCI(url: string, credentialIssuerCreateOption
 			}
 		},
 
-		getMetadata: async (requestMetadataSigning: boolean = true) => {
-			const m = OpenidCredentialIssuerMetadataSchema.parse(metadata);
-			// use credentialIssuerCreateOptions.vctDocumentProvider to override the claims from VCT Document
-			await Promise.all(
-				Object.values(m.credential_configurations_supported).map(async (conf) => {
-					if (conf.format === VerifiableCredentialFormat.DC_SDJWT || conf.format === VerifiableCredentialFormat.VC_SDJWT) {
-						const vct = conf.vct;
-						if (credentialIssuerCreateOptions.vctDocumentProvider) {
-							const doc = await credentialIssuerCreateOptions.vctDocumentProvider.getVctMetadataDocument(vct);
-							if (doc) {
-								const claims = convertSdjwtvcToOpenid4vciClaims(doc.claims);
-								conf.claims = claims;
-								const display = convertSdjwtvcToOpenid4vciDisplay(doc.display);
-								conf.display = display;
-								return;
-							}
-							return;
-						}
-						return;
-					}
-					return;
-				}),
-			);
-
-			if (requestMetadataSigning) {
-				const signer = credentialIssuerCreateOptions.credentialSigner.signer();
-				const publicKeyJwk = await credentialIssuerCreateOptions.credentialSigner.getPublicKeyJwk();
-				const [header, payload] = [encoder.encode(JSON.stringify({ alg: publicKeyJwk.alg as string, x5c: credentialIssuerCreateOptions.x5c, typ: 'openidvci-issuer-metadata+jwt' })), encoder.encode(JSON.stringify({ ...m, iat: Math.floor(new Date().getTime() / 1000), sub: url }))];
-				const data = `${toBase64Url(header)}.${toBase64Url(payload)}`;
-				const signature = await signer(data);
-				m.signed_metadata = `${data}.${signature}`;
-			}
-			return OpenidCredentialIssuerMetadataSchema.parse(m);
+		getMetadata: async () => {
+			await loadMetadata();
+			return metadata;
 		},
 
 		issueCredential: async (issueCredentialOpts): Promise<IssueCredentialResponse> => {

@@ -4,6 +4,6 @@ import { issuer } from '../../vci/issuer';
 export const landingRouter = Router();
 
 landingRouter.get('/', async (_req, res) => {
-	const metadata = await issuer.getMetadata(false);
+	const metadata = await issuer.getMetadata();
 	res.render('home', { metadata });
 });
