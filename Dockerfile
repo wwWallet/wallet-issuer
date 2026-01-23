@@ -18,10 +18,11 @@ FROM gcr.io/distroless/nodejs24-debian12 AS production
 WORKDIR /home/node/app
 USER nonroot
 
-COPY --from=builder /app/package.json .
-COPY --from=builder /app/dist ./dist
-COPY --from=builder /app/node_modules ./node_modules
-COPY --from=builder /app/public ./public
+COPY --from=builder --chown=nonroot:nonroot /app/package.json .
+COPY --from=builder --chown=nonroot:nonroot /app/dist ./dist
+COPY --from=builder --chown=nonroot:nonroot /app/node_modules ./node_modules
+COPY --from=builder --chown=nonroot:nonroot /app/public ./public
+COPY --from=builder --chown=nonroot:nonroot /app/views ./views
 
 ENV NODE_ENV=production
 
