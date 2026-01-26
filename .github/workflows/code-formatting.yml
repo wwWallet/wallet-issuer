@@ -23,4 +23,4 @@ jobs:
         uses: editorconfig-checker/action-editorconfig-checker@v2
 
       - name: Check code formatting
-        run: editorconfig-checker -exclude "public/font-awesome/*"
+        run: editorconfig-checker
