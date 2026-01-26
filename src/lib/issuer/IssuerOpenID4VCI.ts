@@ -185,10 +185,10 @@ export function createIssuerOpenID4VCI(url: string, credentialIssuerCreateOption
 						const vct = conf.vct;
 						if (credentialIssuerCreateOptions.vctDocumentProvider) {
 							const doc = await credentialIssuerCreateOptions.vctDocumentProvider.getVctMetadataDocument(vct);
-							if (doc) {
-								const claims = convertSdjwtvcToOpenid4vciClaims(doc.claims);
+							if (doc?.ok) {
+								const claims = convertSdjwtvcToOpenid4vciClaims(doc.value.claims);
 								conf.claims = claims;
-								const display = convertSdjwtvcToOpenid4vciDisplay(doc.display);
+								const display = convertSdjwtvcToOpenid4vciDisplay(doc.value.display);
 								conf.display = display;
 								return;
 							}
