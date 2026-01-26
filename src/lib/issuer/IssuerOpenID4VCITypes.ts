@@ -2,7 +2,7 @@ import { JWK } from 'jose';
 import { ResponseMessage } from 'wallet-common';
 import { CredentialRequestError } from './CredentialRequest/CredentialRequestError';
 
-export type CredentialOfferCreateSuccess = { credentialOfferId: string; credentialOfferUrlContainer: URL };
+export type CredentialOfferCreateSuccess = { credentialOfferId: string; credentialOfferWithReference: URL };
 
 export type IssueCredentialRequestBase = {
 	credential_response_encryption?: {

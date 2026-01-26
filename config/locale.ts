@@ -17,6 +17,19 @@ export const locale = {
 		issue: "Issue",
 	},
 
+
+	offer: {
+		title: "wwWallet Issuer",
+		subtitle: "Choose a credential type to issue.",
+		empty: "No credential configurations found.",
+		openInwwallet: "Open in wwWallet",
+		openInGenericWallet: "Open in other wallets",
+	},
+
+	error: {
+		title: "Error",
+	},
+
 	about: {
 		title: "wwWallet Issuer",
 		subtitle: "About this service",

@@ -27,4 +27,5 @@ export const config = {
 		background_color: process.env.SITE_BACKGROUND_COLOR || '#ffffff',
 	},
 	vctRegistryUrl: process.env.VCT_REGISTRY_URL || 'http://localhost:8097/type-metadata',
+	revokeCredentialOffers: process.env.REVOKE_CREDENTIAL_OFFERS === 'true' || false,
 };

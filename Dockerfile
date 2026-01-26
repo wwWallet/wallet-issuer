@@ -11,8 +11,11 @@ RUN apt-get update && apt-get install -y \
 	&& rm -rf /var/lib/apt/lists/*
 
 COPY . .
-RUN yarn install --frozen-lockfile && yarn build && rm -rf node_modules/ && yarn install --frozen-lockfile --production
-
+RUN yarn install --frozen-lockfile && \
+	yarn gen:qrcode-module && \
+	yarn build && \
+	rm -rf node_modules/ && \
+	yarn install --frozen-lockfile --production
 
 FROM gcr.io/distroless/nodejs24-debian12 AS production
 WORKDIR /home/node/app

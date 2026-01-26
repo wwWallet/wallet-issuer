@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { logger } from '../logger';
 import express from 'express';
 import { issuer } from './issuer';
+import { config } from '../../config';
 export const vciRouter = Router();
 
 vciRouter.get('/credential-offer/:id', async (req, res) => {
@@ -68,6 +69,13 @@ vciRouter.post('/deferred-credential', express.json(), async (req, res) => {
 		logger.error(JSON.stringify(e));
 		res.status(500).send({ error: 'internal_server_error' });
 	}
+});
+
+vciRouter.get('/credential-offer/:id', async (req, res) => {
+	const offerId = req.params.id;
+	const offer = await issuer.getCredentialOffer(offerId, config.revokeCredentialOffers);
+	logger.info('Credential offer retrieved');
+	res.status(200).send(offer);
 });
 
 vciRouter.get('/.well-known/openid-credential-issuer', async (_req, res) => {

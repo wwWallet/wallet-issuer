@@ -19,6 +19,7 @@ block content
 			else
 				.grid
 					each id in keys
+						- var base64urlEncode = s => btoa(s).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
 						- var cfg = configs[id] || {}
 						- var displayArr = (cfg.display && Array.isArray(cfg.display) && cfg.display.length > 0) ? cfg.display : []
 						- var d = displayArr.length ? displayArr[0] : null
@@ -31,4 +32,4 @@ block content
 							p.card-desc= desc
 
 							.card-actions
-								a.btn.btn-primary(href=`/offer/${scope}`)= locale.home.issue
+								a.btn.btn-primary(href=`/offer/${base64urlEncode(id)}`)= locale.home.issue

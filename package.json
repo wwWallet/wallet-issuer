@@ -5,6 +5,7 @@
   "author": "wwWallet team",
   "license": "MIT",
   "scripts": {
+    "gen:qrcode-module": "npx esbuild node_modules/qrcode/lib/index.js --bundle --minify --format=iife --outfile=public/js/qr.min.js --global-name=QRCode",
     "cmd:hs512-keygen": "ts-node cmd/hs512-keygen.ts",
     "cmd:ecdh-keygen": "ts-node cmd/ecdh-keygen.ts",
     "typecheck": "tsc --noEmit",
@@ -41,6 +42,7 @@
     "eslint-plugin-prettier": "^5.5.5",
     "nodemon": "^3.1.11",
     "prettier": "^3.8.0",
+    "qrcode": "^1.5.4",
     "source-map-support": "^0.5.21",
     "ts-node": "^10.9.2",
     "typescript": "^5.9.3",
