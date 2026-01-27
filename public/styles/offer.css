@@ -10,6 +10,14 @@
 }
 
 /* Buttons */
+.offer-actions {
+	display: flex;
+	flex-direction: column;
+	gap: 0.5rem;
+	align-items: center;
+	width: 100%;
+}
+
 .offer-card .btn {
 	min-width: 200px;
 	width: 100%;
@@ -55,21 +63,14 @@
 }
 
 @media (min-width: 520px) {
+	.offer-actions {
+		flex-direction: row;
+		justify-content: center;
+		gap: 0.75rem; /* horizontal spacing */
+	}
 
 	.offer-card .btn {
 		width: auto;
 	}
-
-	.offer-card {
-		flex-direction: column;
-	}
-
-	.offer-card .btn {
-		display: inline-flex;
-	}
-
-	.offer-card .btn + .btn {
-		margin-top: 0;
-		margin-left: 0.75rem;
-	}
 }
+
