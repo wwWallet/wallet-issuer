@@ -104,10 +104,10 @@ export function createIssuerOpenID4VCI(url: string, credentialIssuerCreateOption
 				const vct = conf.vct;
 				if (credentialIssuerCreateOptions.vctDocumentProvider) {
 					const doc = await credentialIssuerCreateOptions.vctDocumentProvider.getVctMetadataDocument(vct);
-					if (doc && confId in metadata.credential_configurations_supported[confId]) {
-						const claims = convertSdjwtvcToOpenid4vciClaims(doc.claims);
+					if (doc?.ok && metadata.credential_configurations_supported[confId]) {
+						const claims = convertSdjwtvcToOpenid4vciClaims(doc.value.claims);
 						metadata.credential_configurations_supported[confId].claims = claims;
-						const display = convertSdjwtvcToOpenid4vciDisplay(doc.display);
+						const display = convertSdjwtvcToOpenid4vciDisplay(doc.value.display);
 						metadata.credential_configurations_supported[confId].display = display;
 					}
 				}
