@@ -13,9 +13,20 @@ block content
 		.container
 			.offer-card
 				canvas#qr(data-value=credentialOfferWithReference)
+
 				.offer-actions
 					a.btn.btn-primary(href=credentialOfferWithReferenceForWwwallet)= locale.offer.openInwwallet
 					a.btn.btn-primary(href=credentialOfferWithReference)= locale.offer.openInGenericWallet
 
+				.offer-manual
+					label.offer-manual__label(for="offer-url") Or copy / edit the link:
+					.offer-manual__row
+						input#offer-url.offer-manual__input(
+							type="text"
+							value=credentialOfferWithReferenceForWwwallet
+						)
+						button.btn(type="button" id="copy-offer") Copy
+
 	script(src="/js/qr.min.js")
 	script(src="/js/qr.js")
+	script(src="/js/offer.js")
