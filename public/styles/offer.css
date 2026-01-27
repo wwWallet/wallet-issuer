@@ -1,6 +1,7 @@
 .hero{
-    text-align: center;
+	text-align: center;
 }
+
 .offer-card {
 	text-align: center;
 	display: flex;
@@ -66,11 +67,10 @@
 	.offer-actions {
 		flex-direction: row;
 		justify-content: center;
-		gap: 0.75rem; /* horizontal spacing */
+		gap: 0.75rem;
 	}
 
 	.offer-card .btn {
 		width: auto;
 	}
 }
-
