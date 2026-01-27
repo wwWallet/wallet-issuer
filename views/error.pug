@@ -1,7 +1,6 @@
 extends ./layout.pug
 
 block head-styles
-	link(rel="stylesheet" href="/styles/home.css")
 
 block content
 	section.hero
@@ -9,5 +8,3 @@ block content
 			h1= locale.error.title
 			h3 #{error}
 			p #{errorDescription}
-	section.catalog
-		.container
