@@ -1,21 +1,5 @@
 /* home.css */
 
-/* Hero */
-.hero {
-	padding: 2rem 0 1.25rem;
-}
-
-.subtitle {
-	margin: 0;
-	color: var(--muted);
-	font-size: 0.95rem;
-}
-
-/* Catalog */
-.catalog {
-	padding: 1rem 0 2rem;
-}
-
 .empty-state {
 	padding: 1rem;
 	border: 1px solid var(--border);

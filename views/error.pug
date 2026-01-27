@@ -1,0 +1,10 @@
+extends ./layout.pug
+
+block head-styles
+
+block content
+	section.hero
+		.container
+			h1= locale.error.title
+			h3 #{error}
+			p #{errorDescription}

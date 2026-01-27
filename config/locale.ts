@@ -17,6 +17,17 @@ export const locale = {
 		issue: "Issue",
 	},
 
+	offer: {
+		title: "Issue {{name}}",
+		subtitle: "Scan the QR code with your wallet, or open the link directly on this device to continue.",
+		openInwwallet: "Open in wwWallet",
+		openInGenericWallet: "Open in other wallets",
+	},
+
+	error: {
+		title: "Error",
+	},
+
 	about: {
 		title: "wwWallet Issuer",
 		subtitle: "About this service",
