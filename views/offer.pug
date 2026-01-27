@@ -6,17 +6,11 @@ block head-styles
 block content
 	section.hero
 		.container
-			h1= locale.home.title
-			p.subtitle= locale.home.subtitle
+			h1= locale.offer.title.replace("{{name}}", credentialName)
+			p.subtitle= locale.offer.subtitle
 
 	section.catalog
 		.container
-			// left: optional text / instructions (or keep empty)
-			div
-				// you can add a short note here if you want
-				// p.muted= locale.offer.hint
-
-			// right: QR + buttons
 			.offer-card
 				canvas#qr(data-value=credentialOfferWithReference)
 				.offer-actions

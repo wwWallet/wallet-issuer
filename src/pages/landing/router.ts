@@ -19,6 +19,21 @@ landingRouter.get('/offer/:id', async (req, res) => {
 		return;
 	}
 	const credentialConfigurationId = decoder.decode(fromBase64Url(credentialConfigurationIdB54U));
+	const metadata = await issuer.getMetadata();
+	const targetMetadata = metadata.credential_configurations_supported?.[credentialConfigurationId];
+
+	// Default: use the configuration id itself
+	let credentialName = credentialConfigurationId;
+
+	// If a display name exists, prefer it
+	const displayArr = targetMetadata?.display;
+	if (Array.isArray(displayArr) && displayArr.length > 0) {
+		const d = displayArr[0];
+		if (typeof d?.name === "string" && d.name.trim()) {
+			credentialName = d.name;
+		}
+	}
+
 	const { credentialOfferWithReference } = await issuer.generateCredentialOffer({ credentialConfigurationId: credentialConfigurationId });
 	const ref = credentialOfferWithReference.searchParams.get('credential_offer_uri');
 	const credentialOfferWithReferenceForWwwallet = new URL(config.wwwalletURL);
@@ -30,5 +45,5 @@ landingRouter.get('/offer/:id', async (req, res) => {
 		res.render('error', { error: "invalid-credential-offer" });
 		return;
 	}
-	res.render('offer', { credentialOfferWithReference, credentialOfferWithReferenceForWwwallet });
+	res.render('offer', { credentialOfferWithReference, credentialOfferWithReferenceForWwwallet, credentialName });
 });

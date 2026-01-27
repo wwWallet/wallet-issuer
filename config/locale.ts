@@ -17,11 +17,9 @@ export const locale = {
 		issue: "Issue",
 	},
 
-
 	offer: {
-		title: "wwWallet Issuer",
-		subtitle: "Choose a credential type to issue.",
-		empty: "No credential configurations found.",
+		title: "Issue {{name}}",
+		subtitle: "Scan the QR code with your wallet, or open the link directly on this device to continue.",
 		openInwwallet: "Open in wwWallet",
 		openInGenericWallet: "Open in other wallets",
 	},
