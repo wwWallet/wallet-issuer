@@ -1,0 +1,40 @@
+.hero{
+    text-align: center;
+}
+.offer-card {
+	text-align: center;
+	display: flex;
+	flex-direction: column;
+	gap: 1rem;
+	align-items: center;
+}
+
+/* Buttons */
+.offer-card .btn {
+	min-width: 200px;
+	width: 100%;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	text-align: center;
+}
+
+@media (min-width: 520px) {
+
+	.offer-card .btn {
+		width: auto;
+	}
+
+	.offer-card {
+		flex-direction: column;
+	}
+
+	.offer-card .btn {
+		display: inline-flex;
+	}
+
+	.offer-card .btn + .btn {
+		margin-top: 0;
+		margin-left: 0.75rem;
+	}
+}

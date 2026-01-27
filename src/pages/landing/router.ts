@@ -30,5 +30,5 @@ landingRouter.get('/offer/:id', async (req, res) => {
 		res.render('error', { error: "invalid-credential-offer" });
 		return;
 	}
-	res.render('qr', { credentialOfferWithReference, credentialOfferWithReferenceForWwwallet });
+	res.render('offer', { credentialOfferWithReference, credentialOfferWithReferenceForWwwallet });
 });
