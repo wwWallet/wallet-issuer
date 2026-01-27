@@ -3,7 +3,7 @@ document.addEventListener('DOMContentLoaded', () => {
 	if (!canvas) {
 		return;
 	}
-	const value = canvas.dataset.value || 'Hello World';
+	const value = canvas.dataset.value;
 
 	QRCode.toCanvas(canvas, value, {
 		width: 200,
