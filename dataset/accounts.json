@@ -37,7 +37,7 @@
 				},
 				"sex": 1,
 				"birthdate": "10/15/1990",
-				"nationality": [
+				"nationalities": [
 					"US",
 					"GR"
 				],
