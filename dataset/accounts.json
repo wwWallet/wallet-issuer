@@ -29,11 +29,11 @@
 					"country": "US"
 				},
 				"age_equal_or_over": {
-					"14": 1,
-					"16": 1,
-					"18": 1,
-					"21": 1,
-					"65": 0
+					"14": true,
+					"16": true,
+					"18": true,
+					"21": true,
+					"65": false
 				},
 				"sex": 1,
 				"birthdate": "10/15/1990",
@@ -119,11 +119,11 @@
 					"country": "US"
 				},
 				"age_equal_or_over": {
-					"14": 1,
-					"16": 1,
-					"18": 1,
-					"21": 1,
-					"65": 0
+					"14": true,
+					"16": true,
+					"18": true,
+					"21": true,
+					"65": false
 				},
 				"sex": 2,
 				"birthdate": "10/15/1990",
