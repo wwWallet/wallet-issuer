@@ -1,4 +1,16 @@
+import { logger } from "../../logger";
+
 type AnyObj = Record<string, any>;
+
+function base64ToBstr(dataUrl: string): Uint8Array | undefined {
+	const base64Data = dataUrl.split(',')[1];
+	if (!base64Data) {
+		logger.error("Invalid Data URL format. Returning underfined");
+		return undefined;
+	}
+	const buffer = Buffer.from(base64Data, 'base64');
+	return new Uint8Array(buffer);
+}
 
 export function convertPidSdJwtVcToMdoc(pid: AnyObj) {
 	const address = (pid?.address ?? {}) as AnyObj;
@@ -43,7 +55,7 @@ export function convertPidSdJwtVcToMdoc(pid: AnyObj) {
 		resident_street: address?.street_address,
 		resident_house_number: address?.house_number,
 
-		portrait: pid?.picture,
+		portrait: base64ToBstr(pid?.picture),
 
 		email_address: pid?.email,
 		mobile_phone_number: pid?.phone_number,
