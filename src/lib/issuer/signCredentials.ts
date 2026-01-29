@@ -26,7 +26,7 @@ export async function signCredentials(credentialConfigurationId: string, metadat
 			}
 		case VerifiableCredentialFormat.MSO_MDOC:
 			if (attestedKeys.length) {
-				const signedCredentials = await Promise.all(attestedKeys.map((key) => createOpts.credentialSigner.signMsoMdoc(credentialConfigurationSupported.doctype, new Map([['eu.europa.ec.eudi.pid.1', claims]]), key)));
+				const signedCredentials = await Promise.all(attestedKeys.map((key) => createOpts.credentialSigner.signMsoMdoc(credentialConfigurationSupported.doctype, new Map([[credentialConfigurationSupported.doctype, claims]]), key)));
 				return ok(signedCredentials.map((c) => c.credential));
 			} else {
 				return err(CredentialRequestErrors.CredentialRequestDenied, 'Cannot issue mso_mdoc credential without key-binding');
