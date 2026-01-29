@@ -4,6 +4,7 @@ import path from 'path';
 import { createClaimsFuture } from '../src/lib/issuer/CredentialRequestHelper';
 import { supportedCredentialConfigurations } from './supportedCredentialConfigurations';
 import { credentialRequestHelper } from '../src/vci/issuer';
+import { convertPidSdJwtVcToMdoc } from '../src/lib/issuer/convertPidSdJwtVcToMdoc';
 
 type AccountEntry = {
 	id: string;
@@ -49,12 +50,16 @@ export const findAccount: FindAccount = async (ctx, sub, _token) => {
 				return ctx.credentialRequestHelper.submitCredentialRequest({ sub: acc.id, scope: scope });
 			}
 			let releasedClaims = {};
-			if (scope.split(' ').includes('pid:sd_jwt_dc') || scope.split(' ').includes('pid:mso_mdoc')) {
+			if (scope.split(' ').includes('pid:sd_jwt_dc')) {
 				const supportedConf = findSupportedCredentialByScope('pid:sd_jwt_dc');
 				if (supportedConf && 'vct' in supportedConf) {
 					releasedClaims = { ...releasedClaims, vct: supportedConf.vct };
 				}
 				releasedClaims = { ...releasedClaims, ...acc.pid };
+			}
+			if (scope.split(' ').includes('pid:mso_mdoc')) {
+				const pidMdoc = convertPidSdJwtVcToMdoc(acc.pid);
+				releasedClaims = { ...pidMdoc };
 			}
 			if (scope.split(' ').includes('ehic')) {
 				const supportedConf = findSupportedCredentialByScope('ehic');
@@ -78,7 +83,7 @@ export const findAccount: FindAccount = async (ctx, sub, _token) => {
 				releasedClaims = { ...releasedClaims, ...acc.por };
 			}
 
-			return createClaimsFuture<{ sub: string; [key: string]: unknown }>(acc.id, scope, {
+			return createClaimsFuture<{ sub: string;[key: string]: unknown }>(acc.id, scope, {
 				claims: {
 					sub: acc.id,
 					...releasedClaims,
