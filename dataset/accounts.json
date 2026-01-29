@@ -63,7 +63,7 @@
 				"date_of_issuance": "",
 				"date_of_expiry": "2035-04-21",
 				"personal_administrative_number": "12313213213",
-				"issuer_country": "DE",
+				"issuing_country": "DE",
 				"issuing_authority": {
 					"id": 2,
 					"name": "DE Issuing Authority"
@@ -153,7 +153,7 @@
 				"date_of_issuance": "",
 				"date_of_expiry": "2035-04-21",
 				"personal_administrative_number": "52313313216",
-				"issuer_country": "DE",
+				"issuing_country": "DE",
 				"issuing_authority": {
 					"id": 2,
 					"name": "DE Issuing Authority"
