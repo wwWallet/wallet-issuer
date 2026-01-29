@@ -36,7 +36,7 @@
 					"65": false
 				},
 				"sex": 1,
-				"birthdate": "10/15/1990",
+				"birthdate": "1990-10-15",
 				"nationalities": [
 					"US",
 					"GR"
@@ -126,7 +126,7 @@
 					"65": false
 				},
 				"sex": 2,
-				"birthdate": "10/15/1990",
+				"birthdate": "1990-10-15",
 				"nationalities": [
 					"US",
 					"GR"
