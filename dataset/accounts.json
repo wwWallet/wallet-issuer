@@ -56,7 +56,7 @@
 				"eqf_level": 6,
 				"family_name": "Doe",
 				"given_name": "John",
-				"birth_date": "10/15/90",
+				"birth_date": "1990-10-15",
 				"blueprint_id": 2
 			},
 			"ehic": {
@@ -73,8 +73,8 @@
 					"name": "DE Authentic Source"
 				},
 				"document_number": "123456789",
-				"starting_date": "2/2/20",
-				"ending_date": "2/2/25"
+				"starting_date": "2020-02-02",
+				"ending_date": "2025-02-02"
 			},
 			"por": {
 				"legal_person_identifier": "DE/HRA/2477",
@@ -146,7 +146,7 @@
 				"eqf_level": 4,
 				"family_name": "Jones",
 				"given_name": "Emily",
-				"birth_date": "10/15/90",
+				"birth_date": "1990-10-15",
 				"blueprint_id": 2
 			},
 			"ehic": {
@@ -163,8 +163,8 @@
 					"name": "DE Authentic Source"
 				},
 				"document_number": "987654321",
-				"starting_date": "2/2/20",
-				"ending_date": "2/2/25"
+				"starting_date": "2020-02-02",
+				"ending_date": "2225-02-02"
 			},
 			"por": {
 				"legal_person_identifier": "DE/HRA/9394",
