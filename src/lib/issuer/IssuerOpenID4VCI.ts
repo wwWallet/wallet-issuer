@@ -57,6 +57,13 @@ export type CredentialIssuerCreateOptions = {
 	deferredCredentialResponseInterval?: number;
 };
 
+type JWTVCIssuerMetadata = {
+	issuer: string;
+	jwks?: {
+		keys: JWK[];
+	};
+}
+
 export interface IssuerOpenID4VCI {
 	generateCredentialOffer(credentialOfferCreateOptions: { credentialConfigurationId: string }): Promise<CredentialOfferCreateSuccess>;
 
@@ -64,7 +71,7 @@ export interface IssuerOpenID4VCI {
 
 	registerSupportedCredentialConfiguration(credentialConfigurationId: string, credConf: CredentialConfigurationSupported, discloseFrame?: Record<string, unknown>): void;
 
-	getMetadata(): Promise<OpenidCredentialIssuerMetadata>;
+	getMetadata(): Promise<{ metadata: OpenidCredentialIssuerMetadata, jwtVcIssuerMetadata: JWTVCIssuerMetadata }>;
 	issueNonce(): Promise<ResponseMessage>;
 
 	issueCredential(issueCredentialOptions: IssueCredentialRequestOptions): Promise<IssueCredentialResponse>;
@@ -90,6 +97,9 @@ export function createIssuerOpenID4VCI(url: string, credentialIssuerCreateOption
 	}
 
 	const metadata = buildMetadata(url, credentialIssuerCreateOptions);
+	const jwtVcIssuerMetadata: JWTVCIssuerMetadata = {
+		issuer: url,
+	};
 
 	const disclosureFrameMap = new Map<string, Record<string, unknown>>();
 
@@ -121,6 +131,11 @@ export function createIssuerOpenID4VCI(url: string, credentialIssuerCreateOption
 		const signature = await signer(data);
 		metadata.signed_metadata = `${data}.${signature}`;
 		OpenidCredentialIssuerMetadataSchema.parse(metadata);
+
+		const issuerPublicKeyJwk = await credentialIssuerCreateOptions.credentialSigner.getPublicKeyJwk();
+		jwtVcIssuerMetadata.jwks = {
+			keys: [ issuerPublicKeyJwk ]
+		};
 		metadataLoaded = true;
 	};
 
@@ -188,7 +203,7 @@ export function createIssuerOpenID4VCI(url: string, credentialIssuerCreateOption
 
 		getMetadata: async () => {
 			await loadMetadata();
-			return metadata;
+			return { metadata, jwtVcIssuerMetadata };
 		},
 
 		issueCredential: async (issueCredentialOpts): Promise<IssueCredentialResponse> => {
