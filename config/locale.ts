@@ -53,12 +53,11 @@ purposes (not valid for real-world use).
 			"Notes: Currently, the Notification and Deferred Endpoints are not supported.",
 
 		openid4vci: {
-			spec: ["OIDVCI Specification", "Draft 15"],
+			spec: ["OIDVCI Specification", "1.0"],
 			grant: ["Grant Type", "authorization_code [OpenID.Core]"],
 			clientAuth: ["Client Authentication", "PKCE [RFC 7636], no secret"],
 			clientType: ["Client Type", "Public"],
 			dynamic: [
-				"Dynamic Credential Request",
 				"OpenID4VP, OAuth 2.0 for First-Party Applications",
 			],
 			scope: ["Scope", "Required"],
@@ -67,7 +66,7 @@ purposes (not valid for real-world use).
 				"Pushed Authorization Request [RFC 9126]",
 			],
 			accessToken: ["Access Token", "DPoP Token [RFC 9449]"],
-			proof: ["Credential Endpoint Proof Type", "jwt [OpenID4VCI]"],
+			proof: ["Credential Endpoint Proof Type", "jwt [OpenID4VCI]", "Attestation"],
 			binding: [
 				"Credential Response Holder Binding",
 				"cnf claim [RFC 7800]",
