@@ -8,7 +8,7 @@ export const landingRouter = Router();
 const decoder = new TextDecoder();
 
 landingRouter.get('/', async (_req, res) => {
-	const metadata = await issuer.getMetadata();
+	const { metadata } = await issuer.getMetadata();
 	res.render('home', { metadata });
 });
 
@@ -19,7 +19,7 @@ landingRouter.get('/offer/:id', async (req, res) => {
 		return;
 	}
 	const credentialConfigurationId = decoder.decode(fromBase64Url(credentialConfigurationIdB54U));
-	const metadata = await issuer.getMetadata();
+	const { metadata } = await issuer.getMetadata();
 	const targetMetadata = metadata.credential_configurations_supported?.[credentialConfigurationId];
 
 	// Default: use the configuration id itself
