@@ -15,17 +15,17 @@ block content
 
 			p
 				| #{locale.about.issuerMetaPrefix}
-				a(href=`${baseUrl}/.well-known/openid-credential-issuer` target="_blank")
-					| #{baseUrl}/.well-known/openid-credential-issuer
+				a(href=`${baseUrl}/openid/.well-known/openid-credential-issuer` target="_blank")
+					| #{baseUrl}/openid/.well-known/openid-credential-issuer
 				|  #{locale.about.jwtMetaJoin}
-				a(href=`${baseUrl}/.well-known/jwt-vc-issuer` target="_blank")
-					| #{baseUrl}/.well-known/jwt-vc-issuer
+				a(href=`${baseUrl}/.well-known/jwt-vc-issuer/openid` target="_blank")
+					| #{baseUrl}/.well-known/jwt-vc-issuer/openid
 				| .
 
 			p
 				| #{locale.about.rootCaPrefix}
-				a(href=`${baseUrl}/mdoc-iacas` target="_blank")
-					| #{baseUrl}/mdoc-iacas
+				a(href=`${baseUrl}/openid/mdoc-iacas` target="_blank")
+					| #{baseUrl}/openid/mdoc-iacas
 				| .
 
 			h2= locale.about.openid4vciTitle
