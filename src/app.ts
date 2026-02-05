@@ -5,8 +5,20 @@ import { landingRouter } from './pages/landing/router';
 import { aboutRouter } from './pages/about/router';
 import { vciRouter } from './vci/router';
 import { locale } from '../config/locale';
+import { logger } from './logger';
+import { issuer } from './vci/issuer';
 
 const app: Express = express();
+
+app.get('/.well-known/jwt-vc-issuer/openid', async (_req, res) => {
+	try {
+		const { jwtVcIssuerMetadata } = await issuer.getMetadata();
+		res.status(200).send(jwtVcIssuerMetadata);
+	} catch (e) {
+		logger.error(JSON.stringify(e));
+		res.status(500).send({ error: 'internal_server_error' });
+	}
+});
 
 app.use('/openid', vciRouter);
 

@@ -95,15 +95,6 @@ vciRouter.get('/.well-known/openid-credential-issuer', async (_req, res) => {
 	}
 });
 
-vciRouter.get('/.well-known/jwt-vc-issuer', async (_req, res) => {
-	try {
-		const { jwtVcIssuerMetadata } = await issuer.getMetadata();
-		res.status(200).send(jwtVcIssuerMetadata);
-	} catch (e) {
-		logger.error(JSON.stringify(e));
-		res.status(500).send({ error: 'internal_server_error' });
-	}
-});
 
 vciRouter.get('/mdoc-iacas', async (_req, res) => {
 	return res.send({
