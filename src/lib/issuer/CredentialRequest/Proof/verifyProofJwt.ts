@@ -2,10 +2,8 @@
 // https://openid.net/specs/openid-4-verifiable-credential-issuance-1_0.html#name-jwt-proof-type
 
 import { importJWK, importX509, JWK, jwtVerify } from 'jose';
-import { err, ok, Result } from 'wallet-common';
+import { err, ok, Result, fromBase64Url, verifyX5C } from 'wallet-common';
 import { CredentialRequestError, CredentialRequestErrors } from '../CredentialRequestError';
-import { fromBase64Url } from 'wallet-common/dist/utils/util';
-import { verifyX5C } from 'wallet-common';
 import { verifyProofKeyAttestation } from './verifyProofKeyAttestation';
 import { VerifyProofOptions } from './verifyProof';
 
