@@ -1502,6 +1502,13 @@ cross-spawn@^7.0.6:
     shebang-command "^2.0.0"
     which "^2.0.1"
 
+dcql@^3.0.0:
+  version "3.0.0"
+  resolved "https://registry.yarnpkg.com/dcql/-/dcql-3.0.0.tgz#08d89345f4916bd85ac886cf0a74db54653c4b4a"
+  integrity sha512-Z1Iq+tDQqPCqWzQVevUVOaYa+NfoplwrwSPvV0JINZpniiN5jq32C4CXsrmELAgSa5Ja7hBKiuYkpZjQFkeHyw==
+  dependencies:
+    valibot "1.2.0"
+
 debug@^4, debug@^4.3.1, debug@^4.3.2, debug@^4.3.4, debug@^4.3.5, debug@^4.4.0, debug@^4.4.3:
   version "4.4.3"
   resolved "https://registry.npmjs.org/debug/-/debug-4.4.3.tgz"
@@ -3220,6 +3227,11 @@ v8-compile-cache-lib@^3.0.1:
   resolved "https://registry.npmjs.org/v8-compile-cache-lib/-/v8-compile-cache-lib-3.0.1.tgz"
   integrity sha512-wa7YjyUGfNZngI/vtK0UHAN+lgDCxBPCylVXGp0zu59Fz5aiGtNXaq3DhIov063MorB+VfufLh3JlF2KdTK3xg==
 
+valibot@1.2.0:
+  version "1.2.0"
+  resolved "https://registry.yarnpkg.com/valibot/-/valibot-1.2.0.tgz#8fc720d9e4082ba16e30a914064a39619b2f1d6f"
+  integrity sha512-mm1rxUsmOxzrwnX5arGS+U4T25RdvpPjPN4yR0u9pUBov9+zGVtO84tif1eY4r6zWxVxu3KzIyknJy3rxfRZZg==
+
 vary@^1.1.2:
   version "1.1.2"
   resolved "https://registry.npmjs.org/vary/-/vary-1.1.2.tgz"
@@ -3270,9 +3282,9 @@ void-elements@^3.1.0:
   resolved "https://registry.yarnpkg.com/void-elements/-/void-elements-3.1.0.tgz#614f7fbf8d801f0bb5f0661f5b2f5785750e4f09"
   integrity sha512-Dhxzh5HZuiHQhbvTW9AMetFfBHDMYpo23Uo9btPXgdYP+3T5S+p+jgNy7spra+veYhBP2dCSgxR/i2Y02h5/6w==
 
-"wallet-common@git+https://github.com/wwWallet/wallet-common.git#a9d6006d6a4702c36fc3bd4bd2723d7900717599":
+"wallet-common@git+https://github.com/wwWallet/wallet-common.git#f99b578bf67e2342fe36372279e5ca8a28e707fb":
   version "0.0.1"
-  resolved "git+https://github.com/wwWallet/wallet-common.git#a9d6006d6a4702c36fc3bd4bd2723d7900717599"
+  resolved "git+https://github.com/wwWallet/wallet-common.git#f99b578bf67e2342fe36372279e5ca8a28e707fb"
   dependencies:
     "@auth0/mdl" "^2.2.0"
     "@sd-jwt/core" "^0.10.0"
@@ -3281,6 +3293,7 @@ void-elements@^3.1.0:
     axios "^1.7.9"
     buffer "^6.0.3"
     cose-kit "^1.7.1"
+    dcql "^3.0.0"
     jose "^5.9.6"
     jsonpointer "^5.0.1"
     pkijs "^3.2.4"
