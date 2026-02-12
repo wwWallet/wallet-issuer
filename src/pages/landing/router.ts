@@ -26,7 +26,7 @@ landingRouter.get('/offer/:id', async (req, res) => {
 	let credentialName = credentialConfigurationId;
 
 	// If a display name exists, prefer it
-	const displayArr = targetMetadata?.display;
+	const displayArr = targetMetadata?.credential_metadata?.display;
 	if (Array.isArray(displayArr) && displayArr.length > 0) {
 		const d = displayArr[0];
 		if (typeof d?.name === "string" && d.name.trim()) {
