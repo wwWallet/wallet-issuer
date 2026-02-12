@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { issuer } from '../../vci/issuer';
-import { fromBase64Url } from 'wallet-common/dist/utils/util';
+import { fromBase64Url } from 'wallet-common';
 import { config } from '../../../config';
 import { logger } from '../../logger';
 

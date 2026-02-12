@@ -1,11 +1,9 @@
 // OpenID4VCI D.1. Key Attestation in JWT format
 // https://openid.net/specs/openid-4-verifiable-credential-issuance-1_0.html#name-key-attestation-in-jwt-form
 
-import { fromBase64Url } from 'wallet-common/dist/utils/util';
-import { err, ok, Result } from 'wallet-common';
+import { err, ok, Result, fromBase64Url, verifyX5C } from 'wallet-common';
 import { CredentialRequestError, CredentialRequestErrors } from '../CredentialRequestError';
 import { importJWK, importX509, JWK, jwtVerify } from 'jose';
-import { verifyX5C } from 'wallet-common';
 import { VerifyProofOptions } from './verifyProof';
 
 export async function verifyProofKeyAttestation(attestation: string, options: VerifyProofOptions): Promise<Result<{ attested_keys: JWK[] }, CredentialRequestError>> {

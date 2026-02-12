@@ -1,5 +1,4 @@
-import { OpenidCredentialIssuerMetadata } from 'wallet-common';
-import { VerifiableCredentialFormat } from 'wallet-common/dist/types';
+import { OpenidCredentialIssuerMetadata, VerifiableCredentialFormat } from 'wallet-common';
 
 // In this object, all the cryptographic-related attributes can be ommited
 // because default values will be used by the issuer module
