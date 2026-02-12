@@ -20,6 +20,7 @@ import { CredentialRequestHelper } from './CredentialRequestHelper';
 export type CredentialIssuerCreateOptions = {
 	authorizationServerUrl: string;
 	stateStore?: GenericStore<string, State>;
+	credentialOfferStore?: GenericStore<string, CredentialOffer>;
 
 	secret: string; // used for HS512 JWT signatures when issuing nonce values
 
@@ -81,7 +82,7 @@ export function createIssuerOpenID4VCI(url: string, credentialIssuerCreateOption
 	const deferredCredentialResponseInterval = credentialIssuerCreateOptions.deferredCredentialResponseInterval ?? 60;
 
 	const store = credentialIssuerCreateOptions.stateStore ?? new MemoryStore(10000);
-	const credentialOfferStore = new MemoryStore <string, CredentialOffer>(100000);
+	const credentialOfferStore = credentialIssuerCreateOptions.credentialOfferStore ?? new MemoryStore <string, CredentialOffer>(100000);
 	const secretManager = createMemorySecretManager(credentialIssuerCreateOptions.secret, credentialIssuerCreateOptions.clockTolerance, credentialIssuerCreateOptions.nonceExpirationTime);
 
 	if (credentialIssuerCreateOptions?.credentialRequestEncryption?.keypair?.publicKeyJwk !== undefined && !('kid' in credentialIssuerCreateOptions.credentialRequestEncryption.keypair.publicKeyJwk)) {
