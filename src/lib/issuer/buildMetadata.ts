@@ -13,12 +13,14 @@ export function buildMetadata(url: string, credentialIssuerCreateOptions: Creden
 			? {
 					encryption_required: credentialIssuerCreateOptions.credentialRequestEncryption?.encryptionRequired ?? false,
 					enc_values_supported: ['A256GCM'],
-					jwks: [
-						{
-							kid: credentialIssuerCreateOptions.credentialRequestEncryption.keypair.publicKeyJwk.kid as string,
-							...credentialIssuerCreateOptions.credentialRequestEncryption.keypair.publicKeyJwk,
-						},
-					],
+					jwks: {
+						keys: [
+							{
+								kid: credentialIssuerCreateOptions.credentialRequestEncryption.keypair.publicKeyJwk.kid as string,
+								...credentialIssuerCreateOptions.credentialRequestEncryption.keypair.publicKeyJwk,
+							}
+						]
+					},
 				}
 			: undefined,
 		credential_response_encryption: credentialIssuerCreateOptions.credentialResponseEncryption
