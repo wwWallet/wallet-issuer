@@ -261,7 +261,7 @@ export function createIssuerOpenID4VCI(url: string, credentialIssuerCreateOption
 					method: 'POST',
 					url: '/credential',
 					credentialRequestHelper: credentialIssuerCreateOptions.credentialRequestHelper,
-					request: { client: { cliendId: client_id }, transactionId: state.transactionId },
+					request: { client: { cliendId: client_id }, transactionId: state.transactionId, introspectionResponse: accessTokenValidationResult.value, },
 				},
 				sub,
 				'',

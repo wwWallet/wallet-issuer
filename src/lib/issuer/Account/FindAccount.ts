@@ -1,4 +1,5 @@
 import { CredentialRequestHelper } from '../CredentialRequestHelper';
+import { IntrospectionResponse } from '../types';
 import { Account } from './Account';
 
 export type FindAccount = (
@@ -6,7 +7,7 @@ export type FindAccount = (
 		url: string;
 		method: string;
 		credentialRequestHelper: CredentialRequestHelper;
-		request: { client: { cliendId: string } | null; transactionId: string | null };
+		request: { client: { cliendId: string } | null; transactionId: string | null, introspectionResponse?: IntrospectionResponse, };
 	},
 	sub: string,
 	token: string,
