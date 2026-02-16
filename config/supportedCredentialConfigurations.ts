@@ -339,11 +339,6 @@ export const supportedCredentialConfigurations: OpenidCredentialIssuerMetadata['
 		vct: 'urn:eu.europa.ec.eudi:por:1',
 		format: VerifiableCredentialFormat.DC_SDJWT,
 	},
-	'urn:eu.europa.ec.eudi:por:1:deferred': {
-		scope: 'por:sd_jwt_vc:deferred',
-		format: VerifiableCredentialFormat.DC_SDJWT,
-		vct: 'urn:eu.europa.ec.eudi:por:1',
-	},
 };
 
 export const disclosureFrameMap: Record<string, Record<string, unknown>> = {
@@ -416,16 +411,6 @@ export const disclosureFrameMap: Record<string, Record<string, unknown>> = {
 		ending_date: false,
 	},
 	'urn:eu.europa.ec.eudi:por:1': {
-		legal_person_identifier: true,
-		legal_name: true,
-		full_powers: true,
-		effective_until_date: true,
-		effective_from_date: true,
-		eService: true,
-		issuing_authority: true,
-		issuing_country: true,
-	},
-	'urn:eu.europa.ec.eudi:por:1:deferred': {
 		legal_person_identifier: true,
 		legal_name: true,
 		full_powers: true,

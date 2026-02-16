@@ -5,6 +5,8 @@ import { createClaimsFuture } from '../src/lib/issuer/CredentialRequestHelper';
 import { supportedCredentialConfigurations } from './supportedCredentialConfigurations';
 import { credentialRequestHelper } from '../src/vci/issuer';
 import { convertPidSdJwtVcToMdoc } from '../src/lib/issuer/convertPidSdJwtVcToMdoc';
+import { err, ok } from 'wallet-common';
+import { CredentialRequestErrors } from '../src/lib/issuer/CredentialRequest/CredentialRequestError';
 
 type AccountEntry = {
 	id: string;
@@ -41,54 +43,50 @@ export const findAccount: FindAccount = async (ctx, sub, _token) => {
 			if (ctx.request.transactionId) {
 				const claimsFutures = await ctx.credentialRequestHelper.getCredentialRequests(ctx.request.transactionId);
 				if (claimsFutures[0]) {
-					return claimsFutures[0];
+					return ok(claimsFutures[0]);
 				}
 			}
 
-			if (scope.split(' ').includes('por:sd_jwt_vc:deferred')) {
-				// submit credential request for later approval
-				return ctx.credentialRequestHelper.submitCredentialRequest({ sub: acc.id, scope: scope });
-			}
 			let releasedClaims = {};
-			if (scope.split(' ').includes('pid:sd_jwt_dc')) {
+			if (scope.split(' ').includes('por:sd_jwt_vc')) {
+				// submit credential request for later approval
+				return ok(await ctx.credentialRequestHelper.submitCredentialRequest({ sub: acc.id, scope: scope }));
+			}
+			else if (scope.split(' ').includes('pid:sd_jwt_dc')) {
 				const supportedConf = findSupportedCredentialByScope('pid:sd_jwt_dc');
 				if (supportedConf && 'vct' in supportedConf) {
 					releasedClaims = { ...releasedClaims, vct: supportedConf.vct };
 				}
 				releasedClaims = { ...releasedClaims, ...acc.pid };
 			}
-			if (scope.split(' ').includes('pid:mso_mdoc')) {
+			else if (scope.split(' ').includes('pid:mso_mdoc')) {
 				const pidMdoc = convertPidSdJwtVcToMdoc(acc.pid);
 				releasedClaims = { ...pidMdoc };
 			}
-			if (scope.split(' ').includes('ehic')) {
+			else if (scope.split(' ').includes('ehic')) {
 				const supportedConf = findSupportedCredentialByScope('ehic');
 				if (supportedConf && 'vct' in supportedConf) {
 					releasedClaims = { ...releasedClaims, vct: supportedConf.vct };
 				}
 				releasedClaims = { ...releasedClaims, ...acc.ehic };
 			}
-			if (scope.split(' ').includes('diploma')) {
+			else if (scope.split(' ').includes('diploma')) {
 				const supportedConf = findSupportedCredentialByScope('diploma');
 				if (supportedConf && 'vct' in supportedConf) {
 					releasedClaims = { ...releasedClaims, vct: supportedConf.vct };
 				}
 				releasedClaims = { ...releasedClaims, ...acc.diploma };
 			}
-			if (scope.split(' ').includes('por:sd_jwt_vc')) {
-				const supportedConf = findSupportedCredentialByScope('por:sd_jwt_vc');
-				if (supportedConf && 'vct' in supportedConf) {
-					releasedClaims = { ...releasedClaims, vct: supportedConf.vct };
-				}
-				releasedClaims = { ...releasedClaims, ...acc.por };
+			else {
+				return err(CredentialRequestErrors.CredentialRequestDenied, "Not supported scope");
 			}
 
-			return createClaimsFuture<{ sub: string;[key: string]: unknown }>(acc.id, scope, {
+			return ok(createClaimsFuture<{ sub: string;[key: string]: unknown }>(acc.id, scope, {
 				claims: {
 					sub: acc.id,
 					...releasedClaims,
 				},
-			});
+			}));
 		},
 	};
 };
@@ -115,9 +113,9 @@ async function runLoop() {
 			}
 			await Promise.all(
 				requests
-					.filter((req) => req.status === 'pending' && req.scope.split(' ').includes('por:sd_jwt_vc:deferred'))
+					.filter((req) => req.status === 'pending' && req.scope.split(' ').includes('por:sd_jwt_vc'))
 					.map(async (r) => {
-						const supportedConf = findSupportedCredentialByScope('por:sd_jwt_vc:deferred');
+						const supportedConf = findSupportedCredentialByScope('por:sd_jwt_vc');
 						if (!supportedConf || !('vct' in supportedConf)) {
 							return null;
 						}
