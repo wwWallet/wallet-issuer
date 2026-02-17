@@ -1,7 +1,7 @@
 import { Result } from 'wallet-common';
-import { ClaimsFuture, GenericClaims } from '../CredentialRequestHelper';
 import { CredentialRequestError } from '../CredentialRequest/CredentialRequestError';
-
+import { ClaimsFuture } from '../ClaimsFuture';
+import { GenericClaims } from '../CredentialRequestHelper';
 
 export interface Account {
 	accountId: string;

@@ -4,13 +4,14 @@ import { CredentialIssuerCreateOptions } from '../IssuerOpenID4VCI';
 import { CredentialRequestError, CredentialRequestErrors } from '../CredentialRequest/CredentialRequestError';
 import { validateDpopProof } from './validateDpopProof';
 import { PlainIssueCredentialRequestOptions } from '../IssuerOpenID4VCITypes';
+import { IntrospectionResponse } from '../types';
 
 /**
  * * Validates if access token is valid
  * * Checks if access token is authorized for this credentialConfigurationId
  *
  */
-export async function validateAccessToken(credentialConfigurationId: string, metadata: OpenidCredentialIssuerMetadata, issueRequestOpts: PlainIssueCredentialRequestOptions, createOpts: CredentialIssuerCreateOptions): Promise<Result<{ scope: string; sub: string; client_id: string }, CredentialRequestError>> {
+export async function validateAccessToken(credentialConfigurationId: string, metadata: OpenidCredentialIssuerMetadata, issueRequestOpts: PlainIssueCredentialRequestOptions, createOpts: CredentialIssuerCreateOptions): Promise<Result<IntrospectionResponse & { scope: string; sub: string; client_id: string }, CredentialRequestError>> {
 	try {
 		const authorizationServerMetadataResponse = await fetch(createOpts.authorizationServerUrl + '/.well-known/oauth-authorization-server');
 		const authorizationServerMetadata = await authorizationServerMetadataResponse.json();
@@ -30,9 +31,13 @@ export async function validateAccessToken(credentialConfigurationId: string, met
 			});
 			const introspectionPayload = await introspectionResponse.json();
 
-			const { scope, sub, cnf, client_id } = introspectionPayload as { sub: string; scope: string; client_id: string; cnf?: { jkt?: string } };
+			const { active, scope, sub, cnf, client_id } = introspectionPayload as IntrospectionResponse;
 
 			console.log('Introspection response: ', introspectionPayload);
+			if (!active) {
+				return err(CredentialRequestErrors.InvalidRequest, 'Access token not active');
+			}
+
 			if (tokenType === 'DPoP' && dpopProof !== undefined) {
 				const response = await validateDpopProof(dpopProof, cnf);
 				if (!response.ok) {
@@ -40,15 +45,23 @@ export async function validateAccessToken(credentialConfigurationId: string, met
 				}
 			} else if (tokenType.toLocaleLowerCase() === 'DPoP'.toLowerCase() && dpopProof === undefined) {
 				return err(CredentialRequestErrors.InvalidRequest, 'DPoP proof is missing');
+			} else if (!scope) {
+				return err(CredentialRequestErrors.InternalServerError, "Introspection response does not contain 'scope'");
+			} else if (!client_id) {
+				return err(CredentialRequestErrors.InternalServerError, "Introspection response does not contain 'cliend_id'");
+			} else if (!cnf?.jkt) {
+				return err(CredentialRequestErrors.InternalServerError, "Introspection response does not contain 'cnf.jkt'");
+			} else if (sub) {
+				return err(CredentialRequestErrors.InternalServerError, "Introspection response does not contain 'sub'");
 			}
 
-			const scopeArray = scope.split(' ');
+			const scopeArray = (scope as string).split(' ');
 			const configurationsSupportedFiltered = Object.keys(metadata.credential_configurations_supported).filter((confId) => confId === credentialConfigurationId && scopeArray.includes(metadata.credential_configurations_supported[confId].scope))[0];
 			if (!configurationsSupportedFiltered) {
 				return err(CredentialRequestErrors.CredentialRequestDenied, 'Not allowed based on the released scopes');
 			}
 
-			return ok({ scope, sub, client_id });
+			return ok(introspectionPayload);
 		} catch {
 			return err(CredentialRequestErrors.InternalServerError, 'Communication with introspection endpoint failed');
 		}

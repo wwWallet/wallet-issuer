@@ -20,6 +20,7 @@ import { CredentialRequestHelper } from './CredentialRequestHelper';
 export type CredentialIssuerCreateOptions = {
 	authorizationServerUrl: string;
 	stateStore?: GenericStore<string, State>;
+	credentialOfferStore?: GenericStore<string, CredentialOffer>;
 
 	secret: string; // used for HS512 JWT signatures when issuing nonce values
 
@@ -81,7 +82,7 @@ export function createIssuerOpenID4VCI(url: string, credentialIssuerCreateOption
 	const deferredCredentialResponseInterval = credentialIssuerCreateOptions.deferredCredentialResponseInterval ?? 60;
 
 	const store = credentialIssuerCreateOptions.stateStore ?? new MemoryStore(10000);
-	const credentialOfferStore = new MemoryStore <string, CredentialOffer>(100000);
+	const credentialOfferStore = credentialIssuerCreateOptions.credentialOfferStore ?? new MemoryStore <string, CredentialOffer>(100000);
 	const secretManager = createMemorySecretManager(credentialIssuerCreateOptions.secret, credentialIssuerCreateOptions.clockTolerance, credentialIssuerCreateOptions.nonceExpirationTime);
 
 	if (credentialIssuerCreateOptions?.credentialRequestEncryption?.keypair?.publicKeyJwk !== undefined && !('kid' in credentialIssuerCreateOptions.credentialRequestEncryption.keypair.publicKeyJwk)) {
@@ -106,11 +107,12 @@ export function createIssuerOpenID4VCI(url: string, credentialIssuerCreateOption
 				const vct = conf.vct;
 				if (credentialIssuerCreateOptions.vctDocumentProvider) {
 					const doc = await credentialIssuerCreateOptions.vctDocumentProvider.getVctMetadataDocument(vct);
-					if (doc?.ok && metadata.credential_configurations_supported[confId]) {
-						const claims = convertSdjwtvcToOpenid4vciClaims(doc.value.claims);
-						metadata.credential_configurations_supported[confId].claims = claims;
-						const display = convertSdjwtvcToOpenid4vciDisplay(doc.value.display);
-						metadata.credential_configurations_supported[confId].display = display;
+					if (doc?.ok) {
+						const cfg = metadata.credential_configurations_supported[confId];
+						if (!cfg) return;
+						cfg.credential_metadata ??= {};
+						cfg.credential_metadata.claims = convertSdjwtvcToOpenid4vciClaims(doc.value.claims);
+						cfg.credential_metadata.display = convertSdjwtvcToOpenid4vciDisplay(doc.value.display);
 					}
 				}
 			}
@@ -245,7 +247,6 @@ export function createIssuerOpenID4VCI(url: string, credentialIssuerCreateOption
 					id: stateId,
 					sub: sub,
 					clientId: client_id,
-					credentialOfferUrlContainer: null,
 					attestedKeys: null,
 					scope: scope,
 					transactionId: null,
@@ -261,7 +262,7 @@ export function createIssuerOpenID4VCI(url: string, credentialIssuerCreateOption
 					method: 'POST',
 					url: '/credential',
 					credentialRequestHelper: credentialIssuerCreateOptions.credentialRequestHelper,
-					request: { client: { cliendId: client_id }, transactionId: state.transactionId },
+					request: { client: { cliendId: client_id }, transactionId: state.transactionId, introspectionResponse: accessTokenValidationResult.value, },
 				},
 				sub,
 				'',

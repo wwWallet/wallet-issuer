@@ -1,12 +1,12 @@
 import { FindAccount } from '../src/lib/issuer/Account/FindAccount';
 import fs from 'node:fs/promises';
 import path from 'path';
-import { createClaimsFuture } from '../src/lib/issuer/CredentialRequestHelper';
 import { supportedCredentialConfigurations } from './supportedCredentialConfigurations';
 import { credentialRequestHelper } from '../src/vci/issuer';
 import { convertPidSdJwtVcToMdoc } from '../src/lib/issuer/convertPidSdJwtVcToMdoc';
 import { err, ok } from 'wallet-common';
 import { CredentialRequestErrors } from '../src/lib/issuer/CredentialRequest/CredentialRequestError';
+import { createClaimsFuture } from '../src/lib/issuer/ClaimsFuture';
 
 type AccountEntry = {
 	id: string;
