@@ -1,4 +1,5 @@
-import { ClaimsFuture, GenericClaims } from '../CredentialRequestHelper';
+import { ClaimsFuture } from '../ClaimsFuture';
+import { GenericClaims } from '../CredentialRequestHelper';
 
 export interface Account {
 	accountId: string;

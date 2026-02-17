@@ -246,7 +246,6 @@ export function createIssuerOpenID4VCI(url: string, credentialIssuerCreateOption
 					id: stateId,
 					sub: sub,
 					clientId: client_id,
-					credentialOfferUrlContainer: null,
 					attestedKeys: null,
 					scope: scope,
 					transactionId: null,
