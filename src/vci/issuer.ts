@@ -1,5 +1,4 @@
 import { config } from '../../config';
-import { findAccount } from '../../config/accountFinder';
 import { createIssuerOpenID4VCI, ProofTypesSupported } from '../lib/issuer';
 import { LocalTrustedCertificatesManager } from './LocalTrustedCertificatesManager';
 import fs from 'fs';
@@ -11,6 +10,10 @@ import { JWK } from 'jose';
 import { vctDocumentProvider } from '../../config/vctDocumentProvider';
 import { MemoryStore } from 'wallet-common';
 import { createCredentialRequestHelper, CredentialRequestWithClaims } from '../lib/issuer/CredentialRequestHelper';
+import { createFindAccount } from '../claims/createFindAccount';
+import { ClaimsProvider } from '../claims/ClaimsProvider';
+import { FilesystemClaimsProvider } from '../claims/providers/FilesystemClaimsProvider';
+import { RemoteClaimsProvider } from '../claims/providers/RemoteClaimsProvider';
 
 const localTrustedCertsManager = LocalTrustedCertificatesManager();
 
@@ -24,9 +27,16 @@ const credentialRequestStore = new MemoryStore<string, CredentialRequestWithClai
 
 export const credentialRequestHelper = createCredentialRequestHelper(credentialRequestStore);
 
+const claimsProvider: ClaimsProvider = config.vcClaimsFetcherUrl
+	? new RemoteClaimsProvider(config.vcClaimsFetcherUrl)
+	: new FilesystemClaimsProvider();
+
+claimsProvider.startBackgroundJobs?.(credentialRequestHelper);
+const configuredFindAccount = createFindAccount(claimsProvider);
+
 export const issuer = createIssuerOpenID4VCI(config.url + '/openid', {
 	clockTolerance: config.clockTolerance,
-	findAccount: findAccount,
+	findAccount: configuredFindAccount,
 	credentialRequestHelper,
 	proofTypesSupported: [ProofTypesSupported.JWT, ProofTypesSupported.ATTESTATION],
 	requireKeyBindingInCredentialConfigurationIds: [],

@@ -332,6 +332,11 @@ export const supportedCredentialConfigurations: OpenidCredentialIssuerMetadata['
 		vct: 'urn:credential:diploma',
 		format: VerifiableCredentialFormat.DC_SDJWT,
 	},
+	'urn:credential:esc': {
+		scope: 'esc',
+		vct: 'urn:credential:esc',
+		format: VerifiableCredentialFormat.DC_SDJWT,
+	},
 	'urn:eudi:ehic:1': {
 		scope: 'ehic',
 		vct: 'urn:eudi:ehic:1',
@@ -395,6 +400,11 @@ export const disclosureFrameMap: Record<string, Record<string, unknown>> = {
 		grade: true,
 		eqf_level: false,
 		graduation_date: true,
+	},
+	'urn:credential:esc': {
+		family_name: true,
+		given_name: true,
+		picture: true,
 	},
 	'urn:eudi:ehic:1': {
 		personal_administrative_number: true,
