@@ -1,8 +1,34 @@
 import { OpenidCredentialIssuerMetadata, VerifiableCredentialFormat } from 'wallet-common';
 
+type CredentialConfigurationsSupported = OpenidCredentialIssuerMetadata['credential_configurations_supported'];
+type DisclosureFrameMap = Record<string, Record<string, unknown>>;
+type LocalSupportedCredentialConfigurations = {
+	supportedCredentialConfigurations?: CredentialConfigurationsSupported;
+	disclosureFrameMap?: DisclosureFrameMap;
+};
+
+const loadLocalSupportedCredentialConfigurations = (): LocalSupportedCredentialConfigurations => {
+	try {
+		return require('./supportedCredentialConfigurations.local') as LocalSupportedCredentialConfigurations;
+	} catch (error) {
+		if (
+			typeof error === 'object' &&
+			error !== null &&
+			'code' in error &&
+			error.code === 'MODULE_NOT_FOUND' &&
+			'message' in error &&
+			typeof error.message === 'string' &&
+			error.message.includes('supportedCredentialConfigurations.local')
+		) {
+			return {};
+		}
+		throw error;
+	}
+};
+
 // In this object, all the cryptographic-related attributes can be ommited
 // because default values will be used by the issuer module
-export const supportedCredentialConfigurations: OpenidCredentialIssuerMetadata['credential_configurations_supported'] = {
+const baseSupportedCredentialConfigurations: CredentialConfigurationsSupported = {
 	'urn:eudi:pid:1:dc': {
 		scope: 'pid:sd_jwt_dc',
 		vct: 'urn:eudi:pid:1',
@@ -332,11 +358,6 @@ export const supportedCredentialConfigurations: OpenidCredentialIssuerMetadata['
 		vct: 'urn:credential:diploma',
 		format: VerifiableCredentialFormat.DC_SDJWT,
 	},
-	'urn:credential:esc': {
-		scope: 'esc',
-		vct: 'urn:credential:esc',
-		format: VerifiableCredentialFormat.DC_SDJWT,
-	},
 	'urn:eudi:ehic:1': {
 		scope: 'ehic',
 		vct: 'urn:eudi:ehic:1',
@@ -349,7 +370,7 @@ export const supportedCredentialConfigurations: OpenidCredentialIssuerMetadata['
 	},
 };
 
-export const disclosureFrameMap: Record<string, Record<string, unknown>> = {
+const baseDisclosureFrameMap: DisclosureFrameMap = {
 	'urn:eudi:pid:1:dc': {
 		family_name: true,
 		birth_family_name: true,
@@ -433,4 +454,16 @@ export const disclosureFrameMap: Record<string, Record<string, unknown>> = {
 		issuing_authority: true,
 		issuing_country: true,
 	},
+};
+
+const localSupportedCredentialConfigurations = loadLocalSupportedCredentialConfigurations();
+
+export const supportedCredentialConfigurations: CredentialConfigurationsSupported = {
+	...baseSupportedCredentialConfigurations,
+	...(localSupportedCredentialConfigurations.supportedCredentialConfigurations ?? {}),
+};
+
+export const disclosureFrameMap: DisclosureFrameMap = {
+	...baseDisclosureFrameMap,
+	...(localSupportedCredentialConfigurations.disclosureFrameMap ?? {}),
 };

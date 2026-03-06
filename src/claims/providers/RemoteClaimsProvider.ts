@@ -2,7 +2,9 @@ import { ClaimsProvider, ClaimsProviderResult } from '../ClaimsProvider';
 import { supportedCredentialConfigurations } from '../../../config/supportedCredentialConfigurations';
 
 type ClaimsPayload = Record<string, unknown>;
-const DEFAULT_SUPPORTED_SCOPES = ['pid:sd_jwt_dc', 'pid:mso_mdoc', 'diploma', 'ehic', 'por:sd_jwt_vc', 'esc'] as const;
+const DEFAULT_SUPPORTED_SCOPES = Object.values(supportedCredentialConfigurations)
+	.map((configuration) => configuration.scope)
+	.filter((scope): scope is string => typeof scope === 'string');
 
 export class RemoteClaimsProvider implements ClaimsProvider {
 	private readonly supportedScopesSet: ReadonlySet<string>;
