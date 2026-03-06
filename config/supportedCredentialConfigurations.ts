@@ -422,11 +422,6 @@ const baseDisclosureFrameMap: DisclosureFrameMap = {
 		eqf_level: false,
 		graduation_date: true,
 	},
-	'urn:credential:esc': {
-		family_name: true,
-		given_name: true,
-		picture: true,
-	},
 	'urn:eudi:ehic:1': {
 		personal_administrative_number: true,
 		issuing_country: false,

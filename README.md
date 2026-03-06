@@ -37,7 +37,13 @@ export const supportedCredentialConfigurations: CredentialConfigurationsSupporte
 };
 
 // Optional: add disclosure frames keyed by credential configuration id.
-export const disclosureFrameMap: DisclosureFrameMap = {};
+export const disclosureFrameMap: DisclosureFrameMap = {
+  'urn:credential:example': {
+    family_name: true,
+    given_name: true,
+    picture: true,
+  },
+};
 ```
 2. Restart the issuer.
 
