@@ -7,11 +7,7 @@ import { CredentialRequestHelper } from '../../lib/issuer/CredentialRequestHelpe
 
 type AccountEntry = {
 	id: string;
-	pid: Record<string, unknown>;
-	diploma: Record<string, unknown>;
-	ehic: Record<string, unknown>;
-	por: Record<string, unknown>;
-	esc: Record<string, unknown>;
+	[key: string]: unknown;
 };
 
 const findSupportedCredentialByScope = (scope: string) => {
@@ -21,6 +17,16 @@ const findSupportedCredentialByScope = (scope: string) => {
 	}
 	const [_credentialConfigurationId, credentialConfiguration] = result;
 	return credentialConfiguration;
+};
+
+const resolveSupportedScopeToken = (scope: string): string | undefined => {
+	const scopes = scope.split(' ');
+	for (let i = 0; i < scopes.length; i++) {
+		if (findSupportedCredentialByScope(scopes[i])) {
+			return scopes[i];
+		}
+	}
+	return undefined;
 };
 
 export class FilesystemClaimsProvider implements ClaimsProvider {
@@ -43,43 +49,34 @@ export class FilesystemClaimsProvider implements ClaimsProvider {
 			return { kind: 'denied', reason: 'Account not found' };
 		}
 
+		const supportedScope = resolveSupportedScopeToken(scope);
+		if (!supportedScope) {
+			return { kind: 'denied', reason: 'Not supported scope' };
+		}
+
 		let releasedClaims = {};
-		if (scope.split(' ').includes('por:sd_jwt_vc')) {
+		if (supportedScope === 'por:sd_jwt_vc') {
 			return { kind: 'pending' };
 		}
-		else if (scope.split(' ').includes('pid:sd_jwt_dc')) {
-			const supportedConf = findSupportedCredentialByScope('pid:sd_jwt_dc');
-			if (supportedConf && 'vct' in supportedConf) {
-				releasedClaims = { ...releasedClaims, vct: supportedConf.vct };
-			}
-			releasedClaims = { ...releasedClaims, ...account.pid };
-		}
-		else if (scope.split(' ').includes('pid:mso_mdoc')) {
-			releasedClaims = { ...convertPidSdJwtVcToMdoc(account.pid) };
-		}
-		else if (scope.split(' ').includes('ehic')) {
-			const supportedConf = findSupportedCredentialByScope('ehic');
-			if (supportedConf && 'vct' in supportedConf) {
-				releasedClaims = { ...releasedClaims, vct: supportedConf.vct };
-			}
-			releasedClaims = { ...releasedClaims, ...account.ehic };
-		}
-		else if (scope.split(' ').includes('diploma')) {
-			const supportedConf = findSupportedCredentialByScope('diploma');
-			if (supportedConf && 'vct' in supportedConf) {
-				releasedClaims = { ...releasedClaims, vct: supportedConf.vct };
-			}
-			releasedClaims = { ...releasedClaims, ...account.diploma };
-		}
-		else if (scope.split(' ').includes('esc')) {
-			const supportedConf = findSupportedCredentialByScope('esc');
-			if (supportedConf && 'vct' in supportedConf) {
-				releasedClaims = { ...releasedClaims, vct: supportedConf.vct };
-			}
-			releasedClaims = { ...releasedClaims, ...account.esc };
-		}
-		else {
+
+		const supportedConf = findSupportedCredentialByScope(supportedScope);
+		if (!supportedConf) {
 			return { kind: 'denied', reason: 'Not supported scope' };
+		}
+		if (supportedConf && 'vct' in supportedConf) {
+			releasedClaims = { ...releasedClaims, vct: supportedConf.vct };
+		}
+
+		const claimsBucket = supportedScope.split(':')[0];
+		const accountClaims = account[claimsBucket];
+		if (!accountClaims || typeof accountClaims !== 'object') {
+			return { kind: 'denied', reason: `No claims found for scope '${supportedScope}'` };
+		}
+
+		if (supportedScope === 'pid:mso_mdoc') {
+			releasedClaims = { ...convertPidSdJwtVcToMdoc(accountClaims as Record<string, unknown>) };
+		} else {
+			releasedClaims = { ...releasedClaims, ...accountClaims };
 		}
 
 		return { kind: 'ready', claims: releasedClaims };
@@ -113,10 +110,14 @@ export class FilesystemClaimsProvider implements ClaimsProvider {
 							if (!acc) {
 								return null;
 							}
+							const porClaims = acc.por;
+							if (!porClaims || typeof porClaims !== 'object') {
+								return null;
+							}
 							await credentialRequestHelper.fulfilCredentialRequest(r.transaction_id, {
 								sub: r.sub,
 								vct: supportedConf.vct,
-								...acc.por,
+								...porClaims,
 							});
 							return null;
 						}),
