@@ -25,6 +25,7 @@ app.use('/openid', vciRouter);
 
 if (config.enableMockVcClaimsFetching) {
 	app.use('/mock', mockClaimsFetcherRouter);
+	console.warn('Mock VC Claims Fetching is enabled. Disable this in production by setting ENABLE_MOCK_VC_CLAIMS_FETCHING to false.');
 }
 
 app.use(
