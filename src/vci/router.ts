@@ -85,17 +85,6 @@ vciRouter.get('/credential-offer/:id', async (req, res) => {
 	res.status(200).send(offer);
 });
 
-vciRouter.get('/.well-known/openid-credential-issuer', async (_req, res) => {
-	try {
-		const { metadata } = await issuer.getMetadata();
-		res.status(200).send(metadata);
-	} catch (e) {
-		logger.error(JSON.stringify(e));
-		res.status(500).send({ error: 'internal_server_error' });
-	}
-});
-
-
 vciRouter.get('/mdoc-iacas', async (_req, res) => {
 	return res.send({
 		iacas: [ rawBase64CACert ]
