@@ -85,9 +85,10 @@ export class RemoteClaimsProvider implements ClaimsProvider {
 		const timeout = setTimeout(() => controller.abort(), this.fetchTimeoutMs);
 
 		try {
-			const url = new URL(this.claimsFetcherUrl);
-			url.searchParams.append('userId', userId);
-			url.searchParams.append('scope', scope);
+			const baseUrl = this.claimsFetcherUrl.endsWith('/')
+				? this.claimsFetcherUrl.slice(0, -1)
+				: this.claimsFetcherUrl;
+			const url = new URL(`${baseUrl}/${userId}`);
 
 			const headers = new Headers();
 			if (this.apiKey) {
