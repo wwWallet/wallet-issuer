@@ -89,7 +89,7 @@ export class RemoteClaimsProvider implements ClaimsProvider {
 				? this.claimsFetcherUrl.slice(0, -1)
 				: this.claimsFetcherUrl;
 			const url = new URL(`${baseUrl}/${userId}`);
-
+			console.log('Fetching claims from remote service', { url: url.toString(), scope });
 			const headers = new Headers();
 			if (this.apiKey) {
 				headers.set(this.apiKeyHeaderName, this.apiKey);
@@ -103,12 +103,13 @@ export class RemoteClaimsProvider implements ClaimsProvider {
 			}
 
 			const body = await response.json() as unknown;
-			if (!body || typeof body !== 'object' || Array.isArray(body)) {
+			console.log('Fetched claims response body', { body });
+			if (!this.isRecord(body) || !this.isRecord(body.data)) {
 				logger.warn('Remote claims fetch returned invalid payload', { scope });
 				return { kind: 'failure', reason: 'invalid_response_payload' };
 			}
 
-			return { kind: 'success', claims: body as ClaimsPayload };
+			return { kind: 'success', claims: body.data as ClaimsPayload };
 		} catch (error) {
 			if (this.isAbortError(error)) {
 				logger.warn('Remote claims fetch timed out', { scope, timeoutMs: this.fetchTimeoutMs });
@@ -143,5 +144,9 @@ export class RemoteClaimsProvider implements ClaimsProvider {
 
 	private isAbortError(error: unknown): boolean {
 		return error instanceof Error && error.name === 'AbortError';
+	}
+
+	private isRecord(value: unknown): value is Record<string, unknown> {
+		return !!value && typeof value === 'object' && !Array.isArray(value);
 	}
 }

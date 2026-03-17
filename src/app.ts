@@ -7,7 +7,6 @@ import { vciRouter } from './vci/router';
 import { locale } from '../config/locale';
 import { logger } from './logger';
 import { issuer } from './vci/issuer';
-import { mockClaimsFetcherRouter } from './mock/claimsFetcherMockRouter';
 
 const app: Express = express();
 
@@ -22,11 +21,6 @@ app.get('/.well-known/jwt-vc-issuer/openid', async (_req, res) => {
 });
 
 app.use('/openid', vciRouter);
-
-if (config.enableMockVcClaimsFetching) {
-	app.use('/mock', mockClaimsFetcherRouter);
-	console.warn('Mock VC Claims Fetching is enabled. Disable this in production by setting ENABLE_MOCK_VC_CLAIMS_FETCHING to false.');
-}
 
 app.use(
 	'/images',
