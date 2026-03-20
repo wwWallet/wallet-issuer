@@ -28,6 +28,6 @@ export const config = {
 	},
 	vctRegistryUrl: process.env.VCT_REGISTRY_URL || 'http://localhost:8097/type-metadata',
 	vcClaimsFetcherUrl: process.env.VC_CLAIMS_FETCHER_URL || '',
-	enableMockVcClaimsFetching: process.env.ENABLE_MOCK_VC_CLAIMS_FETCHING === 'true' || false,
+	vcClaimsFetcherApiKey: process.env.VC_CLAIMS_FETCHER_API_KEY || '',
 	revokeCredentialOffers: process.env.REVOKE_CREDENTIAL_OFFERS === 'true' || false,
 };
