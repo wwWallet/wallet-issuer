@@ -12,20 +12,6 @@ const rawBase64CACert = fs.readFileSync(path.join(__dirname, '../../../keys/ca.c
 	.replace(/-----(BEGIN|END) CERTIFICATE-----/g, '')
 	.replace(/\s+/g, '');
 
-vciRouter.get('/credential-offer/:id', async (req, res) => {
-	try {
-		const id = req.params.id as string;
-		if (!id) {
-			res.status(400).send({ error: 'Not found' });
-		}
-		const obj = await issuer.getCredentialOffer(id, true);
-		res.status(200).send(obj);
-	} catch (e) {
-		logger.error(JSON.stringify(e));
-		res.status(500).send({ error: 'internal_server_error' });
-	}
-});
-
 vciRouter.post('/nonce', async (_req, res) => {
 	try {
 		const response = await issuer.issueNonce();
@@ -79,10 +65,17 @@ vciRouter.post('/deferred-credential', express.json(), async (req, res) => {
 });
 
 vciRouter.get('/credential-offer/:id', async (req, res) => {
-	const offerId = req.params.id;
-	const offer = await issuer.getCredentialOffer(offerId, config.revokeCredentialOffers);
-	logger.info('Credential offer retrieved');
-	res.status(200).send(offer);
+	try {
+		const id = req.params.id as string;
+		if (!id) {
+			res.status(400).send({ error: 'Not found' });
+		}
+		const obj = await issuer.getCredentialOffer(id, config.revokeCredentialOffers);
+		res.status(200).send(obj);
+	} catch (e) {
+		logger.error(JSON.stringify(e));
+		res.status(500).send({ error: 'internal_server_error' });
+	}
 });
 
 vciRouter.get('/.well-known/openid-credential-issuer', async (_req, res) => {
