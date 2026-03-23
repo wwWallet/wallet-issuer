@@ -1,4 +1,5 @@
 import { OpenidCredentialIssuerMetadata, VerifiableCredentialFormat } from 'wallet-common';
+import { config } from '.';
 
 type CredentialConfigurationsSupported = OpenidCredentialIssuerMetadata['credential_configurations_supported'];
 type DisclosureFrameMap = Record<string, Record<string, unknown>>;
@@ -453,12 +454,51 @@ const baseDisclosureFrameMap: DisclosureFrameMap = {
 
 const localSupportedCredentialConfigurations = loadLocalSupportedCredentialConfigurations();
 
-export const supportedCredentialConfigurations: CredentialConfigurationsSupported = {
+const filterSupportedCredentialConfigurationsByScopeWhitelist = (
+	credentialConfigurations: CredentialConfigurationsSupported,
+	whitelistedScopes: ReadonlySet<string>,
+): CredentialConfigurationsSupported => {
+	if (whitelistedScopes.size === 0) {
+		return {};
+	}
+
+	return Object.fromEntries(
+		Object.entries(credentialConfigurations).filter(([, configuration]) => {
+			return typeof configuration.scope === 'string' && whitelistedScopes.has(configuration.scope);
+		}),
+	);
+};
+
+const filterDisclosureFrameMapBySupportedCredentialConfigurations = (
+	disclosureFrames: DisclosureFrameMap,
+	credentialConfigurations: CredentialConfigurationsSupported,
+): DisclosureFrameMap => {
+	const supportedCredentialConfigurationIds = new Set(Object.keys(credentialConfigurations));
+	return Object.fromEntries(
+		Object.entries(disclosureFrames).filter(([credentialConfigurationId]) => {
+			return supportedCredentialConfigurationIds.has(credentialConfigurationId);
+		}),
+	);
+};
+
+const allSupportedCredentialConfigurations: CredentialConfigurationsSupported = {
 	...baseSupportedCredentialConfigurations,
 	...(localSupportedCredentialConfigurations.supportedCredentialConfigurations ?? {}),
 };
 
-export const disclosureFrameMap: DisclosureFrameMap = {
+const allDisclosureFrameMap: DisclosureFrameMap = {
 	...baseDisclosureFrameMap,
 	...(localSupportedCredentialConfigurations.disclosureFrameMap ?? {}),
 };
+
+const supportedScopesWhitelist = new Set(config.supportedCredentialScopesWhitelist);
+
+export const supportedCredentialConfigurations = filterSupportedCredentialConfigurationsByScopeWhitelist(
+	allSupportedCredentialConfigurations,
+	supportedScopesWhitelist,
+);
+
+export const disclosureFrameMap = filterDisclosureFrameMapBySupportedCredentialConfigurations(
+	allDisclosureFrameMap,
+	supportedCredentialConfigurations,
+);

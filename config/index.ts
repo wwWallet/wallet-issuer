@@ -2,6 +2,11 @@ import dotenv from 'dotenv';
 dotenv.config({ quiet: true });
 
 const url = String(process.env.SERVICE_URL || 'default_url');
+const supportedCredentialScopesWhitelist = (process.env.SUPPORTED_CREDENTIAL_SCOPES_WHITELIST ?? '')
+	.split(',')
+	.map((scope) => scope.trim())
+	.filter(Boolean);
+
 export const config = {
 	url: url,
 	port: parseInt(process.env.SERVICE_PORT || '8003'),
@@ -29,5 +34,6 @@ export const config = {
 	vctRegistryUrl: process.env.VCT_REGISTRY_URL || 'http://localhost:8097/type-metadata',
 	vcClaimsFetcherUrl: process.env.VC_CLAIMS_FETCHER_URL || '',
 	vcClaimsFetcherApiKey: process.env.VC_CLAIMS_FETCHER_API_KEY || '',
+	supportedCredentialScopesWhitelist,
 	revokeCredentialOffers: process.env.REVOKE_CREDENTIAL_OFFERS === 'true' || false,
 };
