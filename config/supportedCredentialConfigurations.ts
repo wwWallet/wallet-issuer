@@ -458,9 +458,6 @@ const filterSupportedCredentialConfigurationsByScopeWhitelist = (
 	credentialConfigurations: CredentialConfigurationsSupported,
 	whitelistedScopes: ReadonlySet<string>,
 ): CredentialConfigurationsSupported => {
-	if (whitelistedScopes.size === 0) {
-		return {};
-	}
 
 	return Object.fromEntries(
 		Object.entries(credentialConfigurations).filter(([, configuration]) => {
