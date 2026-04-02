@@ -24,8 +24,7 @@ export async function signCredentials(credentialConfigurationId: string, metadat
 			}
 		case VerifiableCredentialFormat.MSO_MDOC:
 			if (attestedKeys.length) {
-				const claimsToBeSigned = JSON.parse(JSON.stringify(claims));
-				delete claimsToBeSigned["sub"];
+				const { sub: _sub, ...claimsToBeSigned } = claims;
 				const signedCredentials = await Promise.all(attestedKeys.map((key) => createOpts.credentialSigner.signMsoMdoc(credentialConfigurationSupported.doctype, new Map([[credentialConfigurationSupported.doctype, claimsToBeSigned]]), key)));
 				return ok(signedCredentials.map((c) => c.credential));
 			} else {
