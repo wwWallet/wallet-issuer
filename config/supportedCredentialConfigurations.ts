@@ -1,9 +1,35 @@
 import { OpenidCredentialIssuerMetadata, VerifiableCredentialFormat } from 'wallet-common';
-import { config } from './index';
+import { config } from '.';
+
+type CredentialConfigurationsSupported = OpenidCredentialIssuerMetadata['credential_configurations_supported'];
+type DisclosureFrameMap = Record<string, Record<string, unknown>>;
+type LocalSupportedCredentialConfigurations = {
+	supportedCredentialConfigurations?: CredentialConfigurationsSupported;
+	disclosureFrameMap?: DisclosureFrameMap;
+};
+
+const loadLocalSupportedCredentialConfigurations = (): LocalSupportedCredentialConfigurations => {
+	try {
+		return require('./supportedCredentialConfigurations.local') as LocalSupportedCredentialConfigurations;
+	} catch (error) {
+		if (
+			typeof error === 'object' &&
+			error !== null &&
+			'code' in error &&
+			error.code === 'MODULE_NOT_FOUND' &&
+			'message' in error &&
+			typeof error.message === 'string' &&
+			error.message.includes('supportedCredentialConfigurations.local')
+		) {
+			return {};
+		}
+		throw error;
+	}
+};
 
 // In this object, all the cryptographic-related attributes can be ommited
 // because default values will be used by the issuer module
-export const supportedCredentialConfigurations: OpenidCredentialIssuerMetadata['credential_configurations_supported'] = {
+const baseSupportedCredentialConfigurations: CredentialConfigurationsSupported = {
 	'urn:eudi:pid:1:dc': {
 		scope: 'pid:sd_jwt_dc',
 		vct: 'urn:eudi:pid:1',
@@ -345,7 +371,7 @@ export const supportedCredentialConfigurations: OpenidCredentialIssuerMetadata['
 	},
 };
 
-export const disclosureFrameMap: Record<string, Record<string, unknown>> = {
+const baseDisclosureFrameMap: DisclosureFrameMap = {
 	'urn:eudi:pid:1:dc': {
 		family_name: true,
 		birth_family_name: true,
@@ -425,3 +451,51 @@ export const disclosureFrameMap: Record<string, Record<string, unknown>> = {
 		issuing_country: true,
 	},
 };
+
+const localSupportedCredentialConfigurations = loadLocalSupportedCredentialConfigurations();
+
+const filterSupportedCredentialConfigurationsByScopeWhitelist = (
+	credentialConfigurations: CredentialConfigurationsSupported,
+	whitelistedScopes: ReadonlySet<string>,
+): CredentialConfigurationsSupported => {
+
+	return Object.fromEntries(
+		Object.entries(credentialConfigurations).filter(([, configuration]) => {
+			return typeof configuration.scope === 'string' && whitelistedScopes.has(configuration.scope);
+		}),
+	);
+};
+
+const filterDisclosureFrameMapBySupportedCredentialConfigurations = (
+	disclosureFrames: DisclosureFrameMap,
+	credentialConfigurations: CredentialConfigurationsSupported,
+): DisclosureFrameMap => {
+	const supportedCredentialConfigurationIds = new Set(Object.keys(credentialConfigurations));
+	return Object.fromEntries(
+		Object.entries(disclosureFrames).filter(([credentialConfigurationId]) => {
+			return supportedCredentialConfigurationIds.has(credentialConfigurationId);
+		}),
+	);
+};
+
+const allSupportedCredentialConfigurations: CredentialConfigurationsSupported = {
+	...baseSupportedCredentialConfigurations,
+	...(localSupportedCredentialConfigurations.supportedCredentialConfigurations ?? {}),
+};
+
+const allDisclosureFrameMap: DisclosureFrameMap = {
+	...baseDisclosureFrameMap,
+	...(localSupportedCredentialConfigurations.disclosureFrameMap ?? {}),
+};
+
+const supportedScopesWhitelist = new Set(config.supportedCredentialScopesWhitelist);
+
+export const supportedCredentialConfigurations = filterSupportedCredentialConfigurationsByScopeWhitelist(
+	allSupportedCredentialConfigurations,
+	supportedScopesWhitelist,
+);
+
+export const disclosureFrameMap = filterDisclosureFrameMapBySupportedCredentialConfigurations(
+	allDisclosureFrameMap,
+	supportedCredentialConfigurations,
+);
