@@ -7,6 +7,7 @@ import { vciRouter } from './vci/router';
 import { locale } from '../config/locale';
 import { logger } from './logger';
 import { issuer } from './vci/issuer';
+import { apiRouter } from './api/router';
 
 const app: Express = express();
 
@@ -21,6 +22,8 @@ app.get('/.well-known/jwt-vc-issuer/openid', async (_req, res) => {
 });
 
 app.use('/openid', vciRouter);
+
+app.use('/api', apiRouter);
 
 app.use(
 	'/images',
