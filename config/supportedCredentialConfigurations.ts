@@ -1,4 +1,5 @@
 import { OpenidCredentialIssuerMetadata, VerifiableCredentialFormat } from 'wallet-common';
+import { config } from './index';
 
 // In this object, all the cryptographic-related attributes can be ommited
 // because default values will be used by the issuer module
@@ -24,7 +25,7 @@ export const supportedCredentialConfigurations: OpenidCredentialIssuerMetadata['
 					name: 'PID mDoc',
 					description: 'Person Identification Data',
 					background_image: {
-						uri: 'https://demo-issuer.wwwallet.org/images/background-image.png',
+						uri: new URL('/images/background-image.png', config.url).toString(),
 					},
 					background_color: '#4CC3DD',
 					text_color: '#000000',
