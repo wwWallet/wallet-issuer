@@ -21,7 +21,9 @@ export const createFindAccount = (claimsProvider: ClaimsProvider): FindAccount =
 					}
 				}
 
-				const claimsResult = await claimsProvider.resolveClaims(accountId, scope);
+				const claimsResult = await claimsProvider.resolveClaims(accountId, scope, {
+					issuerState: ctx.request.introspectionResponse?.issuer_state,
+				});
 				if (claimsResult.kind === 'denied') {
 					return err(CredentialRequestErrors.CredentialRequestDenied, claimsResult.reason);
 				}

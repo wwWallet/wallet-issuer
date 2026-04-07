@@ -1,4 +1,4 @@
-import { ClaimsProvider, ClaimsProviderResult } from '../ClaimsProvider';
+import { ClaimsProvider, ClaimsProviderResult, ClaimsResolutionContext } from '../ClaimsProvider';
 import { supportedCredentialConfigurations } from '../../../config/supportedCredentialConfigurations';
 import { logger } from '../../logger';
 
@@ -40,13 +40,13 @@ export class RemoteClaimsProvider implements ClaimsProvider {
 		return sub;
 	}
 
-	async resolveClaims(accountId: string, scope: string): Promise<ClaimsProviderResult> {
+	async resolveClaims(accountId: string, scope: string, context?: ClaimsResolutionContext): Promise<ClaimsProviderResult> {
 		const supportedScope = this.resolveSupportedScope(scope);
 		if (!supportedScope) {
 			return { kind: 'denied', reason: 'Not supported scope' };
 		}
 
-		const fetchedClaimsResult = await this.getClaimsByUserId(accountId, supportedScope);
+		const fetchedClaimsResult = await this.getClaimsByUserId(accountId, supportedScope, context?.issuerState);
 		if (fetchedClaimsResult.kind === 'failure') {
 			return { kind: 'denied', reason: `Could not fetch claims: ${fetchedClaimsResult.reason}` };
 		}
@@ -80,22 +80,36 @@ export class RemoteClaimsProvider implements ClaimsProvider {
 		return configuration.vct;
 	}
 
-	private async getClaimsByUserId(userId: string, scope: string): Promise<ClaimsFetchResult> {
+	private async getClaimsByUserId(userId: string, scope: string, issuerState?: string): Promise<ClaimsFetchResult> {
+		if (!issuerState) {
+			logger.warn('Remote claims fetch skipped due to missing issuer_state', { scope });
+			return { kind: 'failure', reason: 'missing_issuer_state' };
+		}
+
 		const controller = new AbortController();
 		const timeout = setTimeout(() => controller.abort(), this.fetchTimeoutMs);
 
 		try {
-			const baseUrl = this.claimsFetcherUrl.endsWith('/')
-				? this.claimsFetcherUrl.slice(0, -1)
-				: this.claimsFetcherUrl;
-			const url = new URL(`${baseUrl}/${userId}`);
+			const url = new URL(this.claimsFetcherUrl);
 			console.log('Fetching claims from remote service', { url: url.toString(), scope });
 			const headers = new Headers();
+			headers.set('content-type', 'application/json');
 			if (this.apiKey) {
 				headers.set(this.apiKeyHeaderName, this.apiKey);
 			}
-
-			const response = await fetch(url, { headers, signal: controller.signal });
+			console.log('Request headers', { headers: Object.fromEntries(headers.entries()) });
+			console.log('Request body', { sub: userId, issuer_state: issuerState });
+			const response = await fetch(url, {
+				method: 'POST',
+				headers,
+				body: JSON.stringify({
+					data: {
+						sub: userId,
+						issuer_state: issuerState,
+					},
+				}),
+				signal: controller.signal,
+			});
 			if (!response.ok) {
 				const reason = this.resolveHttpFailureReason(response.status);
 				logger.warn('Remote claims fetch failed', { status: response.status, scope, reason });
