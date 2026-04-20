@@ -6,16 +6,17 @@ import { SDJwtInstance } from '@sd-jwt/core';
 import { digest as hasher } from '@sd-jwt/crypto-nodejs';
 import { sign, randomBytes, KeyObject } from 'crypto';
 import { importPrivateKeyPem } from './util/importPrivateKeyPem';
-import { base64url, calculateJwkThumbprint, exportJWK, importX509 } from 'jose';
-import { Document } from '@auth0/mdl';
-import { cborEncode } from '@auth0/mdl/lib/cbor';
+import { calculateJwkThumbprint, exportJWK, importX509 } from 'jose';
+import { CoseKey, DeviceKey, Issuer, SignatureAlgorithm, type MdocContext } from '@owf/mdoc';
 import { pemToBase64 } from './util/pemToBase64';
 import { logger } from './logger';
+import { p256 } from '@noble/curves/nist.js';
 
 const issuerPrivateKeyPem = fs.readFileSync(path.join(__dirname, '../../keys/pem.key'), 'utf-8').toString();
 const issuerCertPem = fs.readFileSync(path.join(__dirname, '../../keys/pem.crt'), 'utf-8').toString() as string;
 
 const issuerX5C = [pemToBase64(issuerCertPem)];
+const issuerCertDer = new Uint8Array(Buffer.from(issuerX5C[0], 'base64'));
 
 importPrivateKeyPem(issuerPrivateKeyPem, 'ES256'); // attempt to import the key
 importX509(issuerCertPem, 'ES256'); // attempt to import the public key
@@ -30,15 +31,44 @@ const key = async function () {
 	return key as any;
 };
 
+const mdocContext = {
+	crypto: {
+		digest: async ({ digestAlgorithm, bytes }) => {
+			const digest = await crypto.subtle.digest(digestAlgorithm, bytes as Uint8Array<ArrayBuffer>);
+			return new Uint8Array(digest);
+		},
+		random: (length: number) => crypto.getRandomValues(new Uint8Array(length)),
+		calculateEphemeralMacKey: async () => {
+			throw new Error('calculateEphemeralMacKey is not used in issuer flow');
+		},
+	},
+	cose: {
+		mac0: {
+			sign: async () => {
+				throw new Error('mac0.sign is not used in issuer flow');
+			},
+			verify: async () => {
+				throw new Error('mac0.verify is not used in issuer flow');
+			},
+		},
+		sign1: {
+			sign: async ({ key, toBeSigned }) => p256.sign(toBeSigned, key.privateKey, { format: 'compact' }),
+			verify: async ({ sign1, key }) => p256.verify(sign1.signature, sign1.toBeSigned, key.publicKey, { lowS: false }),
+		},
+	},
+} satisfies Pick<MdocContext, 'crypto' | 'cose'>;
+
 export const signer: CredentialSigner = {
 	signMsoMdoc: async function (doctype, namespaces, holderPublicKeyJwk) {
 		const key = await importPrivateKeyPem(issuerPrivateKeyPem, 'ES256');
 		if (!key) {
 			throw new Error('Could not import private key');
 		}
-		const document = new Document(doctype);
+
+		const issuer = new Issuer(doctype, mdocContext);
+
 		for (const [ns, nsData] of namespaces) {
-			document.addIssuerNameSpace(ns, { ...nsData });
+			issuer.addIssuerNamespace(ns, { ...nsData });
 		}
 
 		const issuerPrivateKeyJwk = await exportJWK(key);
@@ -47,29 +77,27 @@ export const signer: CredentialSigner = {
 		const expirationDate = new Date();
 
 		expirationDate.setFullYear(expirationDate.getFullYear() + 1);
-		const signedDocument = await document
-			.addValidityInfo({
-				signed: new Date(),
-				validUntil: expirationDate,
-				validFrom: validFromDate,
-			})
-			.addDeviceKeyInfo({ deviceKey: { ...holderPublicKeyJwk, kid: cborEncode(holderPublicKeyJwk.kid) } as any })
-			.sign({
-				issuerPrivateKey: {
-					...issuerPrivateKeyJwk,
-					kid: cborEncode(issuerJwkKid) as any, // only used to avoid undefined value on kid of the IssuerAuth
-				},
-				issuerCertificate: issuerCertPem,
-				alg: 'ES256',
-			});
 
-		// await signedDocument.issuerSigned.issuerAuth.verifyX509([caCertPem])
+		const issuerSigned = await issuer.sign({
+		signingKey: CoseKey.fromJwk({
+			...issuerPrivateKeyJwk,
+			kid: issuerJwkKid,
+		} as Record<string, unknown>),
+		certificates: [issuerCertDer],
+		algorithm: SignatureAlgorithm.ES256,
+		digestAlgorithm: 'SHA-256',
+		deviceKeyInfo: {
+			deviceKey: DeviceKey.fromJwk(holderPublicKeyJwk as Record<string, unknown>),
+		},
+		validityInfo: {
+			signed,
+			validFrom: validFromDate,
+			validUntil: expirationDate,
+		},
+		});
 
-		const prepared = signedDocument.prepare();
-		const issuerSigned = prepared.get('issuerSigned');
-		const issuedSignedCborEncoded = cborEncode(issuerSigned);
-		const credential = base64url.encode(issuedSignedCborEncoded as any);
-		return { credential: credential };
+		const credential = issuerSigned.encodedForOid4Vci;
+		return { credential };
 	},
 	signSdJwtVc: async function (payload, headers, disclosureFrame) {
 		const issuanceDate = new Date();

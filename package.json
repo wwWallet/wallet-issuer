@@ -18,7 +18,8 @@
     "lint": "npx eslint ."
   },
   "dependencies": {
-    "@auth0/mdl": "^3.0.1",
+    "@noble/curves": "^2.2.0",
+    "@owf/mdoc": "^0.6.0",
     "@sd-jwt/core": "^0.17.0",
     "@sd-jwt/crypto-nodejs": "^0.17.0",
     "@sd-jwt/types": "^0.17.0",
