@@ -51,7 +51,7 @@ export async function validateAccessToken(credentialConfigurationId: string, met
 				return err(CredentialRequestErrors.InternalServerError, "Introspection response does not contain 'cliend_id'");
 			} else if (!cnf?.jkt) {
 				return err(CredentialRequestErrors.InternalServerError, "Introspection response does not contain 'cnf.jkt'");
-			} else if (sub) {
+			} else if (!sub) {
 				return err(CredentialRequestErrors.InternalServerError, "Introspection response does not contain 'sub'");
 			}
 
