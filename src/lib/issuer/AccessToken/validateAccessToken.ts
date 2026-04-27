@@ -43,7 +43,9 @@ export async function validateAccessToken(credentialConfigurationId: string, met
 				if (!response.ok) {
 					return response;
 				}
-			} else if (tokenType.toLocaleLowerCase() === 'DPoP'.toLowerCase() && dpopProof === undefined) {
+			}
+
+			if (tokenType.toLocaleLowerCase() === 'DPoP'.toLowerCase() && dpopProof === undefined) {
 				return err(CredentialRequestErrors.InvalidRequest, 'DPoP proof is missing');
 			} else if (!scope) {
 				return err(CredentialRequestErrors.InternalServerError, "Introspection response does not contain 'scope'");
@@ -62,7 +64,7 @@ export async function validateAccessToken(credentialConfigurationId: string, met
 			}
 
 			return ok(introspectionPayload);
-		} catch {
+		} catch(error) {
 			return err(CredentialRequestErrors.InternalServerError, 'Communication with introspection endpoint failed');
 		}
 	} catch {
