@@ -4,19 +4,32 @@ import fs from 'fs';
 import path from 'path';
 import { SDJwtInstance } from '@sd-jwt/core';
 import { digest as hasher } from '@sd-jwt/crypto-nodejs';
-import { sign, randomBytes, KeyObject } from 'crypto';
+import { sign, randomBytes, KeyObject, webcrypto } from 'crypto';
 import { importPrivateKeyPem } from './util/importPrivateKeyPem';
 import { calculateJwkThumbprint, exportJWK, importX509 } from 'jose';
 import { CoseKey, DeviceKey, Issuer, SignatureAlgorithm, type MdocContext } from '@owf/mdoc';
-import { pemToBase64 } from './util/pemToBase64';
 import { logger } from './logger';
 import { p256 } from '@noble/curves/nist.js';
 
 const issuerPrivateKeyPem = fs.readFileSync(path.join(__dirname, '../../keys/pem.key'), 'utf-8').toString();
 const issuerCertPem = fs.readFileSync(path.join(__dirname, '../../keys/pem.crt'), 'utf-8').toString() as string;
 
-const issuerX5C = [pemToBase64(issuerCertPem)];
-const issuerCertDer = new Uint8Array(Buffer.from(issuerX5C[0], 'base64'));
+const parsePemCertificateChain = (pem: string) => {
+	const matches = pem.match(/-----BEGIN CERTIFICATE-----[\s\S]*?-----END CERTIFICATE-----/g);
+	if (!matches || matches.length === 0) {
+		throw new Error('No certificate found in issuer certificate PEM');
+	}
+
+	return matches.map((certPemBlock) =>
+		certPemBlock
+			.replace(/-----BEGIN CERTIFICATE-----/g, '')
+			.replace(/-----END CERTIFICATE-----/g, '')
+			.replace(/\r?\n|\r/g, '')
+	);
+};
+
+const issuerX5C = parsePemCertificateChain(issuerCertPem);
+const issuerCertDerChain = issuerX5C.map((certB64) => new Uint8Array(Buffer.from(certB64, 'base64')));
 
 importPrivateKeyPem(issuerPrivateKeyPem, 'ES256'); // attempt to import the key
 importX509(issuerCertPem, 'ES256'); // attempt to import the public key
@@ -34,10 +47,10 @@ const key = async function () {
 const mdocContext = {
 	crypto: {
 		digest: async ({ digestAlgorithm, bytes }) => {
-			const digest = await crypto.subtle.digest(digestAlgorithm, bytes as Uint8Array<ArrayBuffer>);
+			const digest = await webcrypto.subtle.digest(digestAlgorithm, bytes as Uint8Array<ArrayBuffer>);
 			return new Uint8Array(digest);
 		},
-		random: (length: number) => crypto.getRandomValues(new Uint8Array(length)),
+		random: (length: number) => webcrypto.getRandomValues(new Uint8Array(length)),
 		calculateEphemeralMacKey: async () => {
 			throw new Error('calculateEphemeralMacKey is not used in issuer flow');
 		},
@@ -79,21 +92,21 @@ export const signer: CredentialSigner = {
 		expirationDate.setFullYear(expirationDate.getFullYear() + 1);
 
 		const issuerSigned = await issuer.sign({
-		signingKey: CoseKey.fromJwk({
-			...issuerPrivateKeyJwk,
-			kid: issuerJwkKid,
-		} as Record<string, unknown>),
-		certificates: [issuerCertDer],
-		algorithm: SignatureAlgorithm.ES256,
-		digestAlgorithm: 'SHA-256',
-		deviceKeyInfo: {
-			deviceKey: DeviceKey.fromJwk(holderPublicKeyJwk as Record<string, unknown>),
-		},
-		validityInfo: {
-			signed,
-			validFrom: validFromDate,
-			validUntil: expirationDate,
-		},
+			signingKey: CoseKey.fromJwk({
+				...issuerPrivateKeyJwk,
+				kid: issuerJwkKid,
+			} as Record<string, unknown>),
+			certificates: issuerCertDerChain,
+			algorithm: SignatureAlgorithm.ES256,
+			digestAlgorithm: 'SHA-256',
+			deviceKeyInfo: {
+				deviceKey: DeviceKey.fromJwk(holderPublicKeyJwk as Record<string, unknown>),
+			},
+			validityInfo: {
+				signed,
+				validFrom: validFromDate,
+				validUntil: expirationDate,
+			},
 		});
 
 		const credential = issuerSigned.encodedForOid4Vci;
