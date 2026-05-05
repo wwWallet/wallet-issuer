@@ -27,7 +27,7 @@
     "express": "^5.2.1",
     "jose": "^6.1.3",
     "pug": "^3.0.3",
-    "wallet-common": "git+https://github.com/wwWallet/wallet-common.git#7248778a756913a6f738694f48f4b10563726c8d",
+    "wallet-common": "git+https://github.com/wwWallet/wallet-common.git#daf25260c860f6a8be66e246e848fddcf53479b3",
     "winston": "^3.19.0",
     "zod": "^4.1.13"
   },
