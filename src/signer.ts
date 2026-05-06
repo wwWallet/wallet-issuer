@@ -4,12 +4,11 @@ import fs from 'fs';
 import path from 'path';
 import { SDJwtInstance } from '@sd-jwt/core';
 import { digest as hasher } from '@sd-jwt/crypto-nodejs';
-import { sign, randomBytes, KeyObject, webcrypto } from 'crypto';
+import { createPrivateKey, sign, randomBytes, KeyObject, webcrypto } from 'crypto';
 import { importPrivateKeyPem } from './util/importPrivateKeyPem';
 import { calculateJwkThumbprint, exportJWK, importX509 } from 'jose';
 import { CoseKey, DeviceKey, Issuer, SignatureAlgorithm, type MdocContext } from '@owf/mdoc';
 import { logger } from './logger';
-import { p256 } from '@noble/curves/nist.js';
 
 const issuerPrivateKeyPem = fs.readFileSync(path.join(__dirname, '../../keys/pem.key'), 'utf-8').toString();
 const issuerCertPem = fs.readFileSync(path.join(__dirname, '../../keys/pem.crt'), 'utf-8').toString() as string;
@@ -65,8 +64,18 @@ const mdocContext = {
 			},
 		},
 		sign1: {
-			sign: async ({ key, toBeSigned }) => p256.sign(toBeSigned, key.privateKey, { format: 'compact' }),
-			verify: async ({ sign1, key }) => p256.verify(sign1.signature, sign1.toBeSigned, key.publicKey, { lowS: false }),
+			sign: async ({ key, toBeSigned }) => {
+				const privateKey = createPrivateKey({ format: 'jwk', key: key.jwk as Record<string, unknown> });
+				return new Uint8Array(
+					sign(null, toBeSigned, {
+						dsaEncoding: 'ieee-p1363',
+						key: privateKey,
+					})
+				);
+			},
+			verify: async () => {
+				throw new Error('cose.sign1.verify is not used in issuer flow');
+			},
 		},
 	},
 } satisfies Pick<MdocContext, 'crypto' | 'cose'>;
