@@ -11,7 +11,7 @@ import { Document } from '@auth0/mdl';
 import { cborEncode } from '@auth0/mdl/lib/cbor';
 import { pemToBase64 } from './util/pemToBase64';
 import { logger } from './logger';
-import { calculateVctIntegritySRI } from 'wallet-common';
+import { calculateObjectSRI } from 'wallet-common';
 import { vctDocumentProvider } from '../config/vctDocumentProvider';
 
 const issuerPrivateKeyPem = fs.readFileSync(path.join(__dirname, '../../keys/pem.key'), 'utf-8').toString();
@@ -77,7 +77,9 @@ export const signer: CredentialSigner = {
 		if (!payload?.vct) {
 			throw new Error('payload.vct is required in SD JWT VCs');
 		}
-		const vctIntegrity = await calculateVctIntegritySRI(vctDocumentProvider, payload.vct, crypto.subtle);
+		const typeMetadata = await vctDocumentProvider.getVctMetadataDocument(payload.vct);
+
+		const vctIntegrity = await calculateObjectSRI(crypto.subtle, typeMetadata);
 		if (vctIntegrity) {
 			payload['vct#integrity'] = vctIntegrity;
 		}
