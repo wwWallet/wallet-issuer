@@ -11,6 +11,8 @@ import { Document } from '@auth0/mdl';
 import { cborEncode } from '@auth0/mdl/lib/cbor';
 import { pemToBase64 } from './util/pemToBase64';
 import { logger } from './logger';
+import { calculateVctIntegritySRI } from 'wallet-common';
+import { vctDocumentProvider } from '../config/vctDocumentProvider';
 
 const issuerPrivateKeyPem = fs.readFileSync(path.join(__dirname, '../../keys/pem.key'), 'utf-8').toString();
 const issuerCertPem = fs.readFileSync(path.join(__dirname, '../../keys/pem.crt'), 'utf-8').toString() as string;
@@ -72,6 +74,17 @@ export const signer: CredentialSigner = {
 		return { credential: credential };
 	},
 	signSdJwtVc: async function (payload, headers, disclosureFrame) {
+		if (!payload?.vct) {
+			throw new Error('payload.vct is required in SD JWT VCs');
+		}
+		const vctIntegrity = await calculateVctIntegritySRI(vctDocumentProvider, payload.vct, crypto.subtle);
+		if (vctIntegrity) {
+			payload['vct#integrity'] = vctIntegrity;
+		}
+		else {
+			logger.warn(`Unable to calculate VCT integrity for vct ${payload.vct}`);
+		}
+
 		const issuanceDate = new Date();
 		const expirationDate = new Date();
 		expirationDate.setFullYear(expirationDate.getFullYear() + 1);
@@ -84,6 +97,7 @@ export const signer: CredentialSigner = {
 		}
 
 		payload.iat = Math.floor(issuanceDate.getTime() / 1000);
+		payload.nbf = Math.floor(issuanceDate.getTime() / 1000);
 		payload.exp = Math.floor(expirationDate.getTime() / 1000);
 		if (!payload?.cnf?.jwk) {
 			logger.error('payload.cnf.jwk is required in signSdJwtVc function call');
