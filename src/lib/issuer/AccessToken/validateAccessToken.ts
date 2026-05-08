@@ -64,7 +64,7 @@ export async function validateAccessToken(credentialConfigurationId: string, met
 			}
 
 			return ok(introspectionPayload);
-		} catch(error) {
+		} catch {
 			return err(CredentialRequestErrors.InternalServerError, 'Communication with introspection endpoint failed');
 		}
 	} catch {
