@@ -16,7 +16,8 @@ export async function validateAccessToken(credentialConfigurationId: string, met
 		const authorizationServerMetadataResponse = await fetch(createOpts.authorizationServerUrl + '/.well-known/oauth-authorization-server');
 		const authorizationServerMetadata = await authorizationServerMetadataResponse.json();
 		const { introspection_endpoint } = authorizationServerMetadata as { introspection_endpoint: string };
-		const [tokenType, accessToken] = issueRequestOpts.request.headers['authorization'].split(' ');
+		let [tokenType, accessToken] = issueRequestOpts.request.headers['authorization'].split(' ');
+		tokenType = tokenType.toLowerCase();
 		const dpopProof = issueRequestOpts.request.headers['dpop'] as string | undefined;
 
 		try {
@@ -38,14 +39,14 @@ export async function validateAccessToken(credentialConfigurationId: string, met
 				return err(CredentialRequestErrors.InvalidRequest, 'Access token not active');
 			}
 
-			if (tokenType === 'DPoP' && dpopProof !== undefined) {
+			if (tokenType === 'dpop' && dpopProof !== undefined) {
 				const response = await validateDpopProof(dpopProof, cnf);
 				if (!response.ok) {
 					return response;
 				}
 			}
 
-			if (tokenType.toLocaleLowerCase() === 'DPoP'.toLowerCase() && dpopProof === undefined) {
+			if (tokenType === 'dpop' && dpopProof === undefined) {
 				return err(CredentialRequestErrors.InvalidRequest, 'DPoP proof is missing');
 			} else if (!scope) {
 				return err(CredentialRequestErrors.InternalServerError, "Introspection response does not contain 'scope'");
