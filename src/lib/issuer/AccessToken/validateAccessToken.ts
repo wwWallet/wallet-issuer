@@ -50,7 +50,7 @@ export async function validateAccessToken(credentialConfigurationId: string, met
 			} else if (!scope) {
 				return err(CredentialRequestErrors.InternalServerError, "Introspection response does not contain 'scope'");
 			} else if (!client_id) {
-				return err(CredentialRequestErrors.InternalServerError, "Introspection response does not contain 'cliend_id'");
+				return err(CredentialRequestErrors.InternalServerError, "Introspection response does not contain 'client_id'");
 			} else if (!cnf?.jkt) {
 				return err(CredentialRequestErrors.InternalServerError, "Introspection response does not contain 'cnf.jkt'");
 			} else if (!sub) {
