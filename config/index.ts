@@ -4,6 +4,7 @@ dotenv.config({ quiet: true });
 const url = String(process.env.SERVICE_URL || 'default_url');
 export const config = {
 	url: url,
+	issuerIdentifier: `${url}${process.env.ISSUER_PATH || '/'}`,
 	port: parseInt(process.env.SERVICE_PORT || '8003'),
 	authorizationServerUrl: String(process.env.AUTHORIZATION_SERVER_URL || 'default_url'),
 	credentialIssuanceBatchSize: parseInt(process.env.CREDENTIAL_ISSUANCE_BATCH_SIZE || '1', 10),

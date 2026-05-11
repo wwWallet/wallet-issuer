@@ -24,7 +24,7 @@ const credentialRequestStore = new MemoryStore<string, CredentialRequestWithClai
 
 export const credentialRequestHelper = createCredentialRequestHelper(credentialRequestStore);
 
-export const issuer = createIssuerOpenID4VCI(config.url, {
+export const issuer = createIssuerOpenID4VCI(config.issuerIdentifier, {
 	clockTolerance: config.clockTolerance,
 	findAccount: findAccount,
 	credentialRequestHelper,

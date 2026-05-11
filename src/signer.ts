@@ -156,7 +156,7 @@ export const signer: CredentialSigner = {
 			throw new Error('payload.cnf.jwk is required in signSdJwtVc function call');
 		}
 		payload.sub = await calculateJwkThumbprint(payload.cnf.jwk);
-		payload.iss = config.url;
+		payload.iss = config.issuerIdentifier;
 
 		const sdjwt = new SDJwtInstance({
 			signer: this.signer(),
