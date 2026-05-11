@@ -37,17 +37,20 @@ export async function validateAccessToken(credentialConfigurationId: string, met
 				return err(CredentialRequestErrors.InvalidRequest, 'Access token not active');
 			}
 
-			if (tokenType === 'DPoP' && dpopProof !== undefined) {
+			const normalizedTokenType = tokenType.toLowerCase();
+			if (normalizedTokenType === 'dpop' && dpopProof !== undefined) {
 				const response = await validateDpopProof(dpopProof, cnf);
 				if (!response.ok) {
 					return response;
 				}
-			} else if (tokenType.toLocaleLowerCase() === 'DPoP'.toLowerCase() && dpopProof === undefined) {
+			}
+
+			if (normalizedTokenType === 'dpop' && dpopProof === undefined) {
 				return err(CredentialRequestErrors.InvalidRequest, 'DPoP proof is missing');
 			} else if (!scope) {
 				return err(CredentialRequestErrors.InternalServerError, "Introspection response does not contain 'scope'");
 			} else if (!client_id) {
-				return err(CredentialRequestErrors.InternalServerError, "Introspection response does not contain 'cliend_id'");
+				return err(CredentialRequestErrors.InternalServerError, "Introspection response does not contain 'client_id'");
 			} else if (!cnf?.jkt) {
 				return err(CredentialRequestErrors.InternalServerError, "Introspection response does not contain 'cnf.jkt'");
 			} else if (!sub) {
