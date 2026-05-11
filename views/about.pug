@@ -15,11 +15,11 @@ block content
 
 			p
 				| #{locale.about.issuerMetaPrefix}
-				a(href=`${baseUrl}/.well-known/openid-credential-issuer/openid` target="_blank")
-					| #{baseUrl}/.well-known/openid-credential-issuer/openid
+				a(href=credentialIssuerMetadtaUrl target="_blank")
+					| #{credentialIssuerMetadataUrl}
 				|  #{locale.about.jwtMetaJoin}
-				a(href=`${baseUrl}/.well-known/jwt-vc-issuer/openid` target="_blank")
-					| #{baseUrl}/.well-known/jwt-vc-issuer/openid
+				a(href=jwtVcIssuerMetadataUrl target="_blank")
+					| #{jwtVcIssuerMetadataUrl}
 				| .
 
 			p
