@@ -2,8 +2,14 @@ import dotenv from 'dotenv';
 dotenv.config({ quiet: true });
 
 const url = String(process.env.SERVICE_URL || 'default_url');
+const rawIssuerPath = process.env.ISSUER_PATH?.trim() || "";
+const issuerPath = rawIssuerPath
+	? `/${rawIssuerPath.replace(/^\/+|\/+$/g, "")}`
+	: "";
+
 export const config = {
 	url: url,
+	issuerIdentifier: `${url}${issuerPath}`,
 	port: parseInt(process.env.SERVICE_PORT || '8003'),
 	authorizationServerUrl: String(process.env.AUTHORIZATION_SERVER_URL || 'default_url'),
 	credentialIssuanceBatchSize: parseInt(process.env.CREDENTIAL_ISSUANCE_BATCH_SIZE || '1', 10),
