@@ -127,14 +127,19 @@ export const signer: CredentialSigner = {
 		if (!payload?.vct) {
 			throw new Error('payload.vct is required in SD JWT VCs');
 		}
-		const typeMetadata = await vctDocumentProvider.getVctMetadataDocument(payload.vct);
-
-		const vctIntegrity = await calculateObjectSRI(crypto.subtle, typeMetadata);
-		if (vctIntegrity) {
-			payload['vct#integrity'] = vctIntegrity;
+		const doc = await vctDocumentProvider.getVctMetadataDocument(payload.vct);
+		if (doc?.ok) {
+			const typeMetadata = doc.value;
+			const vctIntegrity = await calculateObjectSRI(crypto.subtle, typeMetadata);
+			if (vctIntegrity) {
+				payload['vct#integrity'] = vctIntegrity;
+			}
+			else {
+				logger.warn(`Unable to calculate VCT integrity for vct ${payload.vct}`);
+			}
 		}
 		else {
-			logger.warn(`Unable to calculate VCT integrity for vct ${payload.vct}`);
+			logger.warn(`Unable to find VCT Metadata for vct ${payload.vct}`);
 		}
 
 		const issuanceDate = new Date();
