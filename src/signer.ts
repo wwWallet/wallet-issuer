@@ -178,6 +178,8 @@ export const signer: CredentialSigner = {
 			payload.shortLived = null;
 		}
 
+		payload.oneTime = null;
+
 		const sdjwt = new SDJwtInstance({
 			signer: this.signer(),
 			hashAlg: 'sha-256',
