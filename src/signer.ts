@@ -12,9 +12,6 @@ import { logger } from './logger';
 import { calculateObjectSRI } from 'wallet-common';
 import { vctDocumentProvider } from '../config/vctDocumentProvider';
 
-const issueShortTermCredentials: boolean = true as const;
-const useAlternativeIdentifier: boolean = config.useAlternativeIdentifier;
-
 const issuerPrivateKeyPem = fs.readFileSync(path.join(__dirname, '../../keys/pem.key'), 'utf-8').toString();
 const issuerCertPem = fs.readFileSync(path.join(__dirname, '../../keys/pem.crt'), 'utf-8').toString() as string;
 
@@ -164,7 +161,7 @@ export const signer: CredentialSigner = {
 			throw new Error('payload.cnf.jwk is required in signSdJwtVc function call');
 		}
 
-		if (useAlternativeIdentifier) {
+		if (config.useAlternativeIdentifier) {
 			payload.also_known_as = randomUUID();
 			payload.sub = undefined;
 		} else {
@@ -174,11 +171,13 @@ export const signer: CredentialSigner = {
 
 		// Mark credential as "short-lived", meaning that no status list is needed
 		// If not "short-lived", the attribute should not exist at all in the payload.
-		if (issueShortTermCredentials) {
+		if (config.issueShortTermCredentials) {
 			payload.shortLived = null;
 		}
 
-		payload.oneTime = null;
+		if (config.issueOneTimeCredentials) {
+			payload.oneTime = null;
+		}
 
 		const sdjwt = new SDJwtInstance({
 			signer: this.signer(),
