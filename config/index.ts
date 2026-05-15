@@ -34,4 +34,5 @@ export const config = {
 	},
 	vctRegistryUrl: process.env.VCT_REGISTRY_URL || 'http://localhost:8097/type-metadata',
 	revokeCredentialOffers: process.env.REVOKE_CREDENTIAL_OFFERS === 'true' || false,
+	useAlternativeIdentifier: process.env.USE_ALTERNATIVE_IDENTIFIER === 'true' || false
 };

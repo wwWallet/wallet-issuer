@@ -4,13 +4,16 @@ import fs from 'fs';
 import path from 'path';
 import { SDJwtInstance } from '@sd-jwt/core';
 import { digest as hasher } from '@sd-jwt/crypto-nodejs';
-import { createPrivateKey, sign, randomBytes, KeyObject, webcrypto } from 'crypto';
+import { createPrivateKey, sign, randomBytes, KeyObject, webcrypto, randomUUID } from 'crypto';
 import { importPrivateKeyPem } from './util/importPrivateKeyPem';
 import { calculateJwkThumbprint, exportJWK, importX509 } from 'jose';
 import { CoseKey, DeviceKey, Issuer, SignatureAlgorithm, type MdocContext } from '@owf/mdoc';
 import { logger } from './logger';
 import { calculateObjectSRI } from 'wallet-common';
 import { vctDocumentProvider } from '../config/vctDocumentProvider';
+
+const issueShortTermCredentials: boolean = true as const;
+const useAlternativeIdentifier: boolean = config.useAlternativeIdentifier;
 
 const issuerPrivateKeyPem = fs.readFileSync(path.join(__dirname, '../../keys/pem.key'), 'utf-8').toString();
 const issuerCertPem = fs.readFileSync(path.join(__dirname, '../../keys/pem.crt'), 'utf-8').toString() as string;
@@ -160,8 +163,20 @@ export const signer: CredentialSigner = {
 			logger.error('payload.cnf.jwk is required in signSdJwtVc function call');
 			throw new Error('payload.cnf.jwk is required in signSdJwtVc function call');
 		}
-		payload.sub = await calculateJwkThumbprint(payload.cnf.jwk);
+
+		if (useAlternativeIdentifier) {
+			payload.also_known_as = randomUUID();
+			payload.sub = undefined;
+		} else {
+			payload.sub = await calculateJwkThumbprint(payload.cnf.jwk);
+		}
 		payload.iss = config.issuerIdentifier;
+
+		// Mark credential as "short-lived", meaning that no status list is needed
+		// If not "short-lived", the attribute should not exist at all in the payload.
+		if (issueShortTermCredentials) {
+			payload.shortLived = null;
+		}
 
 		const sdjwt = new SDJwtInstance({
 			signer: this.signer(),

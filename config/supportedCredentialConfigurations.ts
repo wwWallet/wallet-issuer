@@ -347,17 +347,17 @@ export const supportedCredentialConfigurations: OpenidCredentialIssuerMetadata['
 
 export const disclosureFrameMap: Record<string, Record<string, unknown>> = {
 	'urn:eudi:pid:1:dc': {
-		family_name: true,
+		family_name: false,
 		birth_family_name: true,
-		given_name: true,
+		given_name: false,
 		birth_given_name: true,
 		personal_administrative_number: true,
 		place_of_birth: {
-			country: true,
+			country: false,
 			region: true,
 			locality: true,
 		},
-		birthdate: true,
+		birthdate: false,
 		address: {
 			formatted: true,
 			country: true,
@@ -383,7 +383,7 @@ export const disclosureFrameMap: Record<string, Record<string, unknown>> = {
 		date_of_issuance: true,
 		date_of_expiry: false,
 		sex: true,
-		nationalities: true,
+		nationalities: false,
 		email: true,
 		phone_number: true,
 		picture: true,
