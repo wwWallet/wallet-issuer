@@ -1,5 +1,5 @@
 import { OpenidCredentialIssuerMetadata, VerifiableCredentialFormat } from 'wallet-common';
-import { config } from '.';
+import { config } from './index';
 
 type CredentialConfigurationsSupported = OpenidCredentialIssuerMetadata['credential_configurations_supported'];
 type DisclosureFrameMap = Record<string, Record<string, unknown>>;
@@ -51,7 +51,7 @@ const baseSupportedCredentialConfigurations: CredentialConfigurationsSupported =
 					name: 'PID mDoc',
 					description: 'Person Identification Data',
 					background_image: {
-						uri: 'https://demo-issuer.wwwallet.org/images/background-image.png',
+						uri: new URL('/images/background-image.png', config.url).toString(),
 					},
 					background_color: '#4CC3DD',
 					text_color: '#000000',

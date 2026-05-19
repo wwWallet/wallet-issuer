@@ -6,9 +6,14 @@ const supportedCredentialScopesWhitelist = (process.env.SUPPORTED_CREDENTIAL_SCO
 	.split(',')
 	.map((scope) => scope.trim())
 	.filter(Boolean);
+const rawIssuerPath = process.env.ISSUER_PATH?.trim() || "";
+const issuerPath = rawIssuerPath
+	? `/${rawIssuerPath.replace(/^\/+|\/+$/g, "")}`
+	: "";
 
 export const config = {
 	url: url,
+	issuerIdentifier: `${url}${issuerPath}`,
 	port: parseInt(process.env.SERVICE_PORT || '8003'),
 	authorizationServerUrl: String(process.env.AUTHORIZATION_SERVER_URL || 'default_url'),
 	credentialIssuanceBatchSize: parseInt(process.env.CREDENTIAL_ISSUANCE_BATCH_SIZE || '1', 10),

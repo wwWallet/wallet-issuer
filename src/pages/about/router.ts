@@ -1,14 +1,18 @@
 import { Router } from 'express';
+import { prependToPath } from 'wallet-common';
+import { config } from '../../../config';
 
 export const aboutRouter = Router();
 
-aboutRouter.get('/about', (req, res) => {
-	const protocol = (req.headers['x-forwarded-proto'] as string) || req.protocol;
-	const host = req.get('host');
-	const baseUrl = `${protocol}://${host}`;
+aboutRouter.get('/about', (_req, res) => {
+	const credentialIssuerIdentifier = config.issuerIdentifier;
+	const credentialIssuerMetadataUrl = prependToPath(credentialIssuerIdentifier, '.well-known/openid-credential-issuer');
+	const jwtVcIssuerMetadataUrl = prependToPath(credentialIssuerIdentifier, '.well-known/jwt-vc-issuer');
 
 	res.render('about', {
 		title: 'About',
-		baseUrl,
+		credentialIssuerIdentifier,
+		credentialIssuerMetadataUrl,
+		jwtVcIssuerMetadataUrl
 	});
 });
