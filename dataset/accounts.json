@@ -3,7 +3,7 @@
 		{
 			"id": "test",
 			"pid": {
-				"date_of_issuance": "",
+				"date_of_issuance": "2025-04-21",
 				"date_of_expiry": "2035-04-21",
 				"issuing_authority": "PID:00001",
 				"issuing_country": "GR",
@@ -60,7 +60,7 @@
 				"blueprint_id": 2
 			},
 			"ehic": {
-				"date_of_issuance": "",
+				"date_of_issuance": "2025-04-21",
 				"date_of_expiry": "2035-04-21",
 				"personal_administrative_number": "12313213213",
 				"issuing_country": "DE",
@@ -93,7 +93,7 @@
 		{
 			"id": "test2",
 			"pid": {
-				"date_of_issuance": "",
+				"date_of_issuance": "2025-04-21",
 				"date_of_expiry": "2035-04-21",
 				"issuing_authority": "PID:00002",
 				"issuing_country": "GR",
@@ -150,7 +150,7 @@
 				"blueprint_id": 2
 			},
 			"ehic": {
-				"date_of_issuance": "",
+				"date_of_issuance": "2025-04-21",
 				"date_of_expiry": "2035-04-21",
 				"personal_administrative_number": "52313313216",
 				"issuing_country": "DE",

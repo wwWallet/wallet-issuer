@@ -11,6 +11,7 @@ import { CoseKey, DeviceKey, Issuer, SignatureAlgorithm, type MdocContext } from
 import { logger } from './logger';
 import { calculateObjectSRI } from 'wallet-common';
 import { vctDocumentProvider } from '../config/vctDocumentProvider';
+import { normalizeMdocNamespace } from './lib/issuer/normalizeMdocNamespace';
 
 const issuerPrivateKeyPem = fs.readFileSync(path.join(__dirname, '../../keys/pem.key'), 'utf-8').toString();
 const issuerCertPem = fs.readFileSync(path.join(__dirname, '../../keys/pem.crt'), 'utf-8').toString() as string;
@@ -51,7 +52,16 @@ const mdocContext = {
 			const digest = await webcrypto.subtle.digest(digestAlgorithm, bytes as Uint8Array<ArrayBuffer>);
 			return new Uint8Array(digest);
 		},
-		random: (length: number) => webcrypto.getRandomValues(new Uint8Array(length)),
+		random: (length: number) => {
+			const bytes = webcrypto.getRandomValues(new Uint8Array(length));
+
+			// ensure unsigned 32-bit integer values are always within signed 32-bit bounds
+			if (length === 4) {
+				bytes[0] &= 0x7f;
+			}
+
+			return bytes;
+		},
 		calculateEphemeralMacKey: async () => {
 			throw new Error('calculateEphemeralMacKey is not used in issuer flow');
 		},
@@ -92,7 +102,7 @@ export const signer: CredentialSigner = {
 		const issuer = new Issuer(doctype, mdocContext);
 
 		for (const [ns, nsData] of namespaces) {
-			issuer.addIssuerNamespace(ns, { ...nsData });
+			issuer.addIssuerNamespace(ns, normalizeMdocNamespace(nsData));
 		}
 
 		const issuerPrivateKeyJwk = await exportJWK(key);
