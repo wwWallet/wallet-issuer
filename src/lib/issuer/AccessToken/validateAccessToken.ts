@@ -1,5 +1,4 @@
-import { OpenidCredentialIssuerMetadata } from 'wallet-common';
-import { err, ok, Result } from 'wallet-common';
+import { err, ok, OpenidCredentialIssuerMetadata, prependToPath, Result } from 'wallet-common';
 import { CredentialIssuerCreateOptions } from '../IssuerOpenID4VCI';
 import { CredentialRequestError, CredentialRequestErrors } from '../CredentialRequest/CredentialRequestError';
 import { validateDpopProof } from './validateDpopProof';
@@ -13,7 +12,7 @@ import { IntrospectionResponse } from '../types';
  */
 export async function validateAccessToken(credentialConfigurationId: string, metadata: OpenidCredentialIssuerMetadata, issueRequestOpts: PlainIssueCredentialRequestOptions, createOpts: CredentialIssuerCreateOptions): Promise<Result<IntrospectionResponse & { scope: string; sub: string; client_id: string }, CredentialRequestError>> {
 	try {
-		const authorizationServerMetadataResponse = await fetch(createOpts.authorizationServerUrl + '/.well-known/oauth-authorization-server');
+		const authorizationServerMetadataResponse = await fetch(prependToPath(createOpts.authorizationServerUrl, '.well-known/oauth-authorization-server') ?? '');
 		const authorizationServerMetadata = await authorizationServerMetadataResponse.json();
 		const { introspection_endpoint } = authorizationServerMetadata as { introspection_endpoint: string };
 		const [tokenType, accessToken] = issueRequestOpts.request.headers['authorization'].split(' ');
@@ -38,20 +37,23 @@ export async function validateAccessToken(credentialConfigurationId: string, met
 				return err(CredentialRequestErrors.InvalidRequest, 'Access token not active');
 			}
 
-			if (tokenType === 'DPoP' && dpopProof !== undefined) {
+			const normalizedTokenType = tokenType.toLowerCase();
+			if (normalizedTokenType === 'dpop' && dpopProof !== undefined) {
 				const response = await validateDpopProof(dpopProof, cnf);
 				if (!response.ok) {
 					return response;
 				}
-			} else if (tokenType.toLocaleLowerCase() === 'DPoP'.toLowerCase() && dpopProof === undefined) {
+			}
+
+			if (normalizedTokenType === 'dpop' && dpopProof === undefined) {
 				return err(CredentialRequestErrors.InvalidRequest, 'DPoP proof is missing');
 			} else if (!scope) {
 				return err(CredentialRequestErrors.InternalServerError, "Introspection response does not contain 'scope'");
 			} else if (!client_id) {
-				return err(CredentialRequestErrors.InternalServerError, "Introspection response does not contain 'cliend_id'");
+				return err(CredentialRequestErrors.InternalServerError, "Introspection response does not contain 'client_id'");
 			} else if (!cnf?.jkt) {
 				return err(CredentialRequestErrors.InternalServerError, "Introspection response does not contain 'cnf.jkt'");
-			} else if (sub) {
+			} else if (!sub) {
 				return err(CredentialRequestErrors.InternalServerError, "Introspection response does not contain 'sub'");
 			}
 

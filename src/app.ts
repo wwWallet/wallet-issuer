@@ -11,6 +11,16 @@ import { apiRouter } from './api/router';
 
 const app: Express = express();
 
+app.get('/.well-known/openid-credential-issuer/openid', async (_req, res) => {
+	try {
+		const { metadata } = await issuer.getMetadata();
+		res.status(200).send(metadata);
+	} catch (e) {
+		logger.error(JSON.stringify(e));
+		res.status(500).send({ error: 'internal_server_error' });
+	}
+});
+
 app.get('/.well-known/jwt-vc-issuer/openid', async (_req, res) => {
 	try {
 		const { jwtVcIssuerMetadata } = await issuer.getMetadata();

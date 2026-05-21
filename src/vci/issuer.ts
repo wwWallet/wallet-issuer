@@ -34,7 +34,7 @@ const claimsProvider: ClaimsProvider = config.vcClaimsFetcherUrl
 claimsProvider.startBackgroundJobs?.(credentialRequestHelper);
 const configuredFindAccount = createFindAccount(claimsProvider);
 
-export const issuer = createIssuerOpenID4VCI(config.url + '/openid', {
+export const issuer = createIssuerOpenID4VCI(config.issuerIdentifier, {
 	clockTolerance: config.clockTolerance,
 	findAccount: configuredFindAccount,
 	credentialRequestHelper,
