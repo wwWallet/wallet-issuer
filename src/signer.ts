@@ -104,8 +104,7 @@ export const signer: CredentialSigner = {
 
 		const issuerSigned = await issuer.sign({
 			signingKey: CoseKey.fromJwk({
-				...issuerPrivateKeyJwk,
-				kid: issuerJwkKid,
+				...issuerPrivateKeyJwk
 			} as Record<string, unknown>),
 			certificates: issuerCertDerChain,
 			algorithm: SignatureAlgorithm.ES256,
