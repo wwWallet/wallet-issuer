@@ -100,7 +100,11 @@
 				"issuing_authority": "PID:00001",
 				"issuing_authority_unicode": "PID:00001",
 				"iss_reg_id": "123456789",
-				"also_known_as": "JD"
+				"also_known_as": "JD",
+				"category": "urn:etsi:esi:eaa:eu:standard",
+				"oneTime": true,
+				"status_service": "https://issuer.example.org/status",
+				"shortLived": true
 			}
 		},
 		{

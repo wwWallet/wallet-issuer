@@ -374,6 +374,26 @@ export const supportedCredentialConfigurations: OpenidCredentialIssuerMetadata['
 					],
 				},
 				{
+					path: ['org.iso.23220.1', 'issue_date'],
+					mandatory: true,
+					display: [
+						{
+							name: 'Issuance Date',
+							locale: 'en-US',
+						},
+					],
+				},
+				{
+					path: ['org.iso.23220.1', 'expiry_date'],
+					mandatory: true,
+					display: [
+						{
+							name: 'Expiration Date',
+							locale: 'en-US',
+						},
+					],
+				},
+				{
 					path: ['org.iso.23220.1', 'document_number'],
 					mandatory: true,
 					display: [
@@ -384,11 +404,31 @@ export const supportedCredentialConfigurations: OpenidCredentialIssuerMetadata['
 					],
 				},
 				{
-					path: ['org.iso.23220.1', 'issuing_authority'],
+					path: ['org.iso.23220.1', 'issuing_country'],
+					mandatory: true,
+					display: [
+						{
+							name: 'Issuing Country',
+							locale: 'en-US',
+						},
+					],
+				},
+				{
+					path: ['org.iso.23220.1', 'issuing_authority_unicode'],
 					mandatory: true,
 					display: [
 						{
 							name: 'Issuing Authority',
+							locale: 'en-US',
+						},
+					],
+				},
+				{
+					path: ['org.etsi.01947201.010101', 'category'],
+					mandatory: false,
+					display: [
+						{
+							name: 'Category',
 							locale: 'en-US',
 						},
 					],
@@ -409,6 +449,36 @@ export const supportedCredentialConfigurations: OpenidCredentialIssuerMetadata['
 					display: [
 						{
 							name: 'Also Known As',
+							locale: 'en-US',
+						},
+					],
+				},
+				{
+					path: ['org.etsi.01947201.010101', 'oneTime'],
+					mandatory: false,
+					display: [
+						{
+							name: 'One Time Only',
+							locale: 'en-US',
+						},
+					],
+				},
+				{
+					path: ['org.etsi.01947201.010101', 'status_service'],
+					mandatory: false,
+					display: [
+						{
+							name: 'Status Service',
+							locale: 'en-US',
+						},
+					],
+				},
+				{
+					path: ['org.etsi.01947201.010101', 'shortLived'],
+					mandatory: false,
+					display: [
+						{
+							name: 'Short-lived',
 							locale: 'en-US',
 						},
 					],
