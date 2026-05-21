@@ -46,6 +46,23 @@ const key = async function () {
 	return key as any;
 };
 
+function getNestedValue(
+	obj: Record<string, any>,
+	path: string[]
+) {
+	let current = obj;
+
+	for (const key of path) {
+		if (current == null) {
+			return undefined;
+		}
+
+		current = current[key];
+	}
+
+	return current;
+}
+
 const mdocContext = {
 	crypto: {
 		digest: async ({ digestAlgorithm, bytes }) => {
@@ -93,16 +110,89 @@ const mdocContext = {
 } satisfies Pick<MdocContext, 'crypto' | 'cose'>;
 
 export const signer: CredentialSigner = {
-	signMsoMdoc: async function (doctype, namespaces, holderPublicKeyJwk) {
-		const key = await importPrivateKeyPem(issuerPrivateKeyPem, 'ES256');
+	signMsoMdoc: async function (
+		credentialConfiguration,
+		claimsToSign,
+		holderPublicKeyJwk
+	) {
+		const key = await importPrivateKeyPem(
+			issuerPrivateKeyPem,
+			'ES256'
+		);
+
 		if (!key) {
 			throw new Error('Could not import private key');
 		}
 
+		const doctype = (credentialConfiguration as any).doctype;
+
+		if (!doctype) {
+			throw new Error('Missing mdoc doctype');
+		}
+
+		const supportedClaims =
+			credentialConfiguration.credential_metadata?.claims;
+
+		if (!supportedClaims) {
+			throw new Error('No supported claims');
+		}
+
 		const issuer = new Issuer(doctype, mdocContext);
 
-		for (const [ns, nsData] of namespaces) {
-			issuer.addIssuerNamespace(ns, normalizeMdocNamespace(nsData));
+		/**
+		 * mdoc namespaces must be flat:
+		 * {
+		 *   given_name: "John",
+		 *   family_name: "Doe"
+		 * }
+		 */
+		const namespaces: Record<string, Record<string, unknown>> = {};
+
+		for (const supportedClaim of supportedClaims) {
+			const path = supportedClaim.path as string[];
+
+			if (!Array.isArray(path) || path.length < 2) {
+				continue;
+			}
+
+			/**
+			 * Example:
+			 * path = ["org.iso.18013.5.1", "given_name"]
+			 */
+			const namespace = path[0];
+
+			/**
+			 * Everything after namespace becomes the claim key
+			 */
+			const claimKey = path.slice(1).join('.');
+
+			/**
+			 * Read directly from incoming claims
+			 */
+			const value = getNestedValue(
+				claimsToSign,
+				path.slice(1)
+			);
+
+			if (value === undefined) {
+				continue;
+			}
+
+			namespaces[namespace] ??= {};
+
+			/**
+			 * mdoc issuer namespaces should be flat
+			 */
+			namespaces[namespace][claimKey] = value;
+		}
+
+		for (const [namespace, namespaceData] of Object.entries(
+			namespaces
+		)) {
+			issuer.addIssuerNamespace(
+				namespace,
+				normalizeMdocNamespace(namespaceData)
+			);
 		}
 
 		const issuerPrivateKeyJwk = await exportJWK(key);

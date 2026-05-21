@@ -14,6 +14,7 @@ type AccountEntry = {
 	diploma: Record<string, unknown>;
 	ehic: Record<string, unknown>;
 	por: Record<string, unknown>;
+	etsi: Record<string, unknown>;
 };
 
 const getAccountEntryById = async (id: string): Promise<AccountEntry | null> => {
@@ -62,6 +63,12 @@ export const findAccount: FindAccount = async (ctx, sub, _token) => {
 			else if (scope.split(' ').includes('pid:mso_mdoc')) {
 				const pidMdoc = convertPidSdJwtVcToMdoc(acc.pid);
 				releasedClaims = { ...pidMdoc };
+			}
+			else if (scope.split(' ').includes('etsi:mso_mdoc')) {
+				releasedClaims = {
+					...releasedClaims,
+					...acc.etsi
+				}
 			}
 			else if (scope.split(' ').includes('ehic')) {
 				const supportedConf = findSupportedCredentialByScope('ehic');

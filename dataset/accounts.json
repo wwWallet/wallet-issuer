@@ -88,6 +88,19 @@
 				"family_name": "Doe",
 				"given_name": "John",
 				"birth_date": "1990-10-15"
+			},
+			"etsi": {
+				"family_name": "Doe",
+				"given_name": "John",
+				"birth_date": "1990-10-15",
+				"issue_date": "2025-04-21",
+				"expiry_date": "2035-04-21",
+				"document_number": "12313213",
+				"issuing_country": "GR",
+				"issuing_authority": "PID:00001",
+				"issuing_authority_unicode": "PID:00001",
+				"iss_reg_id": "123456789",
+				"also_known_as": "JD"
 			}
 		},
 		{

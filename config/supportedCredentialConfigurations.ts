@@ -328,6 +328,94 @@ export const supportedCredentialConfigurations: OpenidCredentialIssuerMetadata['
 
 		format: VerifiableCredentialFormat.MSO_MDOC,
 	},
+	'urn:etsi:mdoc:eaa:1': {
+		scope: 'etsi:mso_mdoc',
+		format: VerifiableCredentialFormat.MSO_MDOC,
+		doctype: 'org.iso.23220.1',
+		credential_metadata: {
+			display: [
+				{
+					name: 'ETSI EAA mDoc',
+					description: 'ETSI Electronic Attestation of Attributes',
+					background_color: '#4CC3DD',
+					text_color: '#000000',
+					locale: 'en-US',
+				},
+			],
+			claims: [
+				{
+					path: ['org.iso.23220.1', 'family_name'],
+					mandatory: true,
+					display: [
+						{
+							name: 'Family Name',
+							locale: 'en-US',
+						},
+					],
+				},
+				{
+					path: ['org.iso.23220.1', 'given_name'],
+					mandatory: true,
+					display: [
+						{
+							name: 'Given Name',
+							locale: 'en-US',
+						},
+					],
+				},
+				{
+					path: ['org.iso.23220.1', 'birth_date'],
+					mandatory: true,
+					display: [
+						{
+							name: 'Birth Date',
+							locale: 'en-US',
+						},
+					],
+				},
+				{
+					path: ['org.iso.23220.1', 'document_number'],
+					mandatory: true,
+					display: [
+						{
+							name: 'Document Number',
+							locale: 'en-US',
+						},
+					],
+				},
+				{
+					path: ['org.iso.23220.1', 'issuing_authority'],
+					mandatory: true,
+					display: [
+						{
+							name: 'Issuing Authority',
+							locale: 'en-US',
+						},
+					],
+				},
+				{
+					path: ['org.etsi.01947201.010101', 'iss_reg_id'],
+					mandatory: false,
+					display: [
+						{
+							name: 'Issuer Registration ID',
+							locale: 'en-US',
+						},
+					],
+				},
+				{
+					path: ['org.etsi.01947201.010101', 'also_known_as'],
+					mandatory: false,
+					display: [
+						{
+							name: 'Also Known As',
+							locale: 'en-US',
+						},
+					],
+				},
+			],
+		},
+	},
 	'urn:credential:diploma': {
 		scope: 'diploma',
 		vct: 'urn:credential:diploma',
