@@ -183,18 +183,19 @@ export const signer: CredentialSigner = {
 				path.slice(1)
 			);
 
-			if (
-				namespace === "org.iso.23220.1" &&
-				claimKey === 'birth_date'
-			) {
-				namespaces[namespace][claimKey] = new Map([["birth_date", value]]);
-			};
-
 			if (value === undefined) {
 				continue;
 			}
 
 			namespaces[namespace] ??= {};
+
+			if (
+				namespace === "org.iso.23220.1" &&
+				claimKey === 'birth_date'
+			) {
+				namespaces[namespace][claimKey] = new Map([["birth_date", value]]);
+				continue;
+			};
 
 			/**
 			 * mdoc issuer namespaces should be flat
