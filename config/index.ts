@@ -34,4 +34,10 @@ export const config = {
 	},
 	vctRegistryUrl: process.env.VCT_REGISTRY_URL || 'http://localhost:8097/type-metadata',
 	revokeCredentialOffers: process.env.REVOKE_CREDENTIAL_OFFERS === 'true' || false,
+	issueShortTermCredentials: process.env.ISSUE_SHORT_TERM_CREDENTIALS || true,
+	issueOneTimeCredentials: process.env.ISSUE_ONE_TIME_CREDENTIALS || true,
+	useAlternativeIdentifier: process.env.USE_ALTERNATIVE_IDENTIFIER === 'true' || false,
+	mdocExpectedUpdate: process.env.MDOC_EXPECTED_UPDATE === 'true' || false,
+	mdocKeyAuthorizationNamespaces: process.env.MDOC_KEY_AUTHORIZATION_NAMESPACES === 'true' || false,
+	mdocKeyAuthorizationDataElements: process.env.MDOC_KEY_AUTHORIZATION_DATA_ELEMENTS === 'true' || false,
 };

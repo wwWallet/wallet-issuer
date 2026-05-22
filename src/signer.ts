@@ -4,10 +4,10 @@ import fs from 'fs';
 import path from 'path';
 import { SDJwtInstance } from '@sd-jwt/core';
 import { digest as hasher } from '@sd-jwt/crypto-nodejs';
-import { createPrivateKey, sign, randomBytes, KeyObject, webcrypto } from 'crypto';
+import { createPrivateKey, sign, randomBytes, KeyObject, webcrypto, randomUUID } from 'crypto';
 import { importPrivateKeyPem } from './util/importPrivateKeyPem';
 import { calculateJwkThumbprint, exportJWK, importX509 } from 'jose';
-import { CoseKey, DeviceKey, Issuer, SignatureAlgorithm, type MdocContext } from '@owf/mdoc';
+import { CoseKey, DeviceKey, DeviceKeyInfoOptions, Issuer, KeyAuthorizations, KeyAuthorizationsOptions, SignatureAlgorithm, ValidityInfoOptions, type MdocContext } from '@owf/mdoc';
 import { logger } from './logger';
 import { calculateObjectSRI } from 'wallet-common';
 import { vctDocumentProvider } from '../config/vctDocumentProvider';
@@ -155,9 +155,18 @@ export const signer: CredentialSigner = {
 				continue;
 			}
 
+			if (config.useAlternativeIdentifier) {
+				if (
+					Array.isArray(path) &&
+					path.length === 2 &&
+					path[0] === "org.iso.23220.1" &&
+					['given_name', 'family_name', 'document_number'].includes(path[1])
+				) continue;
+			}
+
 			/**
 			 * Example:
-			 * path = ["org.iso.18013.5.1", "given_name"]
+			 * path = ["org.iso.23220.1", "given_name"]
 			 */
 			const namespace = path[0];
 
@@ -174,6 +183,13 @@ export const signer: CredentialSigner = {
 				path.slice(1)
 			);
 
+			if (
+				namespace === "org.iso.23220.1" &&
+				claimKey === 'birth_date'
+			) {
+				namespaces[namespace][claimKey] = new Map([["birth_date", value]]);
+			};
+
 			if (value === undefined) {
 				continue;
 			}
@@ -184,6 +200,17 @@ export const signer: CredentialSigner = {
 			 * mdoc issuer namespaces should be flat
 			 */
 			namespaces[namespace][claimKey] = value;
+		}
+
+		if(config.useAlternativeIdentifier) {
+			namespaces["org.iso.23220.1"].also_known_as = randomUUID();
+		}
+
+		if (namespaces["org.etsi.01947201.010101"] && config.issueShortTermCredentials) {
+			namespaces["org.etsi.01947201.010101"].shortLived = true;
+		}
+		if (namespaces["org.etsi.01947201.010101"] && config.issueOneTimeCredentials) {
+			namespaces["org.etsi.01947201.010101"].oneTime = true;
 		}
 
 		for (const [namespace, namespaceData] of Object.entries(
@@ -198,9 +225,44 @@ export const signer: CredentialSigner = {
 		const issuerPrivateKeyJwk = await exportJWK(key);
 		const signed = new Date();
 		const validFromDate = new Date(signed.getTime() + 1000);
-		const expirationDate = new Date();
 
+		const expirationDate = new Date();
 		expirationDate.setFullYear(expirationDate.getFullYear() + 1);
+
+		const expectedUpdate = new Date();
+		expectedUpdate.setMonth(expectedUpdate.getMonth() + 3);
+
+		let validityInfo: ValidityInfoOptions = {
+			signed,
+			validFrom: validFromDate,
+			validUntil: expirationDate
+		}
+		if (config.mdocExpectedUpdate) {
+			validityInfo.expectedUpdate = expectedUpdate;
+		}
+
+		let deviceKeyInfo: DeviceKeyInfoOptions = {
+			deviceKey: DeviceKey.fromJwk(holderPublicKeyJwk as Record<string, unknown>)
+		};
+
+		if (config.mdocKeyAuthorizationNamespaces || config.mdocKeyAuthorizationDataElements) {
+			let keyAuthorizationsOptions: KeyAuthorizationsOptions = {};
+
+			if (config.mdocKeyAuthorizationNamespaces) {
+				keyAuthorizationsOptions.namespaces = ["org.etsi.01947201.010101"];
+			}
+
+			if (config.mdocKeyAuthorizationDataElements) {
+				keyAuthorizationsOptions.dataElements = new Map([
+					[
+						"org.iso.23220.1",
+						["given_name", "family_name"]
+					]
+				]);
+			}
+
+			deviceKeyInfo.keyAuthorizations = KeyAuthorizations.create(keyAuthorizationsOptions);
+		}
 
 		const issuerSigned = await issuer.sign({
 			signingKey: CoseKey.fromJwk({
@@ -209,14 +271,8 @@ export const signer: CredentialSigner = {
 			certificates: issuerCertDerChain,
 			algorithm: SignatureAlgorithm.ES256,
 			digestAlgorithm: 'SHA-256',
-			deviceKeyInfo: {
-				deviceKey: DeviceKey.fromJwk(holderPublicKeyJwk as Record<string, unknown>),
-			},
-			validityInfo: {
-				signed,
-				validFrom: validFromDate,
-				validUntil: expirationDate,
-			},
+			deviceKeyInfo,
+			validityInfo
 		});
 
 		const credential = issuerSigned.encodedForOid4Vci;

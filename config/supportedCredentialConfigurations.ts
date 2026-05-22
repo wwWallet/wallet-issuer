@@ -414,11 +414,21 @@ export const supportedCredentialConfigurations: OpenidCredentialIssuerMetadata['
 					],
 				},
 				{
-					path: ['org.iso.23220.1', 'issuing_authority_unicode'],
+					path: ['org.iso.23220.1', 'issuing_authority'],
 					mandatory: true,
 					display: [
 						{
 							name: 'Issuing Authority',
+							locale: 'en-US',
+						},
+					],
+				},
+				{
+					path: ['org.iso.23220.1', 'issuing_authority_unicode'],
+					mandatory: true,
+					display: [
+						{
+							name: 'Issuing Authority (Unicode)',
 							locale: 'en-US',
 						},
 					],
