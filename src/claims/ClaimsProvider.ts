@@ -5,8 +5,12 @@ export type ClaimsProviderResult =
 	| { kind: 'pending' }
 	| { kind: 'denied'; reason: string };
 
+export type ClaimsResolutionContext = {
+	issuerState?: string;
+};
+
 export interface ClaimsProvider {
 	resolveAccountId(sub: string): Promise<string | null>;
-	resolveClaims(accountId: string, scope: string): Promise<ClaimsProviderResult>;
+	resolveClaims(accountId: string, scope: string, context?: ClaimsResolutionContext): Promise<ClaimsProviderResult>;
 	startBackgroundJobs?(credentialRequestHelper: CredentialRequestHelper): void;
 }

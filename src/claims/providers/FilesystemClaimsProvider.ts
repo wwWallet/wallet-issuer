@@ -1,6 +1,6 @@
 import fs from 'node:fs/promises';
 import path from 'path';
-import { ClaimsProvider, ClaimsProviderResult } from '../ClaimsProvider';
+import { ClaimsProvider, ClaimsProviderResult, ClaimsResolutionContext } from '../ClaimsProvider';
 import { convertPidSdJwtVcToMdoc } from '../../lib/issuer/convertPidSdJwtVcToMdoc';
 import { supportedCredentialConfigurations } from '../../../config/supportedCredentialConfigurations';
 import { CredentialRequestHelper } from '../../lib/issuer/CredentialRequestHelper';
@@ -43,7 +43,7 @@ export class FilesystemClaimsProvider implements ClaimsProvider {
 		return account?.id ?? null;
 	}
 
-	async resolveClaims(accountId: string, scope: string): Promise<ClaimsProviderResult> {
+	async resolveClaims(accountId: string, scope: string, _context?: ClaimsResolutionContext): Promise<ClaimsProviderResult> {
 		const account = await this.getAccountEntryById(accountId);
 		if (!account) {
 			return { kind: 'denied', reason: 'Account not found' };
