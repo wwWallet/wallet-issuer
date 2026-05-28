@@ -64,11 +64,42 @@ export const supportedCredentialConfigurations: OpenidCredentialIssuerMetadata['
 					],
 				},
 				{
-					path: ['eu.europa.ec.eudi.pid.1', 'birth_place'],
+					path: ['eu.europa.ec.eudi.pid.1', 'place_of_birth'],
 					mandatory: true,
 					display: [
 						{
 							name: 'Birth Place',
+							locale: 'en-US',
+						},
+					],
+				},
+				{
+					path: ['eu.europa.ec.eudi.pid.1', 'place_of_birth', 'locality'],
+					mandatory: true,
+					display: [
+						{
+							name: 'Locality',
+							locale: 'en-US',
+						},
+					],
+				},
+
+				{
+					path: ['eu.europa.ec.eudi.pid.1', 'place_of_birth', 'region'],
+					mandatory: true,
+					display: [
+						{
+							name: 'Region',
+							locale: 'en-US',
+						},
+					],
+				},
+				{
+					path: ['eu.europa.ec.eudi.pid.1', 'place_of_birth', 'country'],
+					mandatory: true,
+					display: [
+						{
+							name: 'Country',
 							locale: 'en-US',
 						},
 					],
