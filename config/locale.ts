@@ -53,7 +53,7 @@ purposes (not valid for real-world use).
 			"Notes: Currently, the Notification and Deferred Endpoints are not supported.",
 
 		openid4vci: {
-			spec: ["OIDVCI Specification", "1.0"],
+			spec: ["OIDVCI Specification", "v1.0"],
 			grant: ["Grant Type", "authorization_code [OpenID.Core]"],
 			clientAuth: ["Client Authentication", "PKCE [RFC 7636], no secret"],
 			clientType: ["Client Type", "Public"],
@@ -76,10 +76,10 @@ purposes (not valid for real-world use).
 		},
 
 		openid4vp: {
-			spec: ["OIDVP Specification", "Draft 24"],
+			spec: ["OIDVP Specification", "v1.0"],
 			responseMode: ["Response Mode", "direct_post.jwt [OpenID4VP]"],
 			requestMethod: ["Request Method", "request_uri signed [JAR]"],
-			clientId: ["Client ID Scheme", "x509_san_dns"],
+			clientId: ["Client ID Scheme", "x509_san_dns, x509_hash"],
 			format: ["Credential Format", "dc+sd-jwt, mso_mdoc"],
 		},
 	},
