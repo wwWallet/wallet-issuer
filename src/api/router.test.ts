@@ -11,30 +11,41 @@ vi.mock('../vci/issuer', () => ({
 	issuer: issuerMock,
 }));
 
-import { apiRouter } from './router';
-
 type TestResponse = {
 	statusCode: number;
 	body: unknown;
 };
 
-const getCredentialOfferUriHandler = () => {
-	const routeLayer = (apiRouter as any).stack.find((layer: any) => layer.route?.path === '/credential-offer-uri');
-	if (!routeLayer) {
-		throw new Error('Route /credential-offer-uri not found');
-	}
+const loadRouterModule = async (credentialOfferApiEnabled = false) => {
+	vi.resetModules();
+	vi.doMock('../../config', () => ({
+		config: {
+			credentialOfferApiEnabled,
+		},
+	}));
 
-	return routeLayer.route.stack[1].handle as (req: any, res: any) => Promise<unknown>;
+	return await import('./router');
 };
 
-const executeHandler = async (body: unknown): Promise<TestResponse> => {
-	const handler = getCredentialOfferUriHandler();
+const getCredentialOfferUriRoute = (router: { stack: Array<{ route?: { path?: string } }> }) => {
+	return router.stack.find((layer) => layer.route?.path === '/credential-offer-uri');
+};
+
+const executeHandler = async (
+	body: unknown,
+	options: {
+		credentialOfferApiEnabled?: boolean;
+	} = {},
+): Promise<TestResponse> => {
+	const { credentialOfferUriHandler } = await loadRouterModule(options.credentialOfferApiEnabled ?? true);
 	const response: TestResponse = {
 		statusCode: 0,
 		body: undefined,
 	};
 
-	const req = { body };
+	const req = {
+		body,
+	} as any;
 	const res = {
 		status(code: number) {
 			response.statusCode = code;
@@ -44,11 +55,27 @@ const executeHandler = async (body: unknown): Promise<TestResponse> => {
 			response.body = payload;
 			return this;
 		},
-	};
+	} as any;
 
-	await handler(req, res);
+	await credentialOfferUriHandler(req, res);
 	return response;
 };
+
+describe('POST /api/credential-offer-uri configuration', () => {
+	it('does not register the route when disabled', async () => {
+		const { createApiRouter } = await loadRouterModule(false);
+		const router = createApiRouter();
+
+		expect(getCredentialOfferUriRoute(router)).toBeUndefined();
+	});
+
+	it('registers the route when enabled', async () => {
+		const { createApiRouter } = await loadRouterModule(true);
+		const router = createApiRouter();
+
+		expect(getCredentialOfferUriRoute(router)).toBeDefined();
+	});
+});
 
 describe('POST /api/credential-offer-uri input validation', () => {
 	beforeEach(() => {

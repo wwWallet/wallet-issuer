@@ -36,6 +36,7 @@ export const config = {
 		theme_color: process.env.SITE_THEME_COLOR || '#00246b',
 		background_color: process.env.SITE_BACKGROUND_COLOR || '#ffffff',
 	},
+	credentialOfferApiEnabled: process.env.CREDENTIAL_OFFER_API_ENABLED?.trim() === 'true',
 	vctRegistryUrl: process.env.VCT_REGISTRY_URL || 'http://localhost:8097/type-metadata',
 	vcClaimsFetcherUrl: process.env.VC_CLAIMS_FETCHER_URL || '',
 	vcClaimsFetcherApiKey: process.env.VC_CLAIMS_FETCHER_API_KEY || '',
