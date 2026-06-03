@@ -109,6 +109,16 @@ export const supportedCredentialConfigurations: OpenidCredentialIssuerMetadata['
 					mandatory: true,
 					display: [
 						{
+							name: 'Nationalities',
+							locale: 'en-US',
+						},
+					],
+				},
+				{
+					path: ['eu.europa.ec.eudi.pid.1', 'nationality', null],
+					mandatory: true,
+					display: [
+						{
 							name: 'Nationality',
 							locale: 'en-US',
 						},

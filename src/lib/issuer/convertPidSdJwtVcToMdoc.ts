@@ -14,7 +14,6 @@ function base64ToBstr(dataUrl: string): Uint8Array | undefined {
 
 export function convertPidSdJwtVcToMdoc(pid: AnyObj) {
 	const address = (pid?.address ?? {}) as AnyObj;
-	const pob = (pid?.place_of_birth ?? {}) as AnyObj;
 	const ageEq = (pid?.age_equal_or_over ?? {}) as AnyObj;
 
 	return {
@@ -45,7 +44,7 @@ export function convertPidSdJwtVcToMdoc(pid: AnyObj) {
 
 		nationality: pid?.nationalities,
 
-		place_of_birth: pob,
+		place_of_birth: pid.place_of_birth,
 
 		resident_address: address?.formatted,
 		resident_country: address?.country,
