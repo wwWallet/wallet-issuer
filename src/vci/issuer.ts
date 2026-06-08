@@ -36,6 +36,7 @@ const configuredFindAccount = createFindAccount(claimsProvider);
 
 export const issuer = createIssuerOpenID4VCI(config.issuerIdentifier, {
 	clockTolerance: config.clockTolerance,
+	deferredCredentialResponseInterval: config.deferredCredentialResponseInterval,
 	findAccount: configuredFindAccount,
 	credentialRequestHelper,
 	proofTypesSupported: [ProofTypesSupported.JWT, ProofTypesSupported.ATTESTATION],
