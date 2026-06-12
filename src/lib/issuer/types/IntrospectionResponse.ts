@@ -11,5 +11,6 @@ export type IntrospectionResponse = {
 	aud?: string;
 	iss?: string;
 	jti?: string;
+	issuer_state?: string;
 	cnf?: { jkt?: string };
 }

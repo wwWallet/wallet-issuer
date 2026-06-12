@@ -58,7 +58,7 @@ type JWTVCIssuerMetadata = {
 }
 
 export interface IssuerOpenID4VCI {
-	generateCredentialOffer(credentialOfferCreateOptions: { credentialConfigurationId: string }): Promise<CredentialOfferCreateSuccess>;
+	generateCredentialOffer(credentialOfferCreateOptions: { credentialConfigurationId: string, issuerState?: string }): Promise<CredentialOfferCreateSuccess>;
 
 	getCredentialOffer(credentialOfferId: string, revoke: boolean): Promise<CredentialOffer | null>;
 
@@ -134,11 +134,13 @@ export function createIssuerOpenID4VCI(url: string, credentialIssuerCreateOption
 	};
 
 	return {
-		generateCredentialOffer: async (credentialOfferCreateOptions: { credentialConfigurationId: string }): Promise<CredentialOfferCreateSuccess> => {
+		generateCredentialOffer: async (credentialOfferCreateOptions: { credentialConfigurationId: string, issuerState?: string }): Promise<CredentialOfferCreateSuccess> => {
 			const credentialOffer: CredentialOffer = {
 				credential_issuer: url,
 				credential_configuration_ids: [credentialOfferCreateOptions.credentialConfigurationId],
-				grants: { authorization_code: {} },
+				grants: credentialOfferCreateOptions.issuerState
+				? { authorization_code: { issuer_state: credentialOfferCreateOptions.issuerState} }
+				: { authorization_code: {} }
 			};
 			const id = generateRandomIdentifier(18);
 			credentialOfferStore.set(id, credentialOffer);

@@ -2,6 +2,10 @@ import dotenv from 'dotenv';
 dotenv.config({ quiet: true });
 
 const url = String(process.env.SERVICE_URL || 'default_url');
+const supportedCredentialScopesWhitelist = (process.env.SUPPORTED_CREDENTIAL_SCOPES_WHITELIST ?? '')
+	.split(',')
+	.map((scope) => scope.trim())
+	.filter(Boolean);
 const rawIssuerPath = process.env.ISSUER_PATH?.trim() || "";
 const issuerPath = rawIssuerPath
 	? `/${rawIssuerPath.replace(/^\/+|\/+$/g, "")}`
@@ -26,12 +30,17 @@ export const config = {
 	],
 	wwwalletURL: process.env.WWWALLET_URL || 'http://localhost:3000/cb',
 	clockTolerance: parseInt(process.env.CLOCK_TOLERANCE || '60', 10),
+	deferredCredentialResponseInterval: parseInt(process.env.DEFERRED_CREDENTIAL_RESPONSE_INTERVAL_SEC || '60', 10),
 	siteConfig: {
 		name: process.env.SITE_NAME || 'wwWallet Issuer',
 		short_name: process.env.SITE_SHORT_NAME || 'wwWallet Issuer',
 		theme_color: process.env.SITE_THEME_COLOR || '#00246b',
 		background_color: process.env.SITE_BACKGROUND_COLOR || '#ffffff',
 	},
+	credentialOfferApiEnabled: process.env.CREDENTIAL_OFFER_API_ENABLED?.trim() === 'true',
 	vctRegistryUrl: process.env.VCT_REGISTRY_URL || 'http://localhost:8097/type-metadata',
+	vcClaimsFetcherUrl: process.env.VC_CLAIMS_FETCHER_URL || '',
+	vcClaimsFetcherApiKey: process.env.VC_CLAIMS_FETCHER_API_KEY || '',
+	supportedCredentialScopesWhitelist,
 	revokeCredentialOffers: process.env.REVOKE_CREDENTIAL_OFFERS === 'true' || false,
 };

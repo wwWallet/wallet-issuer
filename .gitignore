@@ -5,3 +5,4 @@ dist
 .env
 certs/*
 public/.well-known/*
+config/*.local.ts
