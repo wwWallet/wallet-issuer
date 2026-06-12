@@ -16,11 +16,15 @@ type TestResponse = {
 	body: unknown;
 };
 
-const loadRouterModule = async (credentialOfferApiEnabled = false) => {
+const loadRouterModule = async (
+	credentialOfferApiEnabled = false,
+	credentialOfferApiBearerToken = 'test-token',
+) => {
 	vi.resetModules();
 	vi.doMock('../../config', () => ({
 		config: {
 			credentialOfferApiEnabled,
+			credentialOfferApiBearerToken,
 		},
 	}));
 
@@ -72,8 +76,77 @@ describe('POST /api/credential-offer-uri configuration', () => {
 	it('registers the route when enabled', async () => {
 		const { createApiRouter } = await loadRouterModule(true);
 		const router = createApiRouter();
+		const authLayerIndex = router.stack.findIndex((layer) => layer.name === 'apiBearerAuth');
+		const routeLayerIndex = router.stack.findIndex((layer) => layer.route?.path === '/credential-offer-uri');
 
 		expect(getCredentialOfferUriRoute(router)).toBeDefined();
+		expect(authLayerIndex).toBeGreaterThanOrEqual(0);
+		expect(authLayerIndex).toBeLessThan(routeLayerIndex);
+	});
+
+	it('throws when enabled without a bearer token', async () => {
+		await expect(loadRouterModule(true, '')).rejects.toThrow(
+			'CREDENTIAL_OFFER_API_BEARER_TOKEN is required when CREDENTIAL_OFFER_API_ENABLED=true',
+		);
+	});
+});
+
+describe('/api authentication', () => {
+	const executeAuth = async (authorization?: string) => {
+		const { apiBearerAuth } = await loadRouterModule(true);
+		const response: TestResponse & { headers: Record<string, string> } = {
+			statusCode: 0,
+			body: undefined,
+			headers: {},
+		};
+		const req = {
+			get(name: string) {
+				return name.toLowerCase() === 'authorization' ? authorization : undefined;
+			},
+		} as any;
+		const res = {
+			setHeader(name: string, value: string) {
+				response.headers[name] = value;
+			},
+			status(code: number) {
+				response.statusCode = code;
+				return this;
+			},
+			send(payload: unknown) {
+				response.body = payload;
+				return this;
+			},
+		} as any;
+		const next = vi.fn();
+
+		apiBearerAuth(req, res, next);
+		return { response, next };
+	};
+
+	it('returns 401 when the Authorization header is missing', async () => {
+		const { response, next } = await executeAuth();
+
+		expect(response.statusCode).toBe(401);
+		expect(response.headers['WWW-Authenticate']).toBe('Bearer');
+		expect(response.body).toEqual({
+			error: 'unauthorized',
+			error_description: 'Missing or invalid bearer token',
+		});
+		expect(next).not.toHaveBeenCalled();
+	});
+
+	it('returns 401 for an invalid bearer token', async () => {
+		const { response, next } = await executeAuth('Bearer wrong-token');
+
+		expect(response.statusCode).toBe(401);
+		expect(next).not.toHaveBeenCalled();
+	});
+
+	it('continues for a valid bearer token', async () => {
+		const { response, next } = await executeAuth('Bearer test-token');
+
+		expect(response.statusCode).toBe(0);
+		expect(next).toHaveBeenCalledOnce();
 	});
 });
 

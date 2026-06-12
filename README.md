@@ -16,6 +16,26 @@ Run in dev mode
 yarn run dev
 ```
 
+## API authentication
+
+Enable the credential offer creation endpoint and configure the bearer token used for all
+`/api/*` endpoints:
+
+```dotenv
+CREDENTIAL_OFFER_API_ENABLED=true
+CREDENTIAL_OFFER_API_BEARER_TOKEN=1234567890abcdef1234567890
+```
+
+Send the token with every `/api/*` request:
+
+```http
+Authorization: Bearer 1234567890abcdef1234567890
+Content-Type: application/json
+```
+
+The issuer refuses to start when the API is enabled without a bearer token. Routes outside
+`/api`, including the generated `GET /openid/credential-offer/:id` URL, remain public.
+
 ## Local credential configuration overrides
 
 You can add local-only credential configurations without changing tracked files.
