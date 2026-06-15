@@ -23,13 +23,13 @@ Enable the credential offer creation endpoint and configure the bearer token use
 
 ```dotenv
 CREDENTIAL_OFFER_API_ENABLED=true
-CREDENTIAL_OFFER_API_BEARER_TOKEN=1234567890abcdef1234567890
+CREDENTIAL_OFFER_API_BEARER_TOKEN=replace-with-a-random-secret
 ```
 
 Send the token with every `/api/*` request:
 
 ```http
-Authorization: Bearer 1234567890abcdef1234567890
+Authorization: Bearer replace-with-a-random-secret
 Content-Type: application/json
 ```
 
