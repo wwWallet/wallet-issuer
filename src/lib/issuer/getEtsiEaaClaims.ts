@@ -22,6 +22,15 @@ const credentialConfigurationKeyAuthorizationOptions: Record<string, KeyAuthoriz
 	}
 }
 
+function isEmptyObject(obj: any) {
+	for (let key in obj) {
+		if (Object.prototype.hasOwnProperty.call(obj, key)) {
+			return false;
+		}
+		return true;
+	}
+}
+
 function getEtsiTestCase(scope: string): number {
 	const potentialNumberFromScope = scope.split(':').pop();
 	if (Number.isNaN(Number(potentialNumberFromScope))) {
@@ -246,7 +255,9 @@ export function getDeviceKeyInfoOptions(credentialConfigurationId: string, holde
 		keyAuthorizationsOptions = credentialConfigurationKeyAuthorizationOptions[credentialConfigurationId];
 	}
 
-	deviceKeyInfo.keyAuthorizations = KeyAuthorizations.create(keyAuthorizationsOptions);
+	if (!isEmptyObject(keyAuthorizationsOptions)) {
+		deviceKeyInfo.keyAuthorizations = KeyAuthorizations.create(keyAuthorizationsOptions);
+	}
 
 	return deviceKeyInfo;
 }
