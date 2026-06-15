@@ -7,11 +7,12 @@ import { digest as hasher } from '@sd-jwt/crypto-nodejs';
 import { createPrivateKey, sign, randomBytes, KeyObject, webcrypto } from 'crypto';
 import { importPrivateKeyPem } from './util/importPrivateKeyPem';
 import { calculateJwkThumbprint, exportJWK, importX509 } from 'jose';
-import { CoseKey, DeviceKey, Issuer, SignatureAlgorithm, type MdocContext } from '@owf/mdoc';
+import { CoseKey, Issuer, SignatureAlgorithm, type MdocContext } from '@owf/mdoc';
 import { logger } from './logger';
 import { calculateObjectSRI } from 'wallet-common';
 import { vctDocumentProvider } from '../config/vctDocumentProvider';
 import { normalizeMdocNamespace } from './lib/issuer/normalizeMdocNamespace';
+import { getDeviceKeyInfoOptions, getValidityInfoOptions } from './lib/issuer/getEtsiEaaClaims';
 
 const issuerPrivateKeyPem = fs.readFileSync(path.join(__dirname, '../../keys/pem.key'), 'utf-8').toString();
 const issuerCertPem = fs.readFileSync(path.join(__dirname, '../../keys/pem.crt'), 'utf-8').toString() as string;
@@ -45,6 +46,23 @@ const key = async function () {
 	}
 	return key as any;
 };
+
+function getNestedValue(
+	obj: Record<string, any>,
+	path: string[]
+) {
+	let current = obj;
+
+	for (const key of path) {
+		if (current == null) {
+			return undefined;
+		}
+
+		current = current[key];
+	}
+
+	return current;
+}
 
 const mdocContext = {
 	crypto: {
@@ -93,40 +111,95 @@ const mdocContext = {
 } satisfies Pick<MdocContext, 'crypto' | 'cose'>;
 
 export const signer: CredentialSigner = {
-	signMsoMdoc: async function (doctype, namespaces, holderPublicKeyJwk) {
+	signMsoMdoc: async function (
+		credentialConfiguration,
+		claimsToSign,
+		holderPublicKeyJwk
+	) {
 		const key = await importPrivateKeyPem(issuerPrivateKeyPem, 'ES256');
 		if (!key) {
 			throw new Error('Could not import private key');
 		}
 
+		const doctype = (credentialConfiguration as any).doctype;
+
+		if (!doctype) {
+			throw new Error('Missing mdoc doctype');
+		}
+
+		const supportedClaims =
+			credentialConfiguration.credential_metadata?.claims;
+
+		if (!supportedClaims) {
+			throw new Error('No supported claims');
+		}
+
 		const issuer = new Issuer(doctype, mdocContext);
 
-		for (const [ns, nsData] of namespaces) {
-			issuer.addIssuerNamespace(ns, normalizeMdocNamespace(nsData));
+		const namespaces: Record<string, Record<string, unknown>> = {};
+
+		for (const supportedClaim of supportedClaims) {
+			const path = supportedClaim.path as string[];
+
+			if (!Array.isArray(path) || path.length < 2) {
+				continue;
+			}
+
+			/**
+			 * Example:
+			 * path = ["org.iso.23220.1", "given_name"]
+			 */
+			const namespace = path[0];
+
+			/**
+			 * Everything after namespace becomes the claim key
+			 */
+			const claimKey = path.slice(1).join('.');
+
+			/**
+			 * Read directly from incoming claims
+			 */
+			const value = getNestedValue(
+				claimsToSign,
+				path.slice(1)
+			);
+
+			if (value === undefined) {
+				continue;
+			}
+
+			namespaces[namespace] ??= {};
+
+			/**
+			 * mdoc issuer namespaces should be flat
+			 */
+			namespaces[namespace][claimKey] = value;
+		}
+
+		for (const [namespace, namespaceData] of Object.entries(
+			namespaces
+		)) {
+			issuer.addIssuerNamespace(
+				namespace,
+				normalizeMdocNamespace(namespaceData)
+			);
 		}
 
 		const issuerPrivateKeyJwk = await exportJWK(key);
-		const signed = new Date();
-		const validFromDate = new Date(signed.getTime() + 1000);
-		const expirationDate = new Date();
+		const signingKey = CoseKey.fromJwk({
+				...issuerPrivateKeyJwk
+			} as Record<string, unknown>);
 
-		expirationDate.setFullYear(expirationDate.getFullYear() + 1);
+		const deviceKeyInfo = getDeviceKeyInfoOptions(credentialConfiguration.scope, holderPublicKeyJwk);
+		const validityInfo = getValidityInfoOptions(credentialConfiguration.scope);
 
 		const issuerSigned = await issuer.sign({
-			signingKey: CoseKey.fromJwk({
-				...issuerPrivateKeyJwk
-			} as Record<string, unknown>),
+			signingKey,
 			certificates: issuerCertDerChain,
 			algorithm: SignatureAlgorithm.ES256,
 			digestAlgorithm: 'SHA-256',
-			deviceKeyInfo: {
-				deviceKey: DeviceKey.fromJwk(holderPublicKeyJwk as Record<string, unknown>),
-			},
-			validityInfo: {
-				signed,
-				validFrom: validFromDate,
-				validUntil: expirationDate,
-			},
+			deviceKeyInfo,
+			validityInfo
 		});
 
 		const credential = issuerSigned.encodedForOid4Vci;
@@ -169,7 +242,12 @@ export const signer: CredentialSigner = {
 			logger.error('payload.cnf.jwk is required in signSdJwtVc function call');
 			throw new Error('payload.cnf.jwk is required in signSdJwtVc function call');
 		}
-		payload.sub = await calculateJwkThumbprint(payload.cnf.jwk);
+
+		if (payload?.also_known_as) {
+			payload.sub = undefined;
+		} else {
+			payload.sub = await calculateJwkThumbprint(payload.cnf.jwk);
+		}
 		payload.iss = config.issuerIdentifier;
 
 		const sdjwt = new SDJwtInstance({
@@ -181,20 +259,54 @@ export const signer: CredentialSigner = {
 		});
 
 		// Helper function to convert df to work with newer lib
-		function disclosureFrameConvert(obj: any) {
-			const result: any = {};
-			const sd = [];
+		function disclosureFrameConvert(frame: any): any {
 
-			for (const [key, value] of Object.entries(obj)) {
+			// New df, no need to convert
+			if (typeof frame === 'object' && '_sd' in frame) {
+				return frame;
+			}
+
+			const result: any = {};
+			const sd: (string | number)[] = [];
+
+			for (const [key, value] of Object.entries(frame)) {
+
+				// Simple object disclosure
 				if (value === true) {
 					sd.push(key);
-				} else if (typeof value === 'object' && value !== null) {
+					continue;
+				}
+
+				// Array disclosure
+				if (Array.isArray(value)) {
+					const arrayFrame: any = {};
+					const arraySd: number[] = [];
+
+					value.forEach((item, idx) => {
+						if (item === true) {
+							arraySd.push(idx);
+						} else if (item && typeof item === 'object') {
+							arraySd.push(idx);
+							arrayFrame[idx] = disclosureFrameConvert(item);
+						}
+					});
+
+					if (arraySd.length) {
+						arrayFrame._sd = arraySd;
+					}
+
+					result[key] = arrayFrame;
+					continue;
+				}
+
+				// Recursive object disclosure
+				if (value && typeof value === 'object') {
 					result[key] = disclosureFrameConvert(value);
 				}
 			}
 
-			if (sd.length > 0) {
-				result['_sd'] = sd;
+			if (sd.length) {
+				result._sd = sd;
 			}
 
 			return result;

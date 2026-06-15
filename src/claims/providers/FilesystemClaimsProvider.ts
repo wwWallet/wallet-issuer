@@ -4,6 +4,7 @@ import { ClaimsProvider, ClaimsProviderResult, ClaimsResolutionContext } from '.
 import { convertPidSdJwtVcToMdoc } from '../../lib/issuer/convertPidSdJwtVcToMdoc';
 import { supportedCredentialConfigurations } from '../../../config/supportedCredentialConfigurations';
 import { CredentialRequestHelper } from '../../lib/issuer/CredentialRequestHelper';
+import { getEtsiEaaClaims } from '../../lib/issuer/getEtsiEaaClaims';
 
 type AccountEntry = {
 	id: string;
@@ -75,6 +76,8 @@ export class FilesystemClaimsProvider implements ClaimsProvider {
 
 		if (supportedScope === 'pid:mso_mdoc') {
 			releasedClaims = { ...convertPidSdJwtVcToMdoc(accountClaims as Record<string, unknown>) };
+		} else if (claimsBucket === 'etsi'){
+			releasedClaims = { ...getEtsiEaaClaims(accountClaims as Record<string, unknown>, supportedScope, 'vct' in supportedConf ? supportedConf.vct : undefined)}
 		} else {
 			releasedClaims = { ...releasedClaims, ...accountClaims };
 		}

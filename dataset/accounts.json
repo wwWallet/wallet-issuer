@@ -88,6 +88,54 @@
 				"family_name": "Doe",
 				"given_name": "John",
 				"birth_date": "1990-10-15"
+			},
+			"etsi": {
+				"issue_date": "2025-04-21",
+				"expiry_date": "2035-04-21",
+				"issuing_authority": "PID:00001",
+				"issuing_authority_unicode": "PID:00001",
+				"issuing_country": "GR",
+				"iss_reg_id": "VATEL-123456789",
+				"issuing_jurisdiction": "GR-F",
+				"birth_date": "1990-10-15",
+				"age_in_years": 35,
+				"age_birth_year": 1990,
+				"family_name": "Doe",
+				"given_name": "John",
+				"birth_family_name": "Doe",
+				"birth_given_name": "John",
+				"place_of_birth": {
+					"locality": "Manhattan",
+					"region": "New York",
+					"country": "US"
+				},
+				"places_of_residence": [
+					{
+						"locality": "Attiki",
+						"region": "Athens",
+						"country": "GR"
+					},
+					{
+						"locality": "Manhattan",
+						"region": "New York",
+						"country": "US"
+					}
+				],
+				"resident_country": "US",
+				"sex": 1,
+				"birthdate": "1990-10-15",
+				"nationalities": [
+					"US",
+					"GR"
+				],
+				"document_number": "12313213",
+				"email": "john@sample.com",
+				"phone_number": "+308388338382",
+				"personal_administrative_number": "123456789",
+				"trust_anchor": "https://example.com/trust_anchor",
+				"also_known_as": "pseudonym",
+				"oneTime": null,
+				"shortLived": null
 			}
 		},
 		{
