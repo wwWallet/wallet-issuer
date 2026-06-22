@@ -27,7 +27,7 @@ const credentialRequestStore = new MemoryStore<string, CredentialRequestWithClai
 
 export const credentialRequestHelper = createCredentialRequestHelper(credentialRequestStore);
 
-const claimsProvider: ClaimsProvider = config.vcClaimsFetcherUrl
+const claimsProvider: ClaimsProvider = config.vcClaimsFetcherEnabled && config.vcClaimsFetcherUrl
 	? new RemoteClaimsProvider(config.vcClaimsFetcherUrl, { apiKey: config.vcClaimsFetcherApiKey })
 	: new FilesystemClaimsProvider();
 
