@@ -36,6 +36,19 @@ Content-Type: application/json
 The issuer refuses to start when the API is enabled without a bearer token. Routes outside
 `/api`, including the generated `GET /openid/credential-offer/:id` URL, remain public.
 
+## Remote claims fetching
+
+Enable remote claims fetching explicitly:
+
+```dotenv
+VC_CLAIMS_FETCHER_ENABLED=true
+VC_CLAIMS_FETCHER_URL=https://example.com/claims
+VC_CLAIMS_FETCHER_API_KEY=replace-with-a-random-secret
+```
+
+When `VC_CLAIMS_FETCHER_ENABLED` is not `true`, the issuer uses filesystem claims even if
+`VC_CLAIMS_FETCHER_URL` and `VC_CLAIMS_FETCHER_API_KEY` are present.
+
 ## Local credential configuration overrides
 
 You can add local-only credential configurations without changing tracked files.

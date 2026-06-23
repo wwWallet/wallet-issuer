@@ -40,6 +40,7 @@ export const config = {
 	credentialOfferApiEnabled: process.env.CREDENTIAL_OFFER_API_ENABLED?.trim() === 'true',
 	credentialOfferApiBearerToken: process.env.CREDENTIAL_OFFER_API_BEARER_TOKEN?.trim() || '',
 	vctRegistryUrl: process.env.VCT_REGISTRY_URL || 'http://localhost:8097/type-metadata',
+	vcClaimsFetcherEnabled: process.env.VC_CLAIMS_FETCHER_ENABLED?.trim() === 'true',
 	vcClaimsFetcherUrl: process.env.VC_CLAIMS_FETCHER_URL || '',
 	vcClaimsFetcherApiKey: process.env.VC_CLAIMS_FETCHER_API_KEY || '',
 	supportedCredentialScopesWhitelist,
