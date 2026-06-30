@@ -22,8 +22,6 @@ const preAuthorizedCodeHandlerSchema = z.object({
 export const preAuthorizedCodeHandler = async (req: express.Request, res: express.Response) => {
 	try {
 
-		console.log(req.body);
-
 		const parsedBody = preAuthorizedCodeHandlerSchema.parse(req.body);
 		const preAuthorizedCode = parsedBody["pre-authorized_code"];
 		const txCode = parsedBody["tx_code"];
@@ -42,8 +40,12 @@ export const preAuthorizedCodeHandler = async (req: express.Request, res: expres
 			return sendPreAuthorizedCodeHandlerError(res, 400, 'invalid_request', 'Provided tx_code while grant does not expect it.');
 		}
 
-		if (String(grant.tx_value) !== String(txCode)) {
+		if (grant.tx_code && String(grant.tx_value) !== String(txCode)) {
 			return sendPreAuthorizedCodeHandlerError(res, 400, 'invalid_grant', 'Invalid tx_code.');
+		}
+
+		if (grant.exp && grant.exp < Date.now()) {
+			return sendPreAuthorizedCodeHandlerError(res, 400, 'invalid_grant', 'Expired grant.');
 		}
 
 		await issuer.preAuthorizedCodeStore.delete(preAuthorizedCode);
@@ -54,7 +56,7 @@ export const preAuthorizedCodeHandler = async (req: express.Request, res: expres
 			return sendPreAuthorizedCodeHandlerError(res, 400, 'invalid_request', 'Missing or invalid parameters');
 		}
 
-		console.log(error);
+		console.log(`Error sending pre-authorized code: ${error}`);
 		return sendPreAuthorizedCodeHandlerError(res, 500, 'server_error', 'An unexpected error occurred');
 	}
 };

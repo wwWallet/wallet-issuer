@@ -8,7 +8,7 @@ block content
 		.container
 			h1= locale.offer.title.replace("{{name}}", credentialName)
 			p.subtitle= locale.offer.subtitle
-			p.tx-code Your transaction code is: #{txCode}
+			p.tx-code= locale.offer.txCode.replace("{{txCode}}", txCode)
 
 	section.catalog
 		.container

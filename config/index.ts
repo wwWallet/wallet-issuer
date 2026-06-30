@@ -13,7 +13,7 @@ const issuerPath = rawIssuerPath
 	: "";
 
 const preAuthorizedCodeApiEnabled = process.env.PRE_AUTHORIZED_CODE_API_ENABLED?.trim() === 'true';
-
+const preAuthorizedCodeTxCodeEnabled = process.env.PRE_AUTHORIZED_CODE_GRANT_TX_CODE?.trim() === 'true';
 function getTxCodeObject(): TxCode | undefined {
 
 	let txCode;
@@ -22,44 +22,31 @@ function getTxCodeObject(): TxCode | undefined {
 		return txCode;
 	}
 
-	const txCodeEnabled = process.env.PRE_AUTHORIZED_CODE_GRANT_TX_CODE?.trim() === 'true';
-	if (!txCodeEnabled) {
+	if (!preAuthorizedCodeTxCodeEnabled) {
 		return txCode;
 	} else {
 		txCode = {};
 	}
 
-	const txCodeInputMode = process.env.PRE_AUTHORIZED_CODE_GRANT_INPUT_MODE?.trim();
-	switch (txCodeInputMode) {
-		case 'text':
-			txCode = {
-				input_mode: 'text'
-			}
-			break;
-		case 'numeric':
-		default:
-			txCode = {
-				input_mode: 'numeric'
-			}
-			break;
-	}
-
-	const txCodeLength = process.env.PRE_AUTHORIZED_CODE_GRANT_LENGTH;
-	if (txCodeLength) {
-		txCode = {
-			...txCode,
-			length: Number(txCodeLength)
-		}
-	}
-
-	const txCodeDescription = process.env.PRE_AUTHORIZED_CODE_GRANT_DESCRIPTION;
-	if (txCodeDescription) {
-		txCode = {
-			...txCode,
-			description: txCodeDescription
+	const txCodeObjectEnv = process.env.PRE_AUTHORIZED_CODE_GRANT_TX_CODE_OBJECT?.trim();
+	if (txCodeObjectEnv) {
+		try {
+			txCode = JSON.parse(txCodeObjectEnv) as TxCode;
+			return txCode;
+		} catch (error) {
+			console.log("error parsing tx code object from env: ", error)
 		}
 	}
 	return txCode as TxCode;
+}
+
+function getClientIdAndSecret(): { clientId: string; clientSecret: string } {
+	const combined = process.env.PRE_AUTHORIZED_CODE_GRANT_CLIENT_ID_SECRET?.trim() || 'wallet_issuer:test';
+	const [clientId, clientSecret] = combined.split(':');
+	return {
+		clientId: clientId?.trim() || 'wallet_issuer',
+		clientSecret: clientSecret?.trim() || 'test'
+	};
 }
 
 export const config = {
@@ -99,7 +86,8 @@ export const config = {
 	preAuthorizedCodeApiEnabled,
 	preAuthorizedCodeApiBearerToken: process.env.PRE_AUTHORIZED_CODE_API_BEARER_TOKEN || '',
 	preAuthorizedCodeTxCode: getTxCodeObject(),
-	preAuthorizedCodeTxCodeLength: Number(process.env.PRE_AUTHORIZED_CODE_GRANT_LENGTH),
-	preAuthorizedCodeAllowRefreshToken: process.env.PRE_AUTHORIZED_CODE_GRANT_REFRESH_TOKEN === 'true' || false,
-	preAuthorizedCodeGrantTtlMs: Number(process.env.PRE_AUTHORIZED_CODE_GRANT_TTL_MS) || 60000
+	preAuthorizedCodeTxCodeLength: getTxCodeObject()?.length,
+	preAuthorizedCodeGrantTtlMs: Number(process.env.PRE_AUTHORIZED_CODE_GRANT_TTL_MS) || 60000,
+	preAuthorizedCodeGrantClientId: getClientIdAndSecret().clientId,
+	preAuthorizedCodeGrantClientSecret: getClientIdAndSecret().clientSecret
 };

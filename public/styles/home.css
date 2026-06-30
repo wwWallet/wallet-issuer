@@ -50,5 +50,10 @@
 }
 
 .card-actions a {
+	display: inline-block;
 	margin-right: 0.5rem;
+	max-width: 13ch;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
 }
