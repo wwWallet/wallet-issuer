@@ -48,3 +48,7 @@
 .card-actions {
 	margin-top: 0.25rem;
 }
+
+.card-actions a {
+	margin-right: 0.5rem;
+}

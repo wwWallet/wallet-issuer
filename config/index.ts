@@ -1,4 +1,5 @@
 import dotenv from 'dotenv';
+import { TxCode } from 'wallet-common';
 dotenv.config({ quiet: true });
 
 const url = String(process.env.SERVICE_URL || 'default_url');
@@ -10,6 +11,56 @@ const rawIssuerPath = process.env.ISSUER_PATH?.trim() || "";
 const issuerPath = rawIssuerPath
 	? `/${rawIssuerPath.replace(/^\/+|\/+$/g, "")}`
 	: "";
+
+const preAuthorizedCodeApiEnabled = process.env.PRE_AUTHORIZED_CODE_API_ENABLED?.trim() === 'true';
+
+function getTxCodeObject(): TxCode | undefined {
+
+	let txCode;
+
+	if (!preAuthorizedCodeApiEnabled) {
+		return txCode;
+	}
+
+	const txCodeEnabled = process.env.PRE_AUTHORIZED_CODE_GRANT_TX_CODE?.trim() === 'true';
+	if (!txCodeEnabled) {
+		return txCode;
+	} else {
+		txCode = {};
+	}
+
+	const txCodeInputMode = process.env.PRE_AUTHORIZED_CODE_GRANT_INPUT_MODE?.trim();
+	switch (txCodeInputMode) {
+		case 'text':
+			txCode = {
+				input_mode: 'text'
+			}
+			break;
+		case 'numeric':
+		default:
+			txCode = {
+				input_mode: 'numeric'
+			}
+			break;
+	}
+
+	const txCodeLength = process.env.PRE_AUTHORIZED_CODE_GRANT_LENGTH;
+	if (txCodeLength) {
+		txCode = {
+			...txCode,
+			length: Number(txCodeLength)
+		}
+	}
+
+	const txCodeDescription = process.env.PRE_AUTHORIZED_CODE_GRANT_DESCRIPTION;
+	if (txCodeDescription) {
+		txCode = {
+			...txCode,
+			description: txCodeDescription
+		}
+	}
+	return txCode as TxCode;
+}
 
 export const config = {
 	url: url,
@@ -45,4 +96,10 @@ export const config = {
 	vcClaimsFetcherApiKey: process.env.VC_CLAIMS_FETCHER_API_KEY || '',
 	supportedCredentialScopesWhitelist,
 	revokeCredentialOffers: process.env.REVOKE_CREDENTIAL_OFFERS === 'true' || false,
+	preAuthorizedCodeApiEnabled,
+	preAuthorizedCodeApiBearerToken: process.env.PRE_AUTHORIZED_CODE_API_BEARER_TOKEN || '',
+	preAuthorizedCodeTxCode: getTxCodeObject(),
+	preAuthorizedCodeTxCodeLength: Number(process.env.PRE_AUTHORIZED_CODE_GRANT_LENGTH),
+	preAuthorizedCodeAllowRefreshToken: process.env.PRE_AUTHORIZED_CODE_GRANT_REFRESH_TOKEN === 'true' || false,
+	preAuthorizedCodeGrantTtlMs: Number(process.env.PRE_AUTHORIZED_CODE_GRANT_TTL_MS) || 60000
 };

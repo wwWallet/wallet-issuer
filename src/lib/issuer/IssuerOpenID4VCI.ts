@@ -4,7 +4,7 @@ import { CredentialSigner } from './CredentialSigner';
 import { CredentialOfferCreateSuccess, IssueCredentialRequestOptions, IssueCredentialResponse, PlainIssueCredentialResponse } from './IssuerOpenID4VCITypes';
 import { State } from './State';
 import { FindAccount } from './Account/FindAccount';
-import { GenericStore, MemoryStore, convertSdjwtvcToOpenid4vciClaims, CredentialConfigurationSupported, CredentialOffer, OpenidCredentialIssuerMetadata, OpenidCredentialIssuerMetadataSchema, ResponseMessage, convertSdjwtvcToOpenid4vciDisplay, toBase64Url, generateRandomIdentifier,VctDocumentProvider, VerifiableCredentialFormat } from 'wallet-common';
+import { GenericStore, MemoryStore, convertSdjwtvcToOpenid4vciClaims, CredentialConfigurationSupported, CredentialOffer, OpenidCredentialIssuerMetadata, OpenidCredentialIssuerMetadataSchema, ResponseMessage, convertSdjwtvcToOpenid4vciDisplay, toBase64Url, generateRandomIdentifier,VctDocumentProvider, VerifiableCredentialFormat, PreAuthorizedCodeGrant, GrantType, Grants } from 'wallet-common';
 import { CredentialRequestErrors } from './CredentialRequest/CredentialRequestError';
 import { handleEncryptedCredentialRequest } from './CredentialRequest/handleEncryptedCredentialRequest';
 import { createMemorySecretManager } from './MemorySecretManager';
@@ -16,11 +16,21 @@ import { sendCredentialResponse } from './CredentialRequest/sendCredentialRespon
 import { sendError } from './sendError';
 import { buildMetadata } from './buildMetadata';
 import { CredentialRequestHelper } from './CredentialRequestHelper';
+import { config } from '../../../config';
+
+export interface PreAuthorizedCodeStoreItem extends PreAuthorizedCodeGrant {
+	exp?: number;
+	tx_value?: string | number;
+	credential_configuration_ids?: string []
+	account_id?: string,
+	allow_refresh_token?: boolean
+};
 
 export type CredentialIssuerCreateOptions = {
 	authorizationServerUrl: string;
 	stateStore?: GenericStore<string, State>;
 	credentialOfferStore?: GenericStore<string, CredentialOffer>;
+	preAuthorizedCodeStore?: GenericStore<string, PreAuthorizedCodeStoreItem>;
 
 	secret: string; // used for HS512 JWT signatures when issuing nonce values
 
@@ -58,7 +68,7 @@ type JWTVCIssuerMetadata = {
 }
 
 export interface IssuerOpenID4VCI {
-	generateCredentialOffer(credentialOfferCreateOptions: { credentialConfigurationId: string, issuerState?: string }): Promise<CredentialOfferCreateSuccess>;
+	generateCredentialOffer(credentialOfferCreateOptions: { credentialConfigurationId: string, grant_type?: GrantType.AUTHORIZATION_CODE | GrantType.PRE_AUTHORIZED_CODE, issuerState?: string }): Promise<CredentialOfferCreateSuccess>;
 
 	getCredentialOffer(credentialOfferId: string, revoke: boolean): Promise<CredentialOffer | null>;
 
@@ -68,6 +78,8 @@ export interface IssuerOpenID4VCI {
 	issueNonce(): Promise<ResponseMessage>;
 
 	issueCredential(issueCredentialOptions: IssueCredentialRequestOptions): Promise<IssueCredentialResponse>;
+
+	preAuthorizedCodeStore: GenericStore<string, PreAuthorizedCodeStoreItem>;
 }
 
 /**
@@ -83,6 +95,7 @@ export function createIssuerOpenID4VCI(url: string, credentialIssuerCreateOption
 
 	const store = credentialIssuerCreateOptions.stateStore ?? new MemoryStore(10000);
 	const credentialOfferStore = credentialIssuerCreateOptions.credentialOfferStore ?? new MemoryStore <string, CredentialOffer>(100000);
+	const preAuthorizedCodeStore = credentialIssuerCreateOptions.preAuthorizedCodeStore ?? new MemoryStore <string, PreAuthorizedCodeStoreItem>(100000);
 	const secretManager = createMemorySecretManager(credentialIssuerCreateOptions.secret, credentialIssuerCreateOptions.clockTolerance, credentialIssuerCreateOptions.nonceExpirationTime);
 
 	if (credentialIssuerCreateOptions?.credentialRequestEncryption?.keypair?.publicKeyJwk !== undefined && !('kid' in credentialIssuerCreateOptions.credentialRequestEncryption.keypair.publicKeyJwk)) {
@@ -134,13 +147,82 @@ export function createIssuerOpenID4VCI(url: string, credentialIssuerCreateOption
 	};
 
 	return {
-		generateCredentialOffer: async (credentialOfferCreateOptions: { credentialConfigurationId: string, issuerState?: string }): Promise<CredentialOfferCreateSuccess> => {
+		generateCredentialOffer: async (credentialOfferCreateOptions: {
+			credentialConfigurationId: string,
+			grant_type?: GrantType.AUTHORIZATION_CODE | GrantType.PRE_AUTHORIZED_CODE;
+			issuerState?: string }): Promise<CredentialOfferCreateSuccess> => {
+
+				let grants: Grants;
+				let tx_value;
+
+				if(credentialOfferCreateOptions.grant_type === GrantType.AUTHORIZATION_CODE) {
+
+					if (credentialOfferCreateOptions.issuerState) {
+						grants = {
+							authorization_code: {
+								issuer_state: credentialOfferCreateOptions.issuerState
+							}
+						}
+					}
+					else {
+						grants = { authorization_code: {} }
+					}
+				} else if (credentialOfferCreateOptions.grant_type === GrantType.PRE_AUTHORIZED_CODE) {
+
+					const preAuthorizedCode = generateRandomIdentifier(18);
+					const tx_code = config.preAuthorizedCodeTxCode;
+
+					function generateNumericPin(length: number = 4): string {
+						const array = new Uint8Array(length);
+						crypto.getRandomValues(array);
+						return Array.from(array, (byte) => (byte % 10).toString()).join('');
+					}
+
+					grants = {
+						"urn:ietf:params:oauth:grant-type:pre-authorized_code": {
+								"pre-authorized_code": preAuthorizedCode
+						}
+					}
+
+					let preAuthorizedCodeStoreItem: PreAuthorizedCodeStoreItem = {
+						"pre-authorized_code": preAuthorizedCode,
+						credential_configuration_ids: [credentialOfferCreateOptions.credentialConfigurationId],
+						account_id: 'test',
+						allow_refresh_token: config.preAuthorizedCodeAllowRefreshToken,
+						exp: Date.now() + config.preAuthorizedCodeGrantTtlMs
+					};
+
+					if (tx_code) {
+						const length = config.preAuthorizedCodeTxCodeLength ?? 4;
+						tx_value = config.preAuthorizedCodeTxCode?.input_mode === 'text'
+							? generateRandomIdentifier(length)
+							: generateNumericPin(length)
+						console.log(`tx_code: ${tx_value}`);
+
+						grants = {
+							"urn:ietf:params:oauth:grant-type:pre-authorized_code": {
+								...grants["urn:ietf:params:oauth:grant-type:pre-authorized_code"] as any,
+								tx_code
+							}
+						}
+
+						preAuthorizedCodeStoreItem = {
+							...preAuthorizedCodeStoreItem,
+							tx_code,
+							tx_value
+						};
+					}
+
+					preAuthorizedCodeStore.set(preAuthorizedCode, preAuthorizedCodeStoreItem);
+
+				} else {
+					grants = {};
+				}
+
 			const credentialOffer: CredentialOffer = {
 				credential_issuer: url,
 				credential_configuration_ids: [credentialOfferCreateOptions.credentialConfigurationId],
-				grants: credentialOfferCreateOptions.issuerState
-				? { authorization_code: { issuer_state: credentialOfferCreateOptions.issuerState} }
-				: { authorization_code: {} }
+				grants
 			};
 			const id = generateRandomIdentifier(18);
 			credentialOfferStore.set(id, credentialOffer);
@@ -150,6 +232,7 @@ export function createIssuerOpenID4VCI(url: string, credentialIssuerCreateOption
 			return {
 				credentialOfferId: id,
 				credentialOfferWithReference: container,
+				txCode: tx_value
 			};
 		},
 
@@ -371,5 +454,7 @@ export function createIssuerOpenID4VCI(url: string, credentialIssuerCreateOption
 			}
 			return sendError(CredentialRequestErrors.InvalidRequest, 'No credential configuration is defined in the request');
 		},
+
+		preAuthorizedCodeStore: preAuthorizedCodeStore
 	};
 }

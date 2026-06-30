@@ -25,10 +25,16 @@ const loadRouterModule = async (
 		config: {
 			credentialOfferApiEnabled,
 			credentialOfferApiBearerToken,
+			preAuthorizedCodeApiEnabled: false,
 		},
 	}));
 
-	return await import('./router');
+	const [{ createApiRouter, apiBearerAuth }, { credentialOfferUriHandler }] = await Promise.all([
+		import('./router'),
+		import('./credentialOfferUriHandler'),
+	]);
+
+	return { createApiRouter, apiBearerAuth, credentialOfferUriHandler };
 };
 
 const getCredentialOfferUriRoute = (router: { stack: Array<{ route?: { path?: string } }> }) => {
@@ -86,7 +92,7 @@ describe('POST /api/credential-offer-uri configuration', () => {
 
 	it('throws when enabled without a bearer token', async () => {
 		await expect(loadRouterModule(true, '')).rejects.toThrow(
-			'CREDENTIAL_OFFER_API_BEARER_TOKEN is required when CREDENTIAL_OFFER_API_ENABLED=true',
+			'CREDENTIAL_OFFER_API_BEARER_TOKEN is required when CREDENTIAL_OFFER_API_ENABLED=true OR PRE_AUTHORIZED_CODE_API_ENABLED=true',
 		);
 	});
 });
@@ -285,6 +291,7 @@ describe('POST /api/credential-offer-uri input validation', () => {
 		});
 		expect(issuerMock.generateCredentialOffer).toHaveBeenCalledWith({
 			credentialConfigurationId: 'pid_sd_jwt',
+			grant_type: 'authorization_code',
 			issuerState: 'state-1',
 		});
 	});
