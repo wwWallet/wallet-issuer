@@ -82,17 +82,16 @@ describe('POST /api/credential-offer-uri configuration', () => {
 	it('registers the route when enabled', async () => {
 		const { createApiRouter } = await loadRouterModule(true);
 		const router = createApiRouter();
-		const authLayerIndex = router.stack.findIndex((layer) => layer.name === 'apiBearerAuth');
-		const routeLayerIndex = router.stack.findIndex((layer) => layer.route?.path === '/credential-offer-uri');
+		const routeLayer = router.stack.find((layer) => layer.route?.path === '/credential-offer-uri');
 
 		expect(getCredentialOfferUriRoute(router)).toBeDefined();
-		expect(authLayerIndex).toBeGreaterThanOrEqual(0);
-		expect(authLayerIndex).toBeLessThan(routeLayerIndex);
+		expect(routeLayer).toBeDefined();
+		expect(routeLayer?.route?.stack.some((layer) => layer.name === 'apiBearerAuth')).toBe(true);
 	});
 
 	it('throws when enabled without a bearer token', async () => {
 		await expect(loadRouterModule(true, '')).rejects.toThrow(
-			'CREDENTIAL_OFFER_API_BEARER_TOKEN is required when CREDENTIAL_OFFER_API_ENABLED=true OR PRE_AUTHORIZED_CODE_API_ENABLED=true',
+			'CREDENTIAL_OFFER_API_BEARER_TOKEN is required when CREDENTIAL_OFFER_API_ENABLED=true',
 		);
 	});
 });

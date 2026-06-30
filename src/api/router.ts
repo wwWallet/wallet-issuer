@@ -58,17 +58,13 @@ export const createApiRouter = () => {
 		if (!config.credentialOfferApiBearerToken) {
 			throw new Error('CREDENTIAL_OFFER_API_BEARER_TOKEN is required when CREDENTIAL_OFFER_API_ENABLED=true');
 		}
-
-		router.use(apiBearerAuth);
-		router.post('/credential-offer-uri', express.json(), credentialOfferUriHandler);
+		router.post('/credential-offer-uri', express.json(), apiBearerAuth, credentialOfferUriHandler);
 	}
 	if (config.preAuthorizedCodeApiEnabled) {
 		if (!config.preAuthorizedCodeApiBearerToken) {
 			throw new Error('PRE_AUTHORIZED_CODE_API_BEARER_TOKEN is required when PRE_AUTHORIZED_CODE_API_ENABLED=true');
 		}
-
-		router.use(preAuthorizedCodeApiBearerAuth);
-		router.post('/pre-authorized-code', express.json(), preAuthorizedCodeHandler);
+		router.post('/pre-authorized-code', express.json(), preAuthorizedCodeApiBearerAuth, preAuthorizedCodeHandler);
 	}
 
 	return router;
