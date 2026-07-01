@@ -14,6 +14,8 @@ const issuerPath = rawIssuerPath
 
 const preAuthorizedCodeApiEnabled = process.env.PRE_AUTHORIZED_CODE_API_ENABLED?.trim() === 'true';
 const preAuthorizedCodeTxCodeEnabled = process.env.PRE_AUTHORIZED_CODE_GRANT_TX_CODE?.trim() === 'true';
+const preAuthorizedCodeTxCodeLength = Number(process.env.PRE_AUTHORIZED_CODE_GRANT_TX_CODE_LENGTH || 4);
+
 function getTxCodeObject(): TxCode | undefined {
 
 	let txCode;
@@ -28,16 +30,10 @@ function getTxCodeObject(): TxCode | undefined {
 		txCode = {};
 	}
 
-	const txCodeObjectEnv = process.env.PRE_AUTHORIZED_CODE_GRANT_TX_CODE_OBJECT?.trim();
-	if (txCodeObjectEnv) {
-		try {
-			txCode = JSON.parse(txCodeObjectEnv) as TxCode;
-			return txCode;
-		} catch (error) {
-			console.log("error parsing tx code object from env: ", error)
-		}
+	return {
+		input_mode: 'numeric',
+		length: Number(preAuthorizedCodeTxCodeLength ?? 4)
 	}
-	return txCode as TxCode;
 }
 
 function getClientIdAndSecret(): { clientId: string; clientSecret: string } {
@@ -86,7 +82,7 @@ export const config = {
 	preAuthorizedCodeApiEnabled,
 	preAuthorizedCodeApiBearerToken: process.env.PRE_AUTHORIZED_CODE_API_BEARER_TOKEN || '',
 	preAuthorizedCodeTxCode: getTxCodeObject(),
-	preAuthorizedCodeTxCodeLength: getTxCodeObject()?.length,
+	preAuthorizedCodeTxCodeLength: preAuthorizedCodeTxCodeLength,
 	preAuthorizedCodeGrantTtlMs: Number(process.env.PRE_AUTHORIZED_CODE_GRANT_TTL_MS) || 60000,
 	preAuthorizedCodeGrantClientId: getClientIdAndSecret().clientId,
 	preAuthorizedCodeGrantClientSecret: getClientIdAndSecret().clientSecret

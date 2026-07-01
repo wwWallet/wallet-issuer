@@ -181,10 +181,10 @@ export function createIssuerOpenID4VCI(url: string, credentialIssuerCreateOption
 					};
 
 					if (tx_code) {
-						const length = config.preAuthorizedCodeTxCodeLength ?? 4;
+						const length = config.preAuthorizedCodeTxCodeLength ?? 4
 						tx_value = config.preAuthorizedCodeTxCode?.input_mode === 'text'
 							? generateRandomIdentifierStrictLength(length)
-							: generateNumericPin(length)
+							: generateNumericPin(length);
 						console.log(`tx_code: ${tx_value}`);
 
 						preAuthorizedCodeGrant.tx_code = tx_code;
