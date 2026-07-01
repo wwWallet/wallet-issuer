@@ -190,6 +190,7 @@ landingRouter.get('/callback', async (req, res) => {
 
 	const { metadata } = await issuer.getMetadata();
 	const targetMetadata = metadata.credential_configurations_supported?.[credentialConfigurationId];
+	const scope = targetMetadata.scope;
 
 	let credentialName = credentialConfigurationId;
 
@@ -201,7 +202,7 @@ landingRouter.get('/callback', async (req, res) => {
 		}
 	}
 
-	const { credentialOfferWithReference, txCode } = await issuer.generateCredentialOffer({ credentialConfigurationId, grant_type: GrantType.PRE_AUTHORIZED_CODE, accountId });
+	const { credentialOfferWithReference, txCode } = await issuer.generateCredentialOffer({ credentialConfigurationId, grant_type: GrantType.PRE_AUTHORIZED_CODE, accountId, scope });
 	const ref = credentialOfferWithReference.searchParams.get('credential_offer_uri');
 	const credentialOfferWithReferenceForWwwallet = new URL(config.wwwalletURL);
 	if (ref) {

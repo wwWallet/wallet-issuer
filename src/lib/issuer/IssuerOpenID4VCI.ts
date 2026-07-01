@@ -22,8 +22,9 @@ import { generateNumericPin } from '../../util/generateTxCode';
 export interface PreAuthorizedCodeStoreItem extends PreAuthorizedCodeGrant {
 	exp?: number;
 	tx_value?: string | number;
-	credential_configuration_ids?: string []
-	account_id?: string,
+	credential_configuration_ids?: string [];
+	account_id?: string;
+	scope?: string;
 };
 
 export type CredentialIssuerCreateOptions = {
@@ -68,7 +69,13 @@ type JWTVCIssuerMetadata = {
 }
 
 export interface IssuerOpenID4VCI {
-	generateCredentialOffer(credentialOfferCreateOptions: { credentialConfigurationId: string, grant_type?: GrantType.AUTHORIZATION_CODE | GrantType.PRE_AUTHORIZED_CODE, issuerState?: string, accountId?: string }): Promise<CredentialOfferCreateSuccess>;
+	generateCredentialOffer(credentialOfferCreateOptions: {
+		credentialConfigurationId: string,
+		grant_type?: GrantType.AUTHORIZATION_CODE | GrantType.PRE_AUTHORIZED_CODE,
+		issuerState?: string,
+		accountId?: string,
+		scope?: string
+	}): Promise<CredentialOfferCreateSuccess>;
 
 	getCredentialOffer(credentialOfferId: string, revoke: boolean): Promise<CredentialOffer | null>;
 
@@ -152,6 +159,7 @@ export function createIssuerOpenID4VCI(url: string, credentialIssuerCreateOption
 			grant_type?: GrantType.AUTHORIZATION_CODE | GrantType.PRE_AUTHORIZED_CODE;
 			issuerState?: string;
 			accountId?: string;
+			scope?: string;
 		}): Promise<CredentialOfferCreateSuccess> => {
 
 				let grants: Grants;
@@ -172,7 +180,8 @@ export function createIssuerOpenID4VCI(url: string, credentialIssuerCreateOption
 						"pre-authorized_code": preAuthorizedCode,
 						credential_configuration_ids: [credentialOfferCreateOptions.credentialConfigurationId],
 						account_id: credentialOfferCreateOptions.accountId,
-						exp: Date.now() + config.preAuthorizedCodeGrantTtlMs
+						exp: Date.now() + config.preAuthorizedCodeGrantTtlMs,
+						scope: credentialOfferCreateOptions.scope
 					};
 
 					if (config.preAuthorizedCodeTxCodeLength > 0) {
