@@ -179,12 +179,18 @@
 }
 
 .card-title {
+	flex: 1;
+	min-width: 0;
 	margin: 0;
 	color: var(--credential-text);
 	font-size: 1.18rem;
 	font-weight: 600;
 	line-height: 1.25;
-	word-break: break-word;
+	overflow: hidden;
+	overflow-wrap: anywhere;
+	display: -webkit-box;
+	-webkit-box-orient: vertical;
+	-webkit-line-clamp: 2;
 }
 
 .card-desc {
@@ -193,6 +199,11 @@
 	font-size: 0.9rem;
 	line-height: 1.45;
 	min-height: 2.6rem;
+	overflow: hidden;
+	overflow-wrap: anywhere;
+	display: -webkit-box;
+	-webkit-box-orient: vertical;
+	-webkit-line-clamp: 3;
 }
 
 .format-badge {
@@ -231,12 +242,14 @@
 	font-size: 0.94rem;
 	font-weight: 600;
 	line-height: 1.2;
+	overflow-wrap: anywhere;
 }
 
 .card-footer__meta {
 	color: var(--muted);
 	font-size: 0.78rem;
 	line-height: 1.25;
+	overflow-wrap: anywhere;
 }
 
 .card-arrow {
@@ -293,6 +306,10 @@
 }
 
 @media (max-width: 520px) {
+	.grid {
+		gap: 0.95rem;
+	}
+
 	.flow-toggle__content {
 		min-height: 64px;
 		padding: 0.65rem 0.75rem 0.75rem;
@@ -305,16 +322,66 @@
 	.flow-toggle__text {
 		font-size: 0.74rem;
 	}
+
+	.card {
+		box-shadow: 0 8px 24px rgba(15, 23, 42, 0.06);
+	}
+
+	.card-visual {
+		gap: 0.75rem;
+		min-height: 80px;
+		padding: 0.85rem;
+	}
+
+	.card-visual__logo {
+		width: 48px;
+		height: 48px;
+	}
+
+	.card-title {
+		font-size: 1.06rem;
+	}
+
+	.card-body {
+		gap: 0.55rem;
+		padding: 0.85rem;
+	}
+
+	.card-desc {
+		min-height: 0;
+		font-size: 0.86rem;
+		line-height: 1.4;
+		-webkit-line-clamp: 2;
+	}
+
+	.format-badge {
+		max-width: 100%;
+		font-size: 0.68rem;
+	}
+
+	.card-footer {
+		gap: 0.7rem;
+		padding-top: 0.7rem;
+	}
+
+	.card-footer__title {
+		font-size: 0.9rem;
+	}
+
+	.card-footer__meta {
+		font-size: 0.74rem;
+	}
+
+	.card-arrow {
+		width: 2rem;
+		height: 2rem;
+	}
 }
 
 @media (max-width: 420px) {
 	.flow-toggle__content {
 		min-height: 60px;
 		padding: 0.6rem 0.65rem 0.7rem;
-	}
-
-	.card-body {
-		padding: 0.9rem;
 	}
 
 	.format-badge {
@@ -333,5 +400,27 @@
 
 	.flow-toggle__text {
 		font-size: 0.7rem;
+	}
+
+	.card-visual {
+		min-height: 72px;
+		padding: 0.75rem;
+	}
+
+	.card-visual__logo {
+		width: 42px;
+		height: 42px;
+	}
+
+	.card-title {
+		font-size: 1rem;
+	}
+
+	.card-body {
+		padding: 0.75rem;
+	}
+
+	.card-footer {
+		align-items: flex-end;
 	}
 }
