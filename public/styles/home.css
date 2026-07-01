@@ -1,9 +1,5 @@
 /* home.css */
 
-.home-hero .container {
-	display: block;
-}
-
 .empty-state {
 	padding: 1.15rem;
 	border: 1px solid var(--border);
