@@ -16,7 +16,7 @@ export const locale = {
 		empty: "No credential configurations found.",
 		issue: "Start issuance",
 		standardFlowTitle: "Authorization Code",
-		standardFlowDescription: "login after returning to your  Wallet",
+		standardFlowDescription: "Login after returning to your Wallet",
 		preAuthorizedFlowTitle: "Pre-Authorized Code",
 		preAuthorizedFlowDescription: "Login immediately",
 		chooseFlow: "Grant type",
