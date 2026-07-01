@@ -11,11 +11,15 @@ export const locale = {
 	},
 
 	home: {
-		title: "wwWallet Issuer",
-		subtitle: "Choose a credential type to issue.",
+		title: "Available credentials",
+		subtitle: "Select an authorization code type first, then choose a credential to continue.",
 		empty: "No credential configurations found.",
-		issue: "Issue",
-		issuePreAuth: "Pre-Authorized Issuance",
+		issue: "Start issuance",
+		standardFlowTitle: "Authorization Code",
+		standardFlowDescription: "Log in after returning to your Wallet",
+		preAuthorizedFlowTitle: "Pre-Authorized Code",
+		preAuthorizedFlowDescription: "Log in immediately",
+		chooseFlow: "Grant type",
 	},
 
 	offer: {
