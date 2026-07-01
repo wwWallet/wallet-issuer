@@ -22,15 +22,15 @@ block content
 				.flow-toggle-panel
 					.flow-toggle(role="radiogroup" aria-label=locale.home.chooseFlow)
 						label.flow-toggle__option
-							input.flow-toggle__input(type="radio" name="issuance-flow" value="standard" checked)
-							span.flow-toggle__content
-								span.flow-toggle__title= locale.home.standardFlowTitle
-								span.flow-toggle__text= locale.home.standardFlowDescription
-						label.flow-toggle__option
-							input.flow-toggle__input(type="radio" name="issuance-flow" value="preauth")
+							input.flow-toggle__input(type="radio" name="issuance-flow" value="preauth" checked)
 							span.flow-toggle__content
 								span.flow-toggle__title= locale.home.preAuthorizedFlowTitle
 								span.flow-toggle__text= locale.home.preAuthorizedFlowDescription
+						label.flow-toggle__option
+							input.flow-toggle__input(type="radio" name="issuance-flow" value="standard")
+							span.flow-toggle__content
+								span.flow-toggle__title= locale.home.standardFlowTitle
+								span.flow-toggle__text= locale.home.standardFlowDescription
 				.grid
 					each id in keys
 						- var encodedId = base64urlEncode(id)
@@ -47,8 +47,8 @@ block content
 						- var textColor = d && isSafeColor(d.text_color) ? d.text_color.trim() : "#00246b"
 						- var visualStyle = "--credential-accent: " + accentColor + "; --credential-text: " + textColor + ";"
 
-						a.card.card-issue-action.action-card--standard(
-							href=`/offer/${encodedId}`
+						a.card.card-issue-action.action-card--preauth(
+							href=`/pre-authorized-offer/${encodedId}`
 							data-standard-href=`/offer/${encodedId}`
 							data-preauth-href=`/pre-authorized-offer/${encodedId}`
 							data-standard-meta=locale.home.standardFlowTitle
@@ -65,7 +65,7 @@ block content
 								.card-footer
 									span.card-footer__copy
 										span.card-footer__title(data-action-title)= locale.home.issue
-										span.card-footer__meta(aria-hidden="true" data-action-meta)= locale.home.standardFlowTitle
+										span.card-footer__meta(aria-hidden="true" data-action-meta)= locale.home.preAuthorizedFlowTitle
 									span.card-arrow(aria-hidden="true")
 
 block scripts

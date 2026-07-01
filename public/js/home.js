@@ -8,7 +8,7 @@
 
 	const selectedFlow = () => {
 		const checkedInput = document.querySelector('input[name="issuance-flow"]:checked');
-		return checkedInput ? checkedInput.value : "standard";
+		return checkedInput ? checkedInput.value : "preauth";
 	};
 
 	const applyFlowToLink = (link, flow) => {
