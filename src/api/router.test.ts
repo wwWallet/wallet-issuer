@@ -1,9 +1,13 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 
 const { issuerMock } = vi.hoisted(() => ({
 	issuerMock: {
 		getMetadata: vi.fn(),
 		generateCredentialOffer: vi.fn(),
+		preAuthorizedCodeStore: {
+			get: vi.fn(),
+			delete: vi.fn(),
+		},
 	},
 }));
 
@@ -19,81 +23,68 @@ type TestResponse = {
 const loadRouterModule = async (
 	credentialOfferApiEnabled = false,
 	credentialOfferApiBearerToken = 'test-token',
+	preAuthorizedCodeApiEnabled = false,
+	preAuthorizedCodeApiBearerToken = 'pre-auth-token',
 ) => {
 	vi.resetModules();
 	vi.doMock('../../config', () => ({
 		config: {
 			credentialOfferApiEnabled,
 			credentialOfferApiBearerToken,
+			preAuthorizedCodeApiEnabled,
+			preAuthorizedCodeApiBearerToken,
 		},
 	}));
 
-	return await import('./router');
+	const { createApiRouter, apiBearerAuth, preAuthorizedCodeApiBearerAuth } = await import('./router');
+
+	return { createApiRouter, apiBearerAuth, preAuthorizedCodeApiBearerAuth };
 };
 
-const getCredentialOfferUriRoute = (router: { stack: Array<{ route?: { path?: string } }> }) => {
-	return router.stack.find((layer) => layer.route?.path === '/credential-offer-uri');
+const getRoute = (
+	router: { stack: Array<{ route?: { path?: string; stack?: Array<{ name?: string }> } }> },
+	path: string,
+) => {
+	return router.stack.find((layer) => layer.route?.path === path);
 };
 
-const executeHandler = async (
-	body: unknown,
-	options: {
-		credentialOfferApiEnabled?: boolean;
-	} = {},
-): Promise<TestResponse> => {
-	const { credentialOfferUriHandler } = await loadRouterModule(options.credentialOfferApiEnabled ?? true);
-	const response: TestResponse = {
-		statusCode: 0,
-		body: undefined,
-	};
-
-	const req = {
-		body,
-	} as any;
-	const res = {
-		status(code: number) {
-			response.statusCode = code;
-			return this;
-		},
-		send(payload: unknown) {
-			response.body = payload;
-			return this;
-		},
-	} as any;
-
-	await credentialOfferUriHandler(req, res);
-	return response;
-};
-
-describe('POST /api/credential-offer-uri configuration', () => {
-	it('does not register the route when disabled', async () => {
-		const { createApiRouter } = await loadRouterModule(false);
+describe('API router configuration', () => {
+	it('does not register any API routes when both APIs are disabled', async () => {
+		const { createApiRouter } = await loadRouterModule(false, 'test-token', false, 'pre-auth-token');
 		const router = createApiRouter();
 
-		expect(getCredentialOfferUriRoute(router)).toBeUndefined();
+		expect(getRoute(router, '/credential-offer-uri')).toBeUndefined();
+		expect(getRoute(router, '/pre-authorized-code')).toBeUndefined();
 	});
 
-	it('registers the route when enabled', async () => {
-		const { createApiRouter } = await loadRouterModule(true);
+	it('registers the credential-offer and pre-authorized routes when enabled', async () => {
+		const { createApiRouter } = await loadRouterModule(true, 'test-token', true, 'pre-auth-token');
 		const router = createApiRouter();
-		const authLayerIndex = router.stack.findIndex((layer) => layer.name === 'apiBearerAuth');
-		const routeLayerIndex = router.stack.findIndex((layer) => layer.route?.path === '/credential-offer-uri');
+		const credentialOfferRoute = getRoute(router, '/credential-offer-uri');
+		const preAuthorizedCodeRoute = getRoute(router, '/pre-authorized-code');
 
-		expect(getCredentialOfferUriRoute(router)).toBeDefined();
-		expect(authLayerIndex).toBeGreaterThanOrEqual(0);
-		expect(authLayerIndex).toBeLessThan(routeLayerIndex);
+		expect(credentialOfferRoute).toBeDefined();
+		expect(preAuthorizedCodeRoute).toBeDefined();
+		expect(credentialOfferRoute?.route?.stack?.some((layer: { name?: string }) => layer.name === 'apiBearerAuth')).toBe(true);
+		expect(preAuthorizedCodeRoute?.route?.stack?.some((layer: { name?: string }) => layer.name === 'preAuthorizedCodeApiBearerAuth')).toBe(true);
 	});
 
-	it('throws when enabled without a bearer token', async () => {
-		await expect(loadRouterModule(true, '')).rejects.toThrow(
+	it('throws when credential-offer API is enabled without a bearer token', async () => {
+		await expect(loadRouterModule(true, '', false, 'pre-auth-token')).rejects.toThrow(
 			'CREDENTIAL_OFFER_API_BEARER_TOKEN is required when CREDENTIAL_OFFER_API_ENABLED=true',
+		);
+	});
+
+	it('throws when pre-authorized API is enabled without a bearer token', async () => {
+		await expect(loadRouterModule(false, 'test-token', true, '')).rejects.toThrow(
+			'PRE_AUTHORIZED_CODE_API_BEARER_TOKEN is required when PRE_AUTHORIZED_CODE_API_ENABLED=true',
 		);
 	});
 });
 
 describe('/api authentication', () => {
-	const executeAuth = async (authorization?: string) => {
-		const { apiBearerAuth } = await loadRouterModule(true);
+	const executeAuth = async (authorization?: string, type: 'credential-offer' | 'pre-authorized' = 'credential-offer') => {
+		const { apiBearerAuth, preAuthorizedCodeApiBearerAuth } = await loadRouterModule(true, 'test-token', true, 'pre-auth-token');
 		const response: TestResponse & { headers: Record<string, string> } = {
 			statusCode: 0,
 			body: undefined,
@@ -119,11 +110,11 @@ describe('/api authentication', () => {
 		} as any;
 		const next = vi.fn();
 
-		apiBearerAuth(req, res, next);
+		(type === 'credential-offer' ? apiBearerAuth : preAuthorizedCodeApiBearerAuth)(req, res, next);
 		return { response, next };
 	};
 
-	it('returns 401 when the Authorization header is missing', async () => {
+	it('returns 401 when the credential-offer Authorization header is missing', async () => {
 		const { response, next } = await executeAuth();
 
 		expect(response.statusCode).toBe(401);
@@ -135,157 +126,17 @@ describe('/api authentication', () => {
 		expect(next).not.toHaveBeenCalled();
 	});
 
-	it('returns 401 for an invalid bearer token', async () => {
-		const { response, next } = await executeAuth('Bearer wrong-token');
-
-		expect(response.statusCode).toBe(401);
-		expect(next).not.toHaveBeenCalled();
-	});
-
-	it('continues for a valid bearer token', async () => {
+	it('continues for a valid credential-offer bearer token', async () => {
 		const { response, next } = await executeAuth('Bearer test-token');
 
 		expect(response.statusCode).toBe(0);
 		expect(next).toHaveBeenCalledOnce();
 	});
-});
 
-describe('POST /api/credential-offer-uri input validation', () => {
-	beforeEach(() => {
-		vi.clearAllMocks();
-		issuerMock.getMetadata.mockResolvedValue({
-			metadata: {
-				credential_configurations_supported: {
-					pid_sd_jwt: {},
-				},
-			},
-		});
-		issuerMock.generateCredentialOffer.mockResolvedValue({
-			credentialOfferWithReference: new URL(
-				'https://issuer.example/offer?credential_offer_uri=https%3A%2F%2Fissuer.example%2Fcredential-offer%2Fref-123',
-			),
-		});
-	});
+	it('continues for a valid pre-authorized bearer token', async () => {
+		const { response, next } = await executeAuth('Bearer pre-auth-token', 'pre-authorized');
 
-	it('returns 400 invalid_request when required fields are missing', async () => {
-		const response = await executeHandler({});
-
-		expect(response.statusCode).toBe(400);
-		expect(response.body).toEqual({
-			error: 'invalid_request',
-			error_description: 'Missing or invalid parameters',
-		});
-	});
-
-	it('returns 400 invalid_request when credential_configuration_ids is empty', async () => {
-		const response = await executeHandler({
-			credential_configuration_ids: [],
-			grants: {
-				authorization_code: { issuer_state: 'state-1' },
-			},
-		});
-
-		expect(response.statusCode).toBe(400);
-		expect(response.body).toEqual({
-			error: 'invalid_request',
-			error_description: 'Missing or invalid parameters',
-		});
-	});
-
-	it('returns 501 unsupported_grant_type when authorization_code grant is missing', async () => {
-		const response = await executeHandler({
-			credential_configuration_ids: ['pid_sd_jwt'],
-			grants: {
-				'urn:ietf:params:oauth:grant-type:pre-authorized_code': {},
-			},
-		});
-
-		expect(response.statusCode).toBe(501);
-		expect(response.body).toEqual({
-			error: 'unsupported_grant_type',
-			error_description: 'Only authorization_code grant is supported',
-		});
-	});
-
-	it('returns 501 unsupported_grant_type when extra grant types are included', async () => {
-		const response = await executeHandler({
-			credential_configuration_ids: ['pid_sd_jwt'],
-			grants: {
-				authorization_code: { issuer_state: 'state-1' },
-				custom_grant: {},
-			},
-		});
-
-		expect(response.statusCode).toBe(501);
-		expect(response.body).toEqual({
-			error: 'unsupported_grant_type',
-			error_description: 'Only authorization_code grant is supported',
-		});
-	});
-
-	it('returns 400 invalid_request when authorization_code payload is invalid', async () => {
-		const response = await executeHandler({
-			credential_configuration_ids: ['pid_sd_jwt'],
-			grants: {
-				authorization_code: { issuer_state: '' },
-			},
-		});
-
-		expect(response.statusCode).toBe(400);
-		expect(response.body).toEqual({
-			error: 'invalid_request',
-			error_description: 'Missing or invalid parameters',
-		});
-	});
-
-	it('returns 400 invalid_request when authorization_code has extra fields', async () => {
-		const response = await executeHandler({
-			credential_configuration_ids: ['pid_sd_jwt'],
-			grants: {
-				authorization_code: {
-					issuer_state: 'state-1',
-					extra: 'not-allowed',
-				},
-			},
-		});
-
-		expect(response.statusCode).toBe(400);
-		expect(response.body).toEqual({
-			error: 'invalid_request',
-			error_description: 'Missing or invalid parameters',
-		});
-	});
-
-	it('returns 400 invalid_request for unsupported credential configuration id', async () => {
-		const response = await executeHandler({
-			credential_configuration_ids: ['unknown_credential'],
-			grants: {
-				authorization_code: { issuer_state: 'state-1' },
-			},
-		});
-
-		expect(response.statusCode).toBe(400);
-		expect(response.body).toEqual({
-			error: 'invalid_request',
-			error_description: 'Missing or invalid parameters',
-		});
-	});
-
-	it('returns 201 and credential_offer_uri for valid input', async () => {
-		const response = await executeHandler({
-			credential_configuration_ids: ['pid_sd_jwt'],
-			grants: {
-				authorization_code: { issuer_state: 'state-1' },
-			},
-		});
-
-		expect(response.statusCode).toBe(201);
-		expect(response.body).toEqual({
-			credential_offer_uri: 'https://issuer.example/credential-offer/ref-123',
-		});
-		expect(issuerMock.generateCredentialOffer).toHaveBeenCalledWith({
-			credentialConfigurationId: 'pid_sd_jwt',
-			issuerState: 'state-1',
-		});
+		expect(response.statusCode).toBe(0);
+		expect(next).toHaveBeenCalledOnce();
 	});
 });

@@ -17,20 +17,56 @@ block content
 			if !keys || keys.length === 0
 				p.empty-state= locale.home.empty
 			else
+				- var base64urlEncode = s => btoa(s).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
+				- var isSafeColor = value => typeof value === "string" && /^#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$/.test(value.trim());
+				.flow-toggle-panel
+					.flow-toggle(role="radiogroup" aria-label=locale.home.chooseFlow)
+						label.flow-toggle__option
+							input.flow-toggle__input(type="radio" name="issuance-flow" value="preauth" checked)
+							span.flow-toggle__content
+								span.flow-toggle__title= locale.home.preAuthorizedFlowTitle
+								span.flow-toggle__text= locale.home.preAuthorizedFlowDescription
+						label.flow-toggle__option
+							input.flow-toggle__input(type="radio" name="issuance-flow" value="standard")
+							span.flow-toggle__content
+								span.flow-toggle__title= locale.home.standardFlowTitle
+								span.flow-toggle__text= locale.home.standardFlowDescription
 				.grid
 					each id in keys
-						- var base64urlEncode = s => btoa(s).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
+						- var encodedId = base64urlEncode(id)
 						- var cfg = configs[id] || {}
 						- var cm = cfg.credential_metadata || {}
 						- var displayArr = (cm.display && Array.isArray(cm.display) && cm.display.length > 0) ? cm.display : []
 						- var d = displayArr.length ? displayArr[0] : null
 						- var name = (d && d.name) ? d.name : id
 						- var desc = (d && d.description) ? d.description : ""
-						- var scope = cfg.scope
+						- var format = cfg.format ? String(cfg.format) : ""
+						- var formatLabel = format === "mso_mdoc" ? "mDoc" : (format.indexOf("sd-jwt") >= 0 ? "SD-JWT VC" : (format || "Credential"))
+						- var logoImage = d && d.logo && d.logo.uri ? d.logo.uri : null
+						- var accentColor = d && isSafeColor(d.background_color) ? d.background_color.trim() : "#dbeafe"
+						- var textColor = d && isSafeColor(d.text_color) ? d.text_color.trim() : "#00246b"
+						- var visualStyle = "--credential-accent: " + accentColor + "; --credential-text: " + textColor + ";"
 
-						.card
-							h3.card-title= name
-							p.card-desc= desc
+						a.card.card-issue-action.action-card--preauth(
+							href=`/pre-authorized-offer/${encodedId}`
+							data-standard-href=`/offer/${encodedId}`
+							data-preauth-href=`/pre-authorized-offer/${encodedId}`
+							data-standard-meta=locale.home.standardFlowTitle
+							data-preauth-meta=locale.home.preAuthorizedFlowTitle
+						)
+							.card-visual(style=visualStyle)
+								h3.card-title= name
+								if logoImage
+									img.card-visual__logo(src=logoImage alt="" onerror="this.remove()")
+							.card-body
+								span.format-badge= formatLabel
+								p.card-desc= desc || id
 
-							.card-actions
-								a.btn.btn-primary(href=`/offer/${base64urlEncode(id)}`)= locale.home.issue
+								.card-footer
+									span.card-footer__copy
+										span.card-footer__title(data-action-title)= locale.home.issue
+										span.card-footer__meta(aria-hidden="true" data-action-meta)= locale.home.preAuthorizedFlowTitle
+									span.card-arrow(aria-hidden="true")
+
+block scripts
+	script(src="/js/home.js")

@@ -8,6 +8,8 @@ block content
 		.container
 			h1= locale.offer.title.replace("{{name}}", credentialName)
 			p.subtitle= locale.offer.subtitle
+			if txCode
+				p.tx-code= locale.offer.txCode.replace("{{txCode}}", txCode)
 
 	section.catalog
 		.container
@@ -15,8 +17,16 @@ block content
 				canvas#qr(data-value=credentialOfferWithReference)
 
 				.offer-actions
-					a.btn.btn-primary(href=credentialOfferWithReferenceForWwwallet)= locale.offer.openInwwallet
-					a.btn.btn-primary(href=credentialOfferWithReference)= locale.offer.openInGenericWallet
+					a.btn.btn-primary(
+						href=credentialOfferWithReferenceForWwwallet
+						target=txCode ? '_blank' : false
+						rel=txCode ? 'noopener noreferrer' : false
+					)= locale.offer.openInwwallet
+					a.btn.btn-primary(
+						href=credentialOfferWithReference
+						target=txCode ? '_blank' : false
+						rel=txCode ? 'noopener noreferrer' : false
+					)= locale.offer.openInGenericWallet
 
 				.offer-manual
 					label.offer-manual__label(for="offer-url") Or copy / edit the link:

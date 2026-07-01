@@ -11,6 +11,18 @@ const issuerPath = rawIssuerPath
 	? `/${rawIssuerPath.replace(/^\/+|\/+$/g, "")}`
 	: "";
 
+const preAuthorizedCodeApiEnabled = process.env.PRE_AUTHORIZED_CODE_API_ENABLED?.trim() === 'true';
+const preAuthorizedCodeTxCodeLength = Number(process.env.PRE_AUTHORIZED_CODE_GRANT_TX_CODE_LENGTH);
+
+function getClientIdAndSecret(): { clientId: string; clientSecret: string } {
+	const combined = process.env.PRE_AUTHORIZED_CODE_GRANT_CLIENT_ID_SECRET?.trim() || 'wallet_issuer:test';
+	const [clientId, clientSecret] = combined.split(':');
+	return {
+		clientId: clientId?.trim() || 'wallet_issuer',
+		clientSecret: clientSecret?.trim() || 'test'
+	};
+}
+
 export const config = {
 	url: url,
 	issuerIdentifier: `${url}${issuerPath}`,
@@ -45,4 +57,10 @@ export const config = {
 	vcClaimsFetcherApiKey: process.env.VC_CLAIMS_FETCHER_API_KEY || '',
 	supportedCredentialScopesWhitelist,
 	revokeCredentialOffers: process.env.REVOKE_CREDENTIAL_OFFERS === 'true' || false,
+	preAuthorizedCodeApiEnabled,
+	preAuthorizedCodeApiBearerToken: process.env.PRE_AUTHORIZED_CODE_API_BEARER_TOKEN || '',
+	preAuthorizedCodeTxCodeLength: !Number.isNaN(preAuthorizedCodeTxCodeLength) ? preAuthorizedCodeTxCodeLength : 0,
+	preAuthorizedCodeGrantTtlMs: Number(process.env.PRE_AUTHORIZED_CODE_GRANT_TTL_MS) || 60000,
+	preAuthorizedCodeGrantClientId: getClientIdAndSecret().clientId,
+	preAuthorizedCodeGrantClientSecret: getClientIdAndSecret().clientSecret
 };
