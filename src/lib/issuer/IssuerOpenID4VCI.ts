@@ -4,7 +4,7 @@ import { CredentialSigner } from './CredentialSigner';
 import { CredentialOfferCreateSuccess, IssueCredentialRequestOptions, IssueCredentialResponse, PlainIssueCredentialResponse } from './IssuerOpenID4VCITypes';
 import { State } from './State';
 import { FindAccount } from './Account/FindAccount';
-import { GenericStore, MemoryStore, convertSdjwtvcToOpenid4vciClaims, CredentialConfigurationSupported, CredentialOffer, OpenidCredentialIssuerMetadata, OpenidCredentialIssuerMetadataSchema, ResponseMessage, convertSdjwtvcToOpenid4vciDisplay, toBase64Url, generateRandomIdentifier,VctDocumentProvider, VerifiableCredentialFormat, PreAuthorizedCodeGrant, AuthorizationCodeGrant, GrantType, Grants } from 'wallet-common';
+import { GenericStore, MemoryStore, convertSdjwtvcToOpenid4vciClaims, CredentialConfigurationSupported, CredentialOffer, OpenidCredentialIssuerMetadata, OpenidCredentialIssuerMetadataSchema, ResponseMessage, convertSdjwtvcToOpenid4vciDisplay, toBase64Url, generateRandomIdentifier,VctDocumentProvider, VerifiableCredentialFormat, PreAuthorizedCodeGrant, AuthorizationCodeGrant, GrantType, Grants, TxCode } from 'wallet-common';
 import { CredentialRequestErrors } from './CredentialRequest/CredentialRequestError';
 import { handleEncryptedCredentialRequest } from './CredentialRequest/handleEncryptedCredentialRequest';
 import { createMemorySecretManager } from './MemorySecretManager';
@@ -17,7 +17,7 @@ import { sendError } from './sendError';
 import { buildMetadata } from './buildMetadata';
 import { CredentialRequestHelper } from './CredentialRequestHelper';
 import { config } from '../../../config';
-import { generateNumericPin, generateRandomIdentifierStrictLength } from '../../util/generateTxCode';
+import { generateNumericPin } from '../../util/generateTxCode';
 
 export interface PreAuthorizedCodeStoreItem extends PreAuthorizedCodeGrant {
 	exp?: number;
@@ -167,11 +167,6 @@ export function createIssuerOpenID4VCI(url: string, credentialIssuerCreateOption
 				else if (credentialOfferCreateOptions.grant_type === GrantType.PRE_AUTHORIZED_CODE) {
 
 					const preAuthorizedCode = generateRandomIdentifier(18);
-					const tx_code = config.preAuthorizedCodeTxCode;
-
-					const preAuthorizedCodeGrant: PreAuthorizedCodeGrant = {
-						"pre-authorized_code": preAuthorizedCode
-					};
 
 					let preAuthorizedCodeStoreItem: PreAuthorizedCodeStoreItem = {
 						"pre-authorized_code": preAuthorizedCode,
@@ -180,24 +175,37 @@ export function createIssuerOpenID4VCI(url: string, credentialIssuerCreateOption
 						exp: Date.now() + config.preAuthorizedCodeGrantTtlMs
 					};
 
-					if (tx_code) {
+					if (config.preAuthorizedCodeTxCodeLength > 0) {
 						const length = config.preAuthorizedCodeTxCodeLength ?? 4
-						tx_value = config.preAuthorizedCodeTxCode?.input_mode === 'text'
-							? generateRandomIdentifierStrictLength(length)
-							: generateNumericPin(length);
+						tx_value = generateNumericPin(length);
 						console.log(`tx_code: ${tx_value}`);
 
-						preAuthorizedCodeGrant.tx_code = tx_code;
+						const txCodeObject: TxCode = {
+							'input_mode': 'numeric',
+							'length': length
+						};
 
 						preAuthorizedCodeStoreItem = {
 							...preAuthorizedCodeStoreItem,
-							tx_code,
+							tx_code: txCodeObject,
 							tx_value
+						};
+
+						grants = {
+							"urn:ietf:params:oauth:grant-type:pre-authorized_code": {
+								"pre-authorized_code": preAuthorizedCode,
+								"tx_code": txCodeObject
+							}
+						};
+					} else {
+						grants = {
+							"urn:ietf:params:oauth:grant-type:pre-authorized_code": {
+								"pre-authorized_code": preAuthorizedCode
+							}
 						};
 					}
 
 					preAuthorizedCodeStore.set(preAuthorizedCode, preAuthorizedCodeStoreItem);
-					grants = { "urn:ietf:params:oauth:grant-type:pre-authorized_code": preAuthorizedCodeGrant };
 
 				} else {
 					grants = {};

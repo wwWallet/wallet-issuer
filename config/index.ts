@@ -1,5 +1,4 @@
 import dotenv from 'dotenv';
-import { TxCode } from 'wallet-common';
 dotenv.config({ quiet: true });
 
 const url = String(process.env.SERVICE_URL || 'default_url');
@@ -13,28 +12,7 @@ const issuerPath = rawIssuerPath
 	: "";
 
 const preAuthorizedCodeApiEnabled = process.env.PRE_AUTHORIZED_CODE_API_ENABLED?.trim() === 'true';
-const preAuthorizedCodeTxCodeEnabled = process.env.PRE_AUTHORIZED_CODE_GRANT_TX_CODE?.trim() === 'true';
-const preAuthorizedCodeTxCodeLength = Number(process.env.PRE_AUTHORIZED_CODE_GRANT_TX_CODE_LENGTH || 4);
-
-function getTxCodeObject(): TxCode | undefined {
-
-	let txCode;
-
-	if (!preAuthorizedCodeApiEnabled) {
-		return txCode;
-	}
-
-	if (!preAuthorizedCodeTxCodeEnabled) {
-		return txCode;
-	} else {
-		txCode = {};
-	}
-
-	return {
-		input_mode: 'numeric',
-		length: Number(preAuthorizedCodeTxCodeLength ?? 4)
-	}
-}
+const preAuthorizedCodeTxCodeLength = Number(process.env.PRE_AUTHORIZED_CODE_GRANT_TX_CODE_LENGTH);
 
 function getClientIdAndSecret(): { clientId: string; clientSecret: string } {
 	const combined = process.env.PRE_AUTHORIZED_CODE_GRANT_CLIENT_ID_SECRET?.trim() || 'wallet_issuer:test';
@@ -81,8 +59,7 @@ export const config = {
 	revokeCredentialOffers: process.env.REVOKE_CREDENTIAL_OFFERS === 'true' || false,
 	preAuthorizedCodeApiEnabled,
 	preAuthorizedCodeApiBearerToken: process.env.PRE_AUTHORIZED_CODE_API_BEARER_TOKEN || '',
-	preAuthorizedCodeTxCode: getTxCodeObject(),
-	preAuthorizedCodeTxCodeLength: preAuthorizedCodeTxCodeLength,
+	preAuthorizedCodeTxCodeLength: !Number.isNaN(preAuthorizedCodeTxCodeLength) ? preAuthorizedCodeTxCodeLength : 0,
 	preAuthorizedCodeGrantTtlMs: Number(process.env.PRE_AUTHORIZED_CODE_GRANT_TTL_MS) || 60000,
 	preAuthorizedCodeGrantClientId: getClientIdAndSecret().clientId,
 	preAuthorizedCodeGrantClientSecret: getClientIdAndSecret().clientSecret

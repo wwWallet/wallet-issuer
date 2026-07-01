@@ -23,32 +23,35 @@ export const preAuthorizedCodeHandler = async (req: express.Request, res: expres
 	try {
 
 		const parsedBody = preAuthorizedCodeHandlerSchema.parse(req.body);
-		const preAuthorizedCode = parsedBody["pre-authorized_code"];
-		const txCode = parsedBody["tx_code"];
+		const parsedPreAuthorizedCode = parsedBody["pre-authorized_code"];
+		const parsedTxCode = parsedBody["tx_code"];
 
-		const grant = await issuer.preAuthorizedCodeStore.get(preAuthorizedCode);
+		const grant = await issuer.preAuthorizedCodeStore.get(parsedPreAuthorizedCode);
+		const expectedTxCodeStructure = grant?.tx_code;
+		const expectedTxCodeValue = grant?.tx_value;
+		const expectedExpDateMs = grant?.exp;
 
 		if (!grant) {
 			return sendPreAuthorizedCodeHandlerError(res, 400, 'invalid_grant', 'Missing or already consumed grant.');
 		}
 
-		if (!grant.tx_code && txCode) {
+		if (!expectedTxCodeStructure && parsedTxCode) {
 			return sendPreAuthorizedCodeHandlerError(res, 400, 'invalid_request', 'Missing tx_code.');
 		}
 
-		if (grant.tx_code && !txCode) {
+		if (expectedTxCodeStructure && !parsedTxCode) {
 			return sendPreAuthorizedCodeHandlerError(res, 400, 'invalid_request', 'Provided tx_code while grant does not expect it.');
 		}
 
-		if (grant.tx_code && String(grant.tx_value) !== String(txCode)) {
+		if (expectedTxCodeStructure && String(expectedTxCodeValue) !== String(parsedTxCode)) {
 			return sendPreAuthorizedCodeHandlerError(res, 400, 'invalid_grant', 'Invalid tx_code.');
 		}
 
-		if (grant.exp && grant.exp < Date.now()) {
+		if (expectedExpDateMs && expectedExpDateMs < Date.now()) {
 			return sendPreAuthorizedCodeHandlerError(res, 400, 'invalid_grant', 'Expired grant.');
 		}
 
-		await issuer.preAuthorizedCodeStore.delete(preAuthorizedCode);
+		await issuer.preAuthorizedCodeStore.delete(parsedPreAuthorizedCode);
 
 		return res.status(200).send(grant);
 	} catch (error) {

@@ -21,7 +21,7 @@ export const locale = {
 	offer: {
 		title: "Issue {{name}}",
 		subtitle: "Scan the QR code with your wallet, or open the link directly on this device to continue.",
-		txCode: "Your transaction code is {{txCode}}",
+		txCode: "Your PIN is {{txCode}}",
 		openInwwallet: "Open in wwWallet",
 		openInGenericWallet: "Open in other wallets",
 	},
