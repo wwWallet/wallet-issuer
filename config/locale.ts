@@ -55,12 +55,9 @@ purposes (not valid for real-world use).
 		openid4vciTitle: "OpenID4VCI Interoperability Profile",
 		openid4vpTitle: "OpenID4VP Interoperability Profile",
 
-		notes:
-			"Notes: Currently, the Notification and Deferred Endpoints are not supported.",
-
 		openid4vci: {
 			spec: ["OIDVCI Specification", "v1.0"],
-			grant: ["Grant Type", "authorization_code [OpenID.Core]"],
+			grant: ["Grant Type", "authorization_code [OpenID.Core], urn:ietf:params:oauth:grant-type:pre-authorized_code [OpenID4VCI]"],
 			clientAuth: ["Client Authentication", "PKCE [RFC 7636], no secret"],
 			clientType: ["Client Type", "Public"],
 			dynamic: [
@@ -78,6 +75,8 @@ purposes (not valid for real-world use).
 				"cnf claim [RFC 7800]",
 			],
 			batch: ["Batch Credential Endpoint", "Supported"],
+			deferred: ["Deferred Credential Endpoint", "Supported"],
+			notification: ["Notification Endpoint", "Unsupported"],
 			format: ["Credential Format", "dc+sd-jwt, mso_mdoc"],
 		},
 
