@@ -1,6 +1,7 @@
 extends ./layout.pug
 
 block head-styles
+	link(rel="stylesheet" href="/styles/error.css")
 
 block content
 	section.hero
@@ -8,3 +9,4 @@ block content
 			h1= locale.error.title
 			h3 #{error}
 			p #{errorDescription}
+			a.error-home-link(href="/") Return to Home

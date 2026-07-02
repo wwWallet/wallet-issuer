@@ -13,39 +13,48 @@ type VerifiedPayload = {
 };
 
 async function verifyPayload(tokenRequestBody: { error?: unknown; id_token?: unknown }, res: Response): Promise<VerifiedPayload | null> {
+	const authErrorObj = {
+		error: 'Unable to authenticate',
+		errorDescription: 'Please try again'
+	}
 	if (tokenRequestBody.error) {
-		res.render('error', {
+		console.log({
 			error: 'Token request failed',
 			errorDescription: JSON.stringify(tokenRequestBody, null, 2),
 		});
+		res.render('error', authErrorObj);
 		return null;
 	}
 
 	const idToken = String(tokenRequestBody.id_token || '');
 	if (!idToken) {
-		res.render('error', {
+		console.log({
 			error: 'Missing id_token',
 			errorDescription: 'Authorization server did not return an id_token.',
 		});
+		res.render('error', authErrorObj);
 		return null;
 	}
 
 	const discoveryResponse = await fetch(`${config.authorizationServerUrl}/.well-known/openid-configuration`);
 	if (!discoveryResponse.ok) {
-		res.render('error', {
+		console.log({
 			error: 'Discovery failed',
 			errorDescription: `Unable to fetch OpenID configuration from ${config.authorizationServerUrl}`,
 		});
+		res.render('error', authErrorObj);
+
 		return null;
 	}
 
 	const discovery = await discoveryResponse.json();
 	const jwksResponse = await fetch(discovery.jwks_uri);
 	if (!jwksResponse.ok) {
-		res.render('error', {
+		console.log({
 			error: 'JWKS fetch failed',
 			errorDescription: `Unable to fetch JWKS from ${discovery.jwks_uri}`,
 		});
+		res.render('error', authErrorObj);
 		return null;
 	}
 
@@ -54,10 +63,11 @@ async function verifyPayload(tokenRequestBody: { error?: unknown; id_token?: unk
 	const decodedHeader = JSON.parse(Buffer.from(header, 'base64url').toString('utf8')) as { kid?: string; alg?: string };
 	const jwk = jwks.keys?.find((key: any) => key.kid === decodedHeader.kid);
 	if (!jwk) {
-		res.render('error', {
+		console.log({
 			error: 'Invalid id_token',
 			errorDescription: 'Unable to find a matching JWK for id_token header.',
 		});
+		res.render('error', authErrorObj);
 		return null;
 	}
 
@@ -70,19 +80,21 @@ async function verifyPayload(tokenRequestBody: { error?: unknown; id_token?: unk
 
 		const accountId = String(payload.sub ?? '');
 		if (!accountId) {
-			res.render('error', {
+			console.log({
 				error: 'Invalid id_token',
 				errorDescription: 'id_token is missing the subject (sub) claim.',
 			});
+			res.render('error', authErrorObj);
 			return null;
 		}
 
 		return payload as VerifiedPayload;
 	} catch (error) {
-		res.render('error', {
+		console.log({
 			error: 'Invalid id_token',
 			errorDescription: String(error),
 		});
+		res.render('error', authErrorObj);
 		return null;
 	}
 }
