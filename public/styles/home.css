@@ -29,7 +29,7 @@
 
 .flow-toggle__option {
 	position: relative;
-	display: block;
+	display: flex;
 	min-width: 0;
 }
 
@@ -47,6 +47,7 @@
 .flow-toggle__content {
 	position: relative;
 	display: grid;
+	flex: 1;
 	gap: 0.2rem;
 	min-width: 0;
 	min-height: 68px;
@@ -59,6 +60,7 @@
 	cursor: pointer;
 	overflow-wrap: break-word;
 	pointer-events: none;
+	box-sizing: border-box;
 	transition:
 		border-color 140ms ease,
 		box-shadow 140ms ease;
