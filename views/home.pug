@@ -48,9 +48,9 @@ block content
 						- var visualStyle = "--credential-accent: " + accentColor + "; --credential-text: " + textColor + ";"
 
 						a.card.card-issue-action.action-card--preauth(
-							href=`/pre-authorized-offer/${encodedId}`
+							href=`/initialize-pre-authorized-offer/${encodedId}`
 							data-standard-href=`/offer/${encodedId}`
-							data-preauth-href=`/pre-authorized-offer/${encodedId}`
+							data-preauth-href=`/initialize-pre-authorized-offer/${encodedId}`
 							data-standard-meta=locale.home.standardFlowTitle
 							data-preauth-meta=locale.home.preAuthorizedFlowTitle
 						)

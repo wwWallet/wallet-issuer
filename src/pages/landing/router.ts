@@ -1,12 +1,41 @@
 import { Response, Router } from 'express';
 import { importJWK, jwtVerify } from 'jose';
 import { issuer } from '../../vci/issuer';
-import { fromBase64Url, GrantType } from 'wallet-common';
+import { fromBase64Url, GrantType, MemoryStore } from 'wallet-common';
 import { config } from '../../../config';
 import { logger } from '../../logger';
+import { randomUUID } from 'node:crypto';
 
 export const landingRouter = Router();
 const decoder = new TextDecoder();
+
+type OfferResult = {
+	id: string;
+	credentialOfferWithReference: URL;
+	credentialOfferWithReferenceForWwwallet: URL;
+	credentialName: string;
+	txCode?: string;
+	expiresAt: number;
+};
+
+const offerResults = new MemoryStore<string, OfferResult>(100000);
+
+async function removeExpiredOfferResults(now = Date.now()): Promise<void> {
+	const results = await offerResults.getAll();
+	await Promise.all(results.map(async (result) => {
+		if (result.expiresAt <= now) {
+			await offerResults.delete(result.id);
+		}
+	}));
+}
+
+async function storeOfferResult(result: Omit<OfferResult, 'id' | 'expiresAt'>): Promise<string> {
+	const id = randomUUID();
+	const now = Date.now();
+	await removeExpiredOfferResults(now);
+	await offerResults.set(id, { id, ...result, expiresAt: now + config.preAuthorizedCodeGrantTtlMs });
+	return id;
+}
 
 type VerifiedPayload = {
 	sub?: string;
@@ -140,7 +169,7 @@ landingRouter.get('/offer/:id', async (req, res) => {
 	res.render('offer', { credentialOfferWithReference, credentialOfferWithReferenceForWwwallet, credentialName });
 });
 
-landingRouter.get('/pre-authorized-offer/:id', async (req, res) => {
+landingRouter.get('/initialize-pre-authorized-offer/:id', async (req, res) => {
 	const credentialConfigurationIdB64U = req.params.id;
 	if (!credentialConfigurationIdB64U) {
 		res.redirect('/');
@@ -163,6 +192,19 @@ landingRouter.get('/pre-authorized-offer/:id', async (req, res) => {
 
 	res.redirect(`${config.authorizationServerUrl}/auth?${params}`);
 
+});
+
+landingRouter.get('/pre-authorized-offer/:id', async (req, res) => {
+	const now = Date.now();
+	await removeExpiredOfferResults(now);
+	const offerResult = await offerResults.get(req.params.id);
+	if (!offerResult || offerResult.expiresAt <= now) {
+		await offerResults.delete(req.params.id);
+		res.render('error', { error: 'invalid-credential-offer' });
+		return;
+	}
+
+	res.render('offer', offerResult);
 });
 
 landingRouter.get('/callback', async (req, res) => {
@@ -197,11 +239,25 @@ landingRouter.get('/callback', async (req, res) => {
 		return;
 	}
 
-	const parsedState = await JSON.parse(state as any);
+	let parsedState: { credential_configuration_id?: string };
+	try {
+		parsedState = JSON.parse(String(state));
+	} catch {
+		res.render('error', { error: 'invalid-credential-offer' });
+		return;
+	}
 	const credentialConfigurationId = parsedState['credential_configuration_id'];
+	if (!credentialConfigurationId) {
+		res.render('error', { error: 'invalid-credential-offer' });
+		return;
+	}
 
 	const { metadata } = await issuer.getMetadata();
 	const targetMetadata = metadata.credential_configurations_supported?.[credentialConfigurationId];
+	if (!targetMetadata) {
+		res.render('error', { error: 'invalid-credential-offer' });
+		return;
+	}
 	const scope = targetMetadata.scope;
 
 	let credentialName = credentialConfigurationId;
@@ -225,5 +281,11 @@ landingRouter.get('/callback', async (req, res) => {
 		res.render('error', { error: "invalid-credential-offer" });
 		return;
 	}
-	res.render('offer', { credentialOfferWithReference, credentialOfferWithReferenceForWwwallet, credentialName, txCode });
+	const offerResultId = await storeOfferResult({
+		credentialOfferWithReference,
+		credentialOfferWithReferenceForWwwallet,
+		credentialName,
+		txCode,
+	});
+	res.redirect(303, `/pre-authorized-offer/${offerResultId}`);
 });
