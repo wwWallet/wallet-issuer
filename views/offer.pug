@@ -7,31 +7,30 @@ block content
 	section.hero.offer-hero
 		.container
 			a.offer-back(href="/")= locale.offer.back
-			.offer-hero__grid
-				.offer-hero__copy
-					h1= locale.offer.title.replace("{{name}}", credentialName)
-					if grantTypeLabel || txCode
-						.offer-meta
-							if grantTypeLabel
-								span.badge.badge--neutral= grantTypeLabel
-							if txCode
-								span.badge.badge--pin.offer-pin
-									span.badge__label= locale.offer.pinTitle
-									code.badge__code= txCode
-				article.card.credential-preview(style=credentialVisualStyle)
-					.card-visual
-						.credential-preview__copy
-							.credential-preview__header
-								h2.card-title= credentialName
-								span.badge.badge--format= credentialFormatLabel
-							if credentialDescription
-								p.card-desc= credentialDescription
-						if credentialLogoImage
-							img.card-visual__logo(src=credentialLogoImage alt="" onerror="this.remove()")
+			.offer-hero__copy
+				h1= locale.offer.title
 
 	section.catalog.offer-flow
 		.container
 			.offer-panel.surface-panel
+				.credential-summary(class={ "credential-summary--no-logo": !credentialLogoImage } style=credentialVisualStyle)
+					if credentialLogoImage
+						.credential-summary__logo-wrap
+							img.card-visual__logo(src=credentialLogoImage alt="" onerror="this.parentElement.remove()")
+					.credential-summary__copy
+						.credential-summary__header
+							h2.card-title= credentialName
+							span.badge.badge--format= credentialFormatLabel
+						if credentialDescription
+							p.card-desc= credentialDescription
+					if grantTypeLabel
+						span.badge.badge--grant= grantTypeLabel
+
+				if txCode
+					.offer-pin-callout
+						span.offer-pin-callout__label= locale.offer.pinInstruction
+						code.offer-pin-callout__code= txCode
+
 				.qr-pane
 					h3= locale.offer.qrTitle
 					.qr-frame

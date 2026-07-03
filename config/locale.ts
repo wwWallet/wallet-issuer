@@ -24,10 +24,10 @@ export const locale = {
 
 	offer: {
 		back: "Back",
-		title: "Add {{name}} to your wallet",
+		title: "Add credential to your wallet",
 		qrTitle: "Scan QR",
 		qrAlt: "Credential offer QR code",
-		pinTitle: "Save PIN",
+		pinInstruction: "Use this PIN in your wallet:",
 		openTitle: "Open with",
 		openInwwallet: "wwWallet",
 		openInGenericWallet: "Other wallet",

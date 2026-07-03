@@ -19,64 +19,41 @@
 	color: var(--brand-light);
 }
 
-.offer-hero__grid {
-	display: grid;
-	grid-template-columns: minmax(0, 1fr) minmax(260px, 360px);
-	gap: clamp(1.2rem, 4vw, 3rem);
-	align-items: center;
-}
-
 .offer-hero__copy {
 	max-width: 720px;
 }
 
-.offer-meta {
-	display: flex;
-	flex-wrap: wrap;
-	align-items: center;
-	gap: 0.4rem;
-	margin-top: 0.7rem;
+.offer-hero h1 {
+	font-size: clamp(1.45rem, 2.6vw, 1.82rem);
+	line-height: 1.2;
 }
 
-.offer-meta > .badge {
-	min-height: 2.125rem;
-	font-size: 0.8rem;
-}
-
-.offer-pin {
-	gap: 0.55rem;
-	padding: 0.46rem 0.68rem;
-	border-color: #9dbcf0;
-	background: #eef5ff;
-	box-shadow: 0 8px 18px rgba(0, 36, 107, 0.1);
-	font-size: 0.8rem;
-}
-
-.offer-pin .badge__code {
-	font-size: 1rem;
-	letter-spacing: 0.12em;
-}
-
-.credential-preview {
-	align-self: center;
-	width: 100%;
-	max-width: 360px;
-	min-height: 0;
-}
-
-.credential-preview .card-visual {
-	align-items: flex-start;
-	min-height: 100px;
-	padding: 0.9rem;
-}
-
-.credential-preview__copy {
+.credential-summary {
+	grid-column: 1 / -1;
 	display: grid;
-	gap: 0.42rem;
+	grid-template-columns: auto minmax(0, 1fr) auto;
+	align-items: center;
+	gap: 0.75rem;
+	min-width: 0;
+	min-height: 58px;
+	padding: 0.58rem 0.85rem;
+	border-bottom: 1px solid var(--surface-border);
+	background: var(--credential-accent);
+	background:
+		linear-gradient(135deg, color-mix(in srgb, var(--credential-accent) 96%, #ffffff), #ffffff);
+}
+
+.credential-summary__copy {
+	display: grid;
+	gap: 0.24rem;
 	min-width: 0;
 }
 
-.credential-preview__header {
+.credential-summary--no-logo {
+	grid-template-columns: minmax(0, 1fr) auto;
+}
+
+.credential-summary__header {
 	display: flex;
 	align-items: center;
 	flex-wrap: wrap;
@@ -84,23 +61,83 @@
 	min-width: 0;
 }
 
-.credential-preview .card-title {
+.credential-summary .card-title {
 	flex: 0 1 auto;
-	font-size: 1.12rem;
+	font-size: 0.98rem;
 }
 
-.credential-preview .badge {
+.credential-summary .badge {
 	flex: none;
 	justify-self: start;
 }
 
-.credential-preview .card-desc {
+.credential-summary .card-desc {
 	min-height: 0;
 	margin: 0;
 	color: color-mix(in srgb, var(--credential-text) 70%, #ffffff);
-	font-size: 0.82rem;
-	line-height: 1.35;
+	font-size: 0.76rem;
+	line-height: 1.25;
 	-webkit-line-clamp: 1;
+}
+
+.credential-summary__logo-wrap {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 46px;
+	height: 46px;
+	border: 1px solid rgba(255, 255, 255, 0.72);
+	border-radius: 8px;
+	background: rgba(255, 255, 255, 0.64);
+	box-shadow: 0 8px 20px rgba(15, 23, 42, 0.1);
+}
+
+.credential-summary .card-visual__logo {
+	width: 36px;
+	height: 36px;
+	object-fit: contain;
+}
+
+.badge--grant {
+	align-self: center;
+	justify-self: end;
+	border-color: rgba(0, 36, 107, 0.16);
+	background: rgba(255, 255, 255, 0.78);
+	color: var(--brand-main);
+	box-shadow: 0 6px 16px rgba(15, 23, 42, 0.08);
+}
+
+.offer-pin-callout {
+	grid-column: 1 / -1;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: 0.75rem;
+	padding: clamp(1.05rem, 1.9vw, 1.4rem) clamp(1rem, 2vw, 1.5rem) 0.55rem;
+	color: var(--fg);
+	text-align: center;
+}
+
+.offer-pin-callout__label {
+	color: #475569;
+	font-size: clamp(0.95rem, 1.8vw, 1.12rem);
+	font-weight: 700;
+	line-height: 1.25;
+}
+
+.offer-pin-callout__code {
+	color: var(--brand-main);
+	font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
+		"Liberation Mono", monospace;
+	font-size: clamp(1.35rem, 2.6vw, 1.82rem);
+	font-weight: 800;
+	letter-spacing: 0.14em;
+	line-height: 1.1;
+	padding: 0.22rem 0.5rem 0.24rem 0.62rem;
+	border: 1px solid #bfd4f3;
+	border-radius: 7px;
+	background: #f5f8ff;
+	box-shadow: 0 8px 18px rgba(0, 36, 107, 0.08);
 }
 
 .offer-flow {
@@ -109,7 +146,7 @@
 
 .offer-panel {
 	display: grid;
-	grid-template-columns: minmax(280px, 390px) minmax(0, 1fr);
+	grid-template-columns: minmax(280px, 36%) minmax(0, 1fr);
 	min-height: 360px;
 }
 
@@ -117,9 +154,8 @@
 	display: grid;
 	align-content: center;
 	justify-items: center;
-	padding: clamp(1.2rem, 2.4vw, 1.85rem);
-	border-right: 1px solid var(--border);
-	background: linear-gradient(180deg, #fbfdff, var(--surface-subtle));
+	padding: clamp(1.4rem, 2.8vw, 2.2rem) clamp(1.2rem, 2.4vw, 1.85rem);
+	background: var(--bg);
 	text-align: center;
 }
 
@@ -152,16 +188,26 @@
 }
 
 .flow-pane {
+	position: relative;
 	display: grid;
 	align-content: center;
-	padding: clamp(1rem, 2.4vw, 1.45rem);
+	padding: clamp(1.4rem, 2.8vw, 2.2rem) clamp(1rem, 2.4vw, 1.45rem) clamp(1.4rem, 2.8vw, 2.2rem) clamp(1.5rem, 3.2vw, 2.3rem);
+}
+
+.flow-pane::before {
+	content: "";
+	position: absolute;
+	left: 0;
+	top: clamp(1.4rem, 3vw, 2.2rem);
+	bottom: clamp(1.4rem, 3vw, 2.2rem);
+	width: 1px;
+	background: var(--border);
 }
 
 .offer-section {
 	display: grid;
 	gap: 0.85rem;
 	padding: clamp(1rem, 2.2vw, 1.25rem) 0;
-	border-bottom: 1px solid var(--border);
 }
 
 .offer-section:first-child {
@@ -170,7 +216,11 @@
 
 .offer-section:last-child {
 	padding-bottom: 0;
-	border-bottom: 0;
+}
+
+.offer-section + .offer-section {
+	margin-top: 0.35rem;
+	padding-top: clamp(1.15rem, 2.4vw, 1.5rem);
 }
 
 .offer-actions {
@@ -219,30 +269,21 @@
 }
 
 @media (max-width: 900px) {
-	.offer-hero__grid,
 	.offer-panel {
 		grid-template-columns: 1fr;
-	}
-
-	.offer-hero__grid {
-		align-items: stretch;
-	}
-
-	.credential-preview {
-		max-width: 520px;
 	}
 
 	.offer-panel {
 		min-height: 0;
 	}
 
-	.qr-pane {
-		border-right: 0;
-		border-bottom: 1px solid var(--border);
-	}
-
 	.flow-pane {
 		align-content: start;
+		padding-left: clamp(1rem, 2.4vw, 1.45rem);
+	}
+
+	.flow-pane::before {
+		display: none;
 	}
 }
 
@@ -256,30 +297,34 @@
 		font-size: 0.84rem;
 	}
 
-	.offer-hero__grid {
-		gap: 0.9rem;
+	.offer-hero h1 {
+		font-size: 1.34rem;
 	}
 
-	.offer-meta {
-		gap: 0.35rem;
-		margin-top: 0.55rem;
+	.credential-summary {
+		grid-template-columns: auto minmax(0, 1fr);
+		min-height: 54px;
+		padding: 0.52rem 0.75rem;
 	}
 
-	.offer-pin {
-		padding: 0.42rem 0.6rem;
+	.credential-summary__logo-wrap {
+		width: 36px;
+		height: 36px;
 	}
 
-	.offer-pin .badge__code {
-		font-size: 0.96rem;
+	.credential-summary .card-visual__logo {
+		width: 28px;
+		height: 28px;
 	}
 
-	.credential-preview {
-		max-width: none;
+	.badge--grant {
+		grid-column: 1 / -1;
+		justify-self: start;
 	}
 
-	.credential-preview .card-visual {
-		min-height: 80px;
-		padding: 0.75rem;
+	.offer-pin-callout {
+		flex-wrap: wrap;
+		gap: 0.45rem;
 	}
 
 	.qr-pane {
