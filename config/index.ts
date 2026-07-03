@@ -40,7 +40,7 @@ export const config = {
 			},
 		},
 	],
-	wwwalletURL: process.env.WWWALLET_URL || 'http://localhost:3000/cb',
+	wwwalletURL: process.env.WWWALLET_URL || 'http://localhost:3000',
 	clockTolerance: parseInt(process.env.CLOCK_TOLERANCE || '60', 10),
 	deferredCredentialResponseInterval: parseInt(process.env.DEFERRED_CREDENTIAL_RESPONSE_INTERVAL_SEC || '60', 10),
 	siteConfig: {
