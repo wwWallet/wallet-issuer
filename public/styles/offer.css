@@ -2,11 +2,6 @@
 	text-align: left;
 }
 
-.offer-hero .container,
-.offer-flow .container {
-	max-width: min(var(--container), 1020px);
-}
-
 .offer-back {
 	display: inline-flex;
 	align-items: center;
@@ -35,126 +30,77 @@
 	max-width: 720px;
 }
 
-.offer-hero .subtitle {
-	max-width: 620px;
-}
-
 .offer-meta {
 	display: flex;
 	flex-wrap: wrap;
+	align-items: center;
 	gap: 0.4rem;
 	margin-top: 0.7rem;
 }
 
-.offer-badge {
-	display: inline-flex;
-	align-items: center;
-	align-self: flex-start;
-	max-width: 100%;
-	padding: 0.28rem 0.55rem;
-	border: 1px solid transparent;
-	border-radius: 999px;
-	font-size: 0.74rem;
-	font-weight: 800;
-	line-height: 1.1;
-	text-align: center;
-	white-space: normal;
+.offer-meta > .badge {
+	min-height: 2.125rem;
+	font-size: 0.8rem;
 }
 
-.offer-badge--neutral {
-	border-color: var(--border);
-	background: #f8fafc;
-	color: #334155;
+.offer-pin {
+	gap: 0.55rem;
+	padding: 0.46rem 0.68rem;
+	border-color: #9dbcf0;
+	background: #eef5ff;
+	box-shadow: 0 8px 18px rgba(0, 36, 107, 0.1);
+	font-size: 0.8rem;
 }
 
-.offer-badge--format {
-	border-color: #cde7dc;
-	background: #f0fbf6;
-	color: #0f6b4d;
-}
-
-.offer-badge--pin {
-	gap: 0.45rem;
-	border-color: #bfd4f3;
-	background: #f5f8ff;
-	color: var(--brand-main);
-}
-
-.offer-badge__label {
-	font: inherit;
-}
-
-.offer-badge__code {
-	color: inherit;
-	font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
-	font-size: 0.86rem;
-	font-weight: 800;
-	letter-spacing: 0.1em;
+.offer-pin .badge__code {
+	font-size: 1rem;
+	letter-spacing: 0.12em;
 }
 
 .credential-preview {
-	position: relative;
-	display: flex;
+	align-self: center;
+	width: 100%;
+	max-width: 360px;
+	min-height: 0;
+}
+
+.credential-preview .card-visual {
 	align-items: flex-start;
-	justify-content: space-between;
-	gap: 1rem;
-	align-self: stretch;
-	min-height: clamp(104px, 10vw, 120px);
-	padding: clamp(0.75rem, 1.4vw, 0.95rem);
-	overflow: hidden;
-	border: 1px solid var(--border);
-	border-radius: var(--radius);
-	background:
-		linear-gradient(135deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.84)),
-		var(--credential-accent);
-	color: var(--credential-text);
-	box-shadow: 0 16px 34px rgba(15, 23, 42, 0.07);
+	min-height: 100px;
+	padding: 0.9rem;
 }
 
-.credential-preview__body {
-	position: relative;
-	z-index: 1;
+.credential-preview__copy {
 	display: grid;
-	gap: 0.38rem;
+	gap: 0.42rem;
 	min-width: 0;
 }
 
-.credential-preview__badges {
+.credential-preview__header {
 	display: flex;
+	align-items: center;
 	flex-wrap: wrap;
-	gap: 0.35rem;
+	gap: 0.45rem;
 	min-width: 0;
 }
 
-.credential-preview h2 {
-	margin: 0;
-	color: var(--credential-text);
-	font-size: clamp(1.18rem, 2vw, 1.4rem);
-	font-weight: 700;
-	line-height: 1.15;
-	overflow-wrap: anywhere;
+.credential-preview .card-title {
+	flex: 0 1 auto;
+	font-size: 1.12rem;
 }
 
-.credential-preview__description {
-	display: -webkit-box;
+.credential-preview .badge {
+	flex: none;
+	justify-self: start;
+}
+
+.credential-preview .card-desc {
+	min-height: 0;
 	margin: 0;
-	max-width: 22rem;
-	overflow: hidden;
 	color: color-mix(in srgb, var(--credential-text) 70%, #ffffff);
 	font-size: 0.82rem;
-	line-height: 1.3;
-	overflow-wrap: anywhere;
-	-webkit-box-orient: vertical;
+	line-height: 1.35;
 	-webkit-line-clamp: 1;
-}
-
-.credential-preview__logo {
-	position: relative;
-	z-index: 1;
-	flex: none;
-	width: clamp(48px, 5vw, 60px);
-	height: clamp(48px, 5vw, 60px);
-	object-fit: contain;
 }
 
 .offer-flow {
@@ -165,11 +111,6 @@
 	display: grid;
 	grid-template-columns: minmax(280px, 390px) minmax(0, 1fr);
 	min-height: 360px;
-	overflow: hidden;
-	border: 1px solid var(--border);
-	border-radius: var(--radius);
-	background: var(--bg);
-	box-shadow: 0 18px 50px rgba(15, 23, 42, 0.09);
 }
 
 .qr-pane {
@@ -178,11 +119,10 @@
 	justify-items: center;
 	padding: clamp(1.2rem, 2.4vw, 1.85rem);
 	border-right: 1px solid var(--border);
-	background: linear-gradient(180deg, #fbfdff, #f4f7fb);
+	background: linear-gradient(180deg, #fbfdff, var(--surface-subtle));
 	text-align: center;
 }
 
-.qr-pane p,
 .offer-section p {
 	margin: 0;
 	color: var(--muted);
@@ -199,7 +139,7 @@
 	margin-top: 1rem;
 	padding: 1rem;
 	border: 1px solid var(--border);
-	border-radius: var(--radius);
+	border-radius: var(--surface-radius);
 	background: var(--bg);
 	box-shadow: 0 12px 30px rgba(15, 23, 42, 0.09);
 }
@@ -233,53 +173,16 @@
 	border-bottom: 0;
 }
 
-.offer-section__copy {
-	display: grid;
-	gap: 0.15rem;
-}
-
 .offer-actions {
 	display: grid;
 	grid-template-columns: repeat(2, minmax(0, 1fr));
 	gap: 0.7rem;
-	width: 100%;
 }
 
 .offer-panel .btn {
-	display: inline-flex;
-	align-items: center;
-	justify-content: center;
-	min-height: 44px;
-	font-weight: 800;
-	line-height: 1.2;
-	text-align: center;
-	white-space: normal;
-	overflow-wrap: anywhere;
-	transition:
-		background-color 150ms ease,
-		border-color 150ms ease,
-		box-shadow 150ms ease,
-		color 150ms ease,
-		transform 150ms ease;
-}
-
-.offer-panel .btn:hover {
-	transform: translateY(-1px);
-}
-
-.offer-panel .btn:focus-visible {
-	outline: 2px solid var(--brand-main);
-	outline-offset: 2px;
-}
-
-.btn-secondary {
-	background: var(--bg);
-	color: var(--brand-main);
-}
-
-.btn-secondary:hover {
-	border-color: var(--brand-main);
-	background: #f5f8ff;
+	min-height: 40px;
+	font-size: 0.94rem;
+	font-weight: 700;
 }
 
 .offer-manual {
@@ -298,7 +201,7 @@
 
 .offer-manual__input {
 	min-width: 0;
-	height: 44px;
+	height: 40px;
 	padding: 0.58rem 0.68rem;
 	border: 1px solid var(--border);
 	border-radius: var(--radius);
@@ -313,17 +216,6 @@
 	border-color: var(--brand-main);
 	box-shadow: 0 0 0 3px rgba(0, 36, 107, 0.14);
 	outline: none;
-}
-
-.btn-copy {
-	min-width: 0;
-}
-
-.offer-copy-status {
-	min-height: 1.15rem;
-	color: #0f766e;
-	font-size: 0.78rem;
-	font-weight: 700;
 }
 
 @media (max-width: 900px) {
@@ -346,7 +238,7 @@
 
 	.qr-pane {
 		border-right: 0;
-		border-bottom: 1px solid #e2e8f0;
+		border-bottom: 1px solid var(--border);
 	}
 
 	.flow-pane {
@@ -356,44 +248,54 @@
 
 @media (max-width: 620px) {
 	.offer-hero {
-		padding-top: 1rem;
+		padding-top: 0.9rem;
 	}
 
 	.offer-back {
-		margin-bottom: 1rem;
+		margin-bottom: 0.65rem;
+		font-size: 0.84rem;
 	}
 
 	.offer-hero__grid {
-		gap: 1rem;
+		gap: 0.9rem;
+	}
+
+	.offer-meta {
+		gap: 0.35rem;
+		margin-top: 0.55rem;
+	}
+
+	.offer-pin {
+		padding: 0.42rem 0.6rem;
+	}
+
+	.offer-pin .badge__code {
+		font-size: 0.96rem;
 	}
 
 	.credential-preview {
-		min-height: 104px;
+		max-width: none;
+	}
+
+	.credential-preview .card-visual {
+		min-height: 80px;
 		padding: 0.75rem;
 	}
 
-	.credential-preview h2 {
-		font-size: 1.16rem;
-	}
-
-	.credential-preview__description {
-		font-size: 0.78rem;
-	}
-
-	.credential-preview__logo {
-		width: 48px;
-		height: 48px;
-	}
-
 	.qr-pane {
-		padding: 1.1rem;
+		padding: 1rem 0.9rem;
+	}
+
+	.qr-frame {
+		margin-top: 0.75rem;
 	}
 
 	.flow-pane {
-		padding: 0.9rem 1rem;
+		padding: 0.85rem 0.95rem;
 	}
 
 	.offer-section {
+		gap: 0.7rem;
 		padding: 1rem 0;
 	}
 
@@ -402,26 +304,25 @@
 		grid-template-columns: 1fr;
 	}
 
-	.btn-copy {
-		min-width: 0;
-	}
-
-	.offer-panel .btn,
 	.offer-manual__input {
-		min-height: 44px;
+		font-size: 0.8rem;
 	}
 }
 
 @media (max-width: 380px) {
-	.container {
-		padding: 0 0.9rem;
-	}
-
 	.qr-pane {
-		padding: 0.9rem;
+		padding: 0.85rem;
 	}
 
 	.qr-frame {
-		padding: 0.65rem;
+		padding: 0.6rem;
+	}
+
+	.flow-pane {
+		padding: 0.8rem 0.85rem;
+	}
+
+	.offer-section {
+		padding: 0.9rem 0;
 	}
 }

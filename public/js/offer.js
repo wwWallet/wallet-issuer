@@ -1,7 +1,6 @@
 document.addEventListener("DOMContentLoaded", () => {
 	const input = document.getElementById("offer-url");
 	const btn = document.getElementById("copy-offer");
-	const status = document.getElementById("copy-status");
 
 	if (!input || !btn) return;
 
@@ -13,14 +12,8 @@ document.addEventListener("DOMContentLoaded", () => {
 	const showCopied = () => {
 		window.clearTimeout(resetTimer);
 		label.textContent = copiedLabel;
-		if (status) {
-			status.textContent = copiedLabel;
-		}
 		resetTimer = window.setTimeout(() => {
 			label.textContent = defaultLabel;
-			if (status) {
-				status.textContent = "";
-			}
 		}, 1500);
 	};
 

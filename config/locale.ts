@@ -27,7 +27,7 @@ export const locale = {
 		title: "Add {{name}} to your wallet",
 		qrTitle: "Scan QR",
 		qrAlt: "Credential offer QR code",
-		pinTitle: "PIN",
+		pinTitle: "Save PIN",
 		openTitle: "Open with",
 		openInwwallet: "wwWallet",
 		openInGenericWallet: "Other wallet",
