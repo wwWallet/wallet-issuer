@@ -57,7 +57,7 @@ block content
 							.card-visual(style=visualStyle)
 								h3.card-title= name
 								if logoImage
-									img.card-visual__logo(src=logoImage alt="" onerror="this.remove()")
+									img.card-visual__logo(src=logoImage alt="" crossorigin="anonymous" onerror="this.remove()")
 							.card-body
 								span.format-badge= formatLabel
 								p.card-desc= desc || id
