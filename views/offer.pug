@@ -16,7 +16,7 @@ block content
 				.credential-summary(class={ "credential-summary--no-logo": !credentialLogoImage } style=credentialVisualStyle)
 					if credentialLogoImage
 						.credential-summary__logo-wrap
-							img.card-visual__logo(src=credentialLogoImage alt="" onerror="this.parentElement.remove()")
+							img.card-visual__logo(src=credentialLogoImage alt="" crossorigin="anonymous" onerror="this.parentElement.remove()")
 					.credential-summary__copy
 						.credential-summary__header
 							h2.card-title= credentialName
