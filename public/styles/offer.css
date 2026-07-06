@@ -84,17 +84,13 @@
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	width: 46px;
-	height: 46px;
-	border: 1px solid rgba(255, 255, 255, 0.72);
-	border-radius: 8px;
-	background: rgba(255, 255, 255, 0.64);
-	box-shadow: 0 8px 20px rgba(15, 23, 42, 0.1);
+	width: 50px;
+	height: 50px;
 }
 
 .credential-summary .card-visual__logo {
-	width: 36px;
-	height: 36px;
+	width: 42px;
+	height: 42px;
 	object-fit: contain;
 }
 
@@ -177,7 +173,6 @@
 	border: 1px solid var(--border);
 	border-radius: var(--surface-radius);
 	background: var(--bg);
-	box-shadow: 0 12px 30px rgba(15, 23, 42, 0.09);
 }
 
 #qr {
@@ -308,13 +303,13 @@
 	}
 
 	.credential-summary__logo-wrap {
-		width: 36px;
-		height: 36px;
+		width: 40px;
+		height: 40px;
 	}
 
 	.credential-summary .card-visual__logo {
-		width: 28px;
-		height: 28px;
+		width: 34px;
+		height: 34px;
 	}
 
 	.badge--grant {
