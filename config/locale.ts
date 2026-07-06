@@ -23,11 +23,19 @@ export const locale = {
 	},
 
 	offer: {
-		title: "Issue {{name}}",
-		subtitle: "Scan the QR code with your wallet, or open the link directly on this device to continue.",
-		txCode: "Your PIN is {{txCode}}",
-		openInwwallet: "Open in wwWallet",
-		openInGenericWallet: "Open in other wallets",
+		back: "Back",
+		title: "Add credential to your wallet",
+		qrTitle: "Scan QR",
+		qrAlt: "Credential offer QR code",
+		pinInstruction: "Use this PIN in your wallet:",
+		openTitle: "Open with",
+		openInwwallet: "wwWallet",
+		openInGenericWallet: "Other wallet",
+		manualLabel: "Offer link",
+		authorizationCodeGrant: "Authorization Code",
+		preAuthorizedCodeGrant: "Pre-Authorized Code",
+		copy: "Copy",
+		copied: "Copied",
 	},
 
 	error: {
