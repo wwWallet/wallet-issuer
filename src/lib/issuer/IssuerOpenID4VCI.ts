@@ -4,7 +4,7 @@ import { CredentialSigner } from './CredentialSigner';
 import { CredentialOfferCreateSuccess, IssueCredentialRequestOptions, IssueCredentialResponse, PlainIssueCredentialResponse } from './IssuerOpenID4VCITypes';
 import { State } from './State';
 import { FindAccount } from './Account/FindAccount';
-import { GenericStore, MemoryStore, convertSdjwtvcToOpenid4vciClaims, CredentialConfigurationSupported, CredentialOffer, OpenidCredentialIssuerMetadata, OpenidCredentialIssuerMetadataSchema, ResponseMessage, convertSdjwtvcToOpenid4vciDisplay, toBase64Url, generateRandomIdentifier,VctDocumentProvider, VerifiableCredentialFormat, PreAuthorizedCodeGrant, AuthorizationCodeGrant, GrantType, Grants, TxCode } from 'wallet-common';
+import { GenericStore, convertSdjwtvcToOpenid4vciClaims, CredentialConfigurationSupported, CredentialOffer, OpenidCredentialIssuerMetadata, OpenidCredentialIssuerMetadataSchema, ResponseMessage, convertSdjwtvcToOpenid4vciDisplay, toBase64Url, generateRandomIdentifier,VctDocumentProvider, VerifiableCredentialFormat, PreAuthorizedCodeGrant, AuthorizationCodeGrant, GrantType, Grants, TxCode } from 'wallet-common';
 import { CredentialRequestErrors } from './CredentialRequest/CredentialRequestError';
 import { handleEncryptedCredentialRequest } from './CredentialRequest/handleEncryptedCredentialRequest';
 import { createMemorySecretManager } from './MemorySecretManager';
@@ -18,6 +18,8 @@ import { buildMetadata } from './buildMetadata';
 import { CredentialRequestHelper } from './CredentialRequestHelper';
 import { config } from '../../../config';
 import { generateNumericPin } from '../../util/generateTxCode';
+import { DataStore } from '../../store/DataStore';
+import { dataStoreClient } from '../../store/dataStoreClient';
 
 export interface PreAuthorizedCodeStoreItem extends PreAuthorizedCodeGrant {
 	exp?: number;
@@ -30,6 +32,7 @@ export interface PreAuthorizedCodeStoreItem extends PreAuthorizedCodeGrant {
 export type CredentialIssuerCreateOptions = {
 	authorizationServerUrl: string;
 	stateStore?: GenericStore<string, State>;
+	stateByTransactionIdStore?: GenericStore<string, string>;
 	credentialOfferStore?: GenericStore<string, CredentialOffer>;
 	preAuthorizedCodeStore?: GenericStore<string, PreAuthorizedCodeStoreItem>;
 
@@ -100,9 +103,10 @@ export function createIssuerOpenID4VCI(url: string, credentialIssuerCreateOption
 
 	const deferredCredentialResponseInterval = credentialIssuerCreateOptions.deferredCredentialResponseInterval ?? 60;
 
-	const store = credentialIssuerCreateOptions.stateStore ?? new MemoryStore(10000);
-	const credentialOfferStore = credentialIssuerCreateOptions.credentialOfferStore ?? new MemoryStore <string, CredentialOffer>(100000);
-	const preAuthorizedCodeStore = credentialIssuerCreateOptions.preAuthorizedCodeStore ?? new MemoryStore <string, PreAuthorizedCodeStoreItem>(100000);
+	const store = credentialIssuerCreateOptions.stateStore ?? new DataStore(dataStoreClient, "credentialIssuerState");
+	const stateByTransactionIdStore = credentialIssuerCreateOptions.stateByTransactionIdStore ?? new DataStore<string>(dataStoreClient, "credentialIssuerStateByTransactionId");
+	const credentialOfferStore = credentialIssuerCreateOptions.credentialOfferStore ?? new DataStore<CredentialOffer>(dataStoreClient, "credentialOffer");
+	const preAuthorizedCodeStore = credentialIssuerCreateOptions.preAuthorizedCodeStore ?? new DataStore<PreAuthorizedCodeStoreItem>(dataStoreClient, "preAuthorizedCode");
 	const secretManager = createMemorySecretManager(credentialIssuerCreateOptions.secret, credentialIssuerCreateOptions.clockTolerance, credentialIssuerCreateOptions.nonceExpirationTime);
 
 	if (credentialIssuerCreateOptions?.credentialRequestEncryption?.keypair?.publicKeyJwk !== undefined && !('kid' in credentialIssuerCreateOptions.credentialRequestEncryption.keypair.publicKeyJwk)) {
@@ -304,8 +308,8 @@ export function createIssuerOpenID4VCI(url: string, credentialIssuerCreateOption
 					return { state: null, credential_configuration_id: issueCredentialOptions.request.data.credential_configuration_id };
 				} else if ('transaction_id' in issueCredentialOptions.request.data) {
 					const transaction_id = issueCredentialOptions.request.data.transaction_id;
-					const allStates = await store.getAll();
-					const s = allStates.filter((s) => s.transactionId === transaction_id)[0];
+					const stateId = await stateByTransactionIdStore.get(transaction_id);
+					const s = stateId ? await store.get(stateId) : undefined;
 					if (s && s.credentialConfigurationId) {
 						return { state: s, credential_configuration_id: s.credentialConfigurationId };
 					}
@@ -422,6 +426,7 @@ export function createIssuerOpenID4VCI(url: string, credentialIssuerCreateOption
 				state.transactionId = claimsFutureResult.value.transaction_id;
 				state.credentialConfigurationId = credential_configuration_id;
 				await store.set(state.id, state);
+				await stateByTransactionIdStore.set(claimsFutureResult.value.transaction_id, state.id);
 
 				if (claimsFutureResult.value.status === 'pending') {
 					// if not resolved then respond with transaction_id

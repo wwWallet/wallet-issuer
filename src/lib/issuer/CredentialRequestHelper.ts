@@ -1,4 +1,4 @@
-import { GenericStore } from 'wallet-common';
+import { GenericStore, MemoryStore } from 'wallet-common';
 import { generateRandomIdentifier } from 'wallet-common';
 import { ClaimsFuture } from './ClaimsFuture';
 
@@ -23,11 +23,36 @@ export interface CredentialRequestHelper {
 
 export type CredentialRequestWithClaims = CredentialRequest & { claims: GenericClaims; status: 'resolved' | 'rejected' | 'pending' };
 
-export function createCredentialRequestHelper(store: GenericStore<string, CredentialRequestWithClaims>): CredentialRequestHelper {
+const credentialRequestIndexKey = 'transaction_ids';
+
+function toClaimsFuture(transaction: CredentialRequestWithClaims): ClaimsFuture<GenericClaims> {
+	if (transaction.status === 'resolved') {
+		return {
+			scope: transaction.scope,
+			sub: transaction.sub,
+			status: transaction.status,
+			data: { claims: transaction.claims },
+			transaction_id: transaction.transaction_id,
+		};
+	}
+	return {
+		scope: transaction.scope,
+		sub: transaction.sub,
+		status: transaction.status,
+		data: null,
+		transaction_id: transaction.transaction_id,
+	};
+}
+
+export function createCredentialRequestHelper(store: GenericStore<string, CredentialRequestWithClaims>, transactionIdIndexStore: GenericStore<string, string[]> = new MemoryStore<string, string[]>(1)): CredentialRequestHelper {
 	return {
 		submitCredentialRequest: async (request) => {
 			const transaction_id = generateRandomIdentifier(12);
 			await store.set(transaction_id, { ...request, transaction_id, status: 'pending', claims: {} as GenericClaims });
+			const transactionIds = await transactionIdIndexStore.get(credentialRequestIndexKey) ?? [];
+			if (!transactionIds.includes(transaction_id)) {
+				await transactionIdIndexStore.set(credentialRequestIndexKey, [...transactionIds, transaction_id]);
+			}
 			return {
 				sub: request.sub,
 				scope: request.scope,
@@ -50,53 +75,16 @@ export function createCredentialRequestHelper(store: GenericStore<string, Creden
 
 		getCredentialRequests: async (transaction_id?: string) => {
 			if (!transaction_id) {
-				const transactions = await store.getAll();
-				return transactions.map((t) => {
-					if (t.status === 'resolved') {
-						return {
-							scope: t.scope,
-							sub: t.sub,
-							status: t.status,
-							data: { claims: t.claims },
-							transaction_id: t.transaction_id,
-						} satisfies ClaimsFuture<GenericClaims>;
-					}
-					return {
-						scope: t.scope,
-						sub: t.sub,
-						status: t.status,
-						data: null,
-						transaction_id: t.transaction_id,
-					} satisfies ClaimsFuture<GenericClaims>;
-				});
+				const transactionIds = await transactionIdIndexStore.get(credentialRequestIndexKey) ?? [];
+				const transactions = await Promise.all(transactionIds.map((id) => store.get(id)));
+				return transactions.filter((transaction) => transaction !== undefined).map(toClaimsFuture);
 			}
 			const transaction = await store.get(transaction_id);
 			if (!transaction) {
 				return [];
 			}
 
-			if (transaction.status === 'resolved') {
-				return [
-					{
-						scope: transaction.scope,
-						sub: transaction.sub,
-						status: 'resolved',
-						data: {
-							claims: transaction.claims,
-						},
-						transaction_id: transaction_id,
-					},
-				] satisfies ClaimsFuture<GenericClaims>[];
-			}
-			return [
-				{
-					scope: transaction.scope,
-					sub: transaction.sub,
-					status: transaction.status,
-					transaction_id: transaction_id,
-					data: null,
-				},
-			] satisfies ClaimsFuture<GenericClaims>[];
+			return [toClaimsFuture(transaction)];
 		},
 	};
 }

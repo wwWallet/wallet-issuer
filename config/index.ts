@@ -23,6 +23,19 @@ function getClientIdAndSecret(): { clientId: string; clientSecret: string } {
 	};
 }
 
+const dataStoreHost = process.env.DATA_STORE_HOST || "localhost";
+const dataStorePort = Number(process.env.DATA_STORE_PORT) || 6379;
+const dataStorePassword = process.env.DATA_STORE_PASSWORD || null;
+
+if (process.env.NODE_ENV === "production" && !dataStorePassword) {
+	console.error(
+		`FATAL: Insecure data store found in production.`
+	);
+
+	process.exit(1);
+}
+
+
 export const config = {
 	url: url,
 	issuerIdentifier: `${url}${issuerPath}`,
@@ -31,6 +44,9 @@ export const config = {
 	credentialIssuanceBatchSize: parseInt(process.env.CREDENTIAL_ISSUANCE_BATCH_SIZE || '1', 10),
 	introspectionEndpointBasicAuthString: String(process.env.INTROSPECTION_ENDPOINT_BASIC_AUTH_HEADER || 'default_url'),
 	jweEncryptionAlg: String(process.env.JWE_ENCRYPTION_ALG || 'ECDH-ES'),
+	dataStoreHost: dataStoreHost,
+	dataStorePort: dataStorePort,
+	dataStorePassword: dataStorePassword,
 	display: [
 		{
 			name: String(process.env.DISPLAY_NAME || 'wwWallet Issuer'),
