@@ -2,7 +2,9 @@ import { Response, Router } from 'express';
 import { importJWK, jwtVerify } from 'jose';
 import { issuer } from '../../vci/issuer';
 import { fromBase64Url, GrantType, MemoryStore } from 'wallet-common';
+import type { CredentialConfigurationSupported } from 'wallet-common';
 import { config } from '../../../config';
+import { locale } from '../../../config/locale';
 import { logger } from '../../logger';
 import { randomUUID } from 'node:crypto';
 
@@ -14,6 +16,8 @@ type OfferResult = {
 	credentialOfferWithReference: URL;
 	credentialOfferWithReferenceForWwwallet: URL;
 	credentialName: string;
+	grantTypeLabel: string;
+	pageTitle: string;
 	txCode?: string;
 	expiresAt: number;
 };
@@ -39,6 +43,61 @@ async function storeOfferResult(result: Omit<OfferResult, 'id' | 'expiresAt'>): 
 
 type VerifiedPayload = {
 	sub?: string;
+};
+
+type CredentialOfferDisplay = {
+	credentialName: string;
+	credentialDescription: string;
+	credentialFormatLabel: string;
+	credentialLogoImage: string;
+	credentialVisualStyle: string;
+};
+
+const isSafeColor = (value: unknown): value is string =>
+	typeof value === 'string' && /^#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$/.test(value.trim());
+
+const getFormatLabel = (format: string | undefined): string => {
+	if (format === 'mso_mdoc') {
+		return 'mDoc';
+	}
+
+	if (format && format.includes('sd-jwt')) {
+		return 'SD-JWT VC';
+	}
+
+	if (format === 'jwt_vc_json') {
+		return 'JWT VC';
+	}
+
+	return format || 'Credential';
+};
+
+const getCredentialOfferDisplay = (
+	credentialConfigurationId: string,
+	targetMetadata?: CredentialConfigurationSupported,
+): CredentialOfferDisplay => {
+	const display = targetMetadata?.credential_metadata?.display?.[0];
+	const accentColor = isSafeColor(display?.background_color) ? display.background_color.trim() : '#dbeafe';
+	const textColor = isSafeColor(display?.text_color) ? display.text_color.trim() : '#00246b';
+
+	return {
+		credentialName: display?.name?.trim() || credentialConfigurationId,
+		credentialDescription: display?.description?.trim() || '',
+		credentialFormatLabel: getFormatLabel(targetMetadata?.format),
+		credentialLogoImage: display?.logo?.uri || '',
+		credentialVisualStyle: `--credential-accent: ${accentColor}; --credential-text: ${textColor};`,
+	};
+};
+
+const getWwwalletCredentialOfferUrl = (credentialOfferWithReference: URL): URL | null => {
+	const ref = credentialOfferWithReference.searchParams.get('credential_offer_uri');
+	if (!ref) {
+		return null;
+	}
+
+	const credentialOfferWithReferenceForWwwallet = new URL(config.wwwalletURL);
+	credentialOfferWithReferenceForWwwallet.searchParams.append('credential_offer_uri', ref);
+	return credentialOfferWithReferenceForWwwallet;
 };
 
 async function verifyPayload(tokenRequestBody: { error?: unknown; id_token?: unknown }, res: Response): Promise<VerifiedPayload | null> {
@@ -142,31 +201,22 @@ landingRouter.get('/offer/:id', async (req, res) => {
 	const credentialConfigurationId = decoder.decode(fromBase64Url(credentialConfigurationIdB54U));
 	const { metadata } = await issuer.getMetadata();
 	const targetMetadata = metadata.credential_configurations_supported?.[credentialConfigurationId];
-
-	// Default: use the configuration id itself
-	let credentialName = credentialConfigurationId;
-
-	// If a display name exists, prefer it
-	const displayArr = targetMetadata?.credential_metadata?.display;
-	if (Array.isArray(displayArr) && displayArr.length > 0) {
-		const d = displayArr[0];
-		if (typeof d?.name === "string" && d.name.trim()) {
-			credentialName = d.name;
-		}
-	}
+	const credentialDisplay = getCredentialOfferDisplay(credentialConfigurationId, targetMetadata);
 
 	const { credentialOfferWithReference } = await issuer.generateCredentialOffer({ credentialConfigurationId: credentialConfigurationId });
-	const ref = credentialOfferWithReference.searchParams.get('credential_offer_uri');
-	const credentialOfferWithReferenceForWwwallet = new URL(config.wwwalletURL);
-	if (ref) {
-		credentialOfferWithReferenceForWwwallet.searchParams.append('credential_offer_uri', ref);
-	}
-	else {
-		logger.error("No credential offer refference found");
+	const credentialOfferWithReferenceForWwwallet = getWwwalletCredentialOfferUrl(credentialOfferWithReference);
+	if (!credentialOfferWithReferenceForWwwallet) {
+		logger.error("No credential offer reference found");
 		res.render('error', { error: "invalid-credential-offer" });
 		return;
 	}
-	res.render('offer', { credentialOfferWithReference, credentialOfferWithReferenceForWwwallet, credentialName });
+	res.render('offer', {
+		credentialOfferWithReference,
+		credentialOfferWithReferenceForWwwallet,
+		...credentialDisplay,
+		grantTypeLabel: locale.offer.authorizationCodeGrant,
+		pageTitle: `${credentialDisplay.credentialName} offer`,
+	});
 });
 
 landingRouter.get('/initialize-pre-authorized-offer/:id', async (req, res) => {
@@ -259,33 +309,23 @@ landingRouter.get('/callback', async (req, res) => {
 		return;
 	}
 	const scope = targetMetadata.scope;
-
-	let credentialName = credentialConfigurationId;
-
-	const displayArr = targetMetadata?.credential_metadata?.display;
-	if (Array.isArray(displayArr) && displayArr.length > 0) {
-		const d = displayArr[0];
-		if (typeof d?.name === "string" && d.name.trim()) {
-			credentialName = d.name;
-		}
-	}
+	const credentialDisplay = getCredentialOfferDisplay(credentialConfigurationId, targetMetadata);
 
 	const { credentialOfferWithReference, txCode } = await issuer.generateCredentialOffer({ credentialConfigurationId, grant_type: GrantType.PRE_AUTHORIZED_CODE, accountId, scope });
-	const ref = credentialOfferWithReference.searchParams.get('credential_offer_uri');
-	const credentialOfferWithReferenceForWwwallet = new URL(config.wwwalletURL);
-	if (ref) {
-		credentialOfferWithReferenceForWwwallet.searchParams.append('credential_offer_uri', ref);
-	}
-	else {
-		logger.error("No credential offer refference found");
+	const credentialOfferWithReferenceForWwwallet = getWwwalletCredentialOfferUrl(credentialOfferWithReference);
+	if (!credentialOfferWithReferenceForWwwallet) {
+		logger.error("No credential offer reference found");
 		res.render('error', { error: "invalid-credential-offer" });
 		return;
 	}
 	const offerResultId = await storeOfferResult({
 		credentialOfferWithReference,
 		credentialOfferWithReferenceForWwwallet,
-		credentialName,
+		...credentialDisplay,
 		txCode,
+		grantTypeLabel: locale.offer.preAuthorizedCodeGrant,
+		pageTitle: `${credentialDisplay.credentialName} offer`,
 	});
+
 	res.redirect(303, `/pre-authorized-offer/${offerResultId}`);
 });

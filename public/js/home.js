@@ -16,8 +16,6 @@
 		const meta = link.querySelector("[data-action-meta]");
 
 		link.href = link.dataset[`${flowKey}Href`];
-		link.classList.toggle("action-card--preauth", flowKey === "preauth");
-		link.classList.toggle("action-card--standard", flowKey === "standard");
 
 		if (meta) {
 			meta.textContent = link.dataset[`${flowKey}Meta`];

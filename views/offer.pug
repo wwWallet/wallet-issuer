@@ -4,38 +4,70 @@ block head-styles
 	link(rel="stylesheet" href="/styles/offer.css")
 
 block content
-	section.hero
+	section.hero.offer-hero
 		.container
-			h1= locale.offer.title.replace("{{name}}", credentialName)
-			p.subtitle= locale.offer.subtitle
-			if txCode
-				p.tx-code= locale.offer.txCode.replace("{{txCode}}", txCode)
+			a.offer-back(href="/")= locale.offer.back
+			.offer-hero__copy
+				h1= locale.offer.title
 
-	section.catalog
+	section.catalog.offer-flow
 		.container
-			.offer-card
-				canvas#qr(data-value=credentialOfferWithReference)
+			.offer-panel.surface-panel
+				.credential-summary(class={ "credential-summary--no-logo": !credentialLogoImage } style=credentialVisualStyle)
+					if credentialLogoImage
+						.credential-summary__logo-wrap
+							img.card-visual__logo(src=credentialLogoImage alt="" crossorigin="anonymous" onerror="this.parentElement.remove()")
+					.credential-summary__copy
+						.credential-summary__header
+							h2.card-title= credentialName
+							span.badge.badge--format= credentialFormatLabel
+						if credentialDescription
+							p.card-desc= credentialDescription
+					if grantTypeLabel
+						span.badge.badge--grant= grantTypeLabel
 
-				.offer-actions
-					a.btn.btn-primary(
-						href=credentialOfferWithReferenceForWwwallet
-						target=txCode ? '_blank' : false
-						rel=txCode ? 'noopener noreferrer' : false
-					)= locale.offer.openInwwallet
-					a.btn.btn-primary(
-						href=credentialOfferWithReference
-						target=txCode ? '_blank' : false
-						rel=txCode ? 'noopener noreferrer' : false
-					)= locale.offer.openInGenericWallet
+				if txCode
+					.offer-pin-callout
+						span.offer-pin-callout__label= locale.offer.pinInstruction
+						code.offer-pin-callout__code= txCode
 
-				.offer-manual
-					label.offer-manual__label(for="offer-url") Or copy / edit the link:
-					.offer-manual__row
-						input#offer-url.offer-manual__input(
-							type="text"
-							value=credentialOfferWithReferenceForWwwallet
-						)
-						button.btn(type="button" id="copy-offer") Copy
+				.qr-pane
+					h3= locale.offer.qrTitle
+					.qr-frame
+						canvas#qr(data-value=credentialOfferWithReference aria-label=locale.offer.qrAlt)
+
+				.flow-pane
+					.offer-section
+						h3= locale.offer.openTitle
+						.offer-actions
+							a.btn.btn-primary.offer-action(
+								href=credentialOfferWithReferenceForWwwallet
+								target=txCode ? '_blank' : false
+								rel=txCode ? 'noopener noreferrer' : false
+							)= locale.offer.openInwwallet
+							a.btn.btn-secondary.offer-action(
+								href=credentialOfferWithReference
+								target=txCode ? '_blank' : false
+								rel=txCode ? 'noopener noreferrer' : false
+							)= locale.offer.openInGenericWallet
+
+					.offer-section.offer-manual
+						h3
+							label(for="offer-url")= locale.offer.manualLabel
+						.offer-manual__row
+							input#offer-url.offer-manual__input(
+								type="text"
+								value=credentialOfferWithReferenceForWwwallet
+								autocomplete="off"
+								spellcheck="false"
+							)
+							button.btn.btn-copy(
+								type="button"
+								id="copy-offer"
+								data-label-default=locale.offer.copy
+								data-label-copied=locale.offer.copied
+							)
+								span.btn-copy__text= locale.offer.copy
 
 	script(src="/js/qr.min.js")
 	script(src="/js/qrcode-canvas.js")

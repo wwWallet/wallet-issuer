@@ -6,7 +6,7 @@ document.addEventListener('DOMContentLoaded', () => {
 	const value = canvas.dataset.value;
 
 	QRCode.toCanvas(canvas, value, {
-		width: 200,
+		width: 220,
 		margin: 2,
 		errorCorrectionLevel: 'M',
 	}).catch((err) => console.error(err));

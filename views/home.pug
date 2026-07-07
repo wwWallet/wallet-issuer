@@ -47,7 +47,7 @@ block content
 						- var textColor = d && isSafeColor(d.text_color) ? d.text_color.trim() : "#00246b"
 						- var visualStyle = "--credential-accent: " + accentColor + "; --credential-text: " + textColor + ";"
 
-						a.card.card-issue-action.action-card--preauth(
+						a.card.card--interactive.card-issue-action(
 							href=`/initialize-pre-authorized-offer/${encodedId}`
 							data-standard-href=`/offer/${encodedId}`
 							data-preauth-href=`/initialize-pre-authorized-offer/${encodedId}`
@@ -57,9 +57,9 @@ block content
 							.card-visual(style=visualStyle)
 								h3.card-title= name
 								if logoImage
-									img.card-visual__logo(src=logoImage alt="" onerror="this.remove()")
+									img.card-visual__logo(src=logoImage alt="" crossorigin="anonymous" onerror="this.remove()")
 							.card-body
-								span.format-badge= formatLabel
+								span.badge.badge--format= formatLabel
 								p.card-desc= desc || id
 
 								.card-footer
