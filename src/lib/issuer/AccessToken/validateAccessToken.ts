@@ -15,8 +15,15 @@ export async function validateAccessToken(credentialConfigurationId: string, met
 		const authorizationServerMetadataResponse = await fetch(prependToPath(createOpts.authorizationServerUrl, '.well-known/oauth-authorization-server') ?? '');
 		const authorizationServerMetadata = await authorizationServerMetadataResponse.json();
 		const { introspection_endpoint } = authorizationServerMetadata as { introspection_endpoint: string };
-		const [tokenType, accessToken] = issueRequestOpts.request.headers['authorization'].split(' ');
-		const dpopProof = issueRequestOpts.request.headers['dpop'] as string | undefined;
+		const authorizationHeader = getHeader(issueRequestOpts.request.headers, 'authorization');
+		if (!authorizationHeader) {
+			return err(CredentialRequestErrors.InvalidRequest, 'Authorization header is missing');
+		}
+		const [tokenType, accessToken] = authorizationHeader.split(' ');
+		if (!tokenType || !accessToken) {
+			return err(CredentialRequestErrors.InvalidRequest, 'Authorization header is malformed');
+		}
+		const dpopProof = getHeader(issueRequestOpts.request.headers, 'dpop');
 
 		try {
 			// RFC7662
@@ -39,7 +46,17 @@ export async function validateAccessToken(credentialConfigurationId: string, met
 
 			const normalizedTokenType = tokenType.toLowerCase();
 			if (normalizedTokenType === 'dpop' && dpopProof !== undefined) {
-				const response = await validateDpopProof(dpopProof, cnf);
+				const expectedDpopHtu = getExpectedDpopHtu(metadata, issueRequestOpts);
+				if (!expectedDpopHtu) {
+					return err(CredentialRequestErrors.InternalServerError, 'Credential Issuer metadata does not contain the expected endpoint for DPoP validation');
+				}
+
+				const response = await validateDpopProof(dpopProof, cnf, {
+					accessToken,
+					clockTolerance: createOpts.clockTolerance,
+					htu: expectedDpopHtu,
+					method: 'POST',
+				});
 				if (!response.ok) {
 					return response;
 				}
@@ -70,4 +87,21 @@ export async function validateAccessToken(credentialConfigurationId: string, met
 	} catch {
 		return err(CredentialRequestErrors.InternalServerError, 'Could not fetch authorization server metadata');
 	}
+}
+
+function getExpectedDpopHtu(metadata: OpenidCredentialIssuerMetadata, issueRequestOpts: PlainIssueCredentialRequestOptions): string | undefined {
+	if ('transaction_id' in issueRequestOpts.request.data) {
+		return metadata.deferred_credential_endpoint;
+	}
+
+	return metadata.credential_endpoint;
+}
+
+function getHeader(headers: Record<string, unknown>, name: string): string | undefined {
+	const entry = Object.entries(headers).find(([key]) => key.toLowerCase() === name.toLowerCase());
+	const value = entry?.[1];
+	if (Array.isArray(value)) {
+		return value.join(', ');
+	}
+	return typeof value === 'string' ? value : undefined;
 }
