@@ -8,6 +8,8 @@ export type VerifyProofOptions = {
 	getAllTrustedPemCertificates: () => Promise<string[]>;
 	requiredVerificationMechanisms: ('x5c' | 'jwk' | 'kid')[];
 	expectedNonce?: string;
+	verifyNonce?: (nonce: string) => Promise<boolean>;
+	resolveKid?: (kid: string) => Promise<JWK | null>;
 	cliend_id?: string;
 	credentialIssuerIdentifier: string;
 	clockTolerance?: number;

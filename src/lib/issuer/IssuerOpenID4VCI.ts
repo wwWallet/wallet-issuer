@@ -39,6 +39,7 @@ export type CredentialIssuerCreateOptions = {
 	clockTolerance: number;
 	nonceExpirationTime?: string; // ex. '10s' for 10 seconds. Follows the same format as the JOSE library
 	getAllTrustedPemCertificates: () => Promise<string[]>;
+	resolveProofKid?: (kid: string) => Promise<JWK | null>;
 	findAccount: FindAccount;
 	credentialSigner: CredentialSigner;
 	proofTypesSupported: ProofTypeSupported[];
@@ -261,19 +262,25 @@ export function createIssuerOpenID4VCI(url: string, credentialIssuerCreateOption
 		},
 
 		registerSupportedCredentialConfiguration: (credentialConfigurationId, credConf, disclosureFrame) => {
+			const cryptographicBindingMethod = credConf.format === VerifiableCredentialFormat.MSO_MDOC ? 'cose_key' : 'jwk';
+			const attestationProof = credConf.proof_types_supported?.attestation;
 			metadata.credential_configurations_supported[credentialConfigurationId] = {
 				...credConf,
+				cryptographic_binding_methods_supported: [cryptographicBindingMethod],
 				proof_types_supported: {
 					...credConf.proof_types_supported,
 					jwt: {
+						...credConf.proof_types_supported?.jwt,
 						proof_signing_alg_values_supported: ['ES256'],
 					},
-					attestation: credConf.proof_types_supported?.attestation?.key_attestations_required
+					...(attestationProof
 						? {
-								proof_signing_alg_values_supported: ['ES256'],
-								key_attestations_required: {},
+								attestation: {
+									...attestationProof,
+									proof_signing_alg_values_supported: ['ES256'],
+								},
 							}
-						: undefined,
+						: {}),
 				},
 			};
 			if (disclosureFrame) {
@@ -391,10 +398,11 @@ export function createIssuerOpenID4VCI(url: string, credentialIssuerCreateOption
 				}
 			}
 
-			if (!('proofs' in issueCredentialOptions.request.data) && credentialIssuerCreateOptions.requireKeyBindingInCredentialConfigurationIds.includes(credential_configuration_id)) {
-				// check if key-binding is required and no proofs provided
-
-				return sendError(CredentialRequestErrors.CredentialRequestDenied, `Credetial configuration id '${credential_configuration_id}' can only be issued with key-binding.`);
+			const credentialConfiguration = metadata.credential_configurations_supported[credential_configuration_id];
+			const keyBindingRequired = Boolean(credentialConfiguration?.cryptographic_binding_methods_supported?.length)
+				|| credentialIssuerCreateOptions.requireKeyBindingInCredentialConfigurationIds.includes(credential_configuration_id);
+			if (!('proofs' in issueCredentialOptions.request.data) && keyBindingRequired) {
+				return sendError(CredentialRequestErrors.InvalidProof, `Credential configuration id '${credential_configuration_id}' requires a key proof.`);
 			}
 
 			// 'proofs' validation
@@ -404,6 +412,8 @@ export function createIssuerOpenID4VCI(url: string, credentialIssuerCreateOption
 					getAllTrustedPemCertificates: credentialIssuerCreateOptions.getAllTrustedPemCertificates,
 					requiredVerificationMechanisms: ['x5c'],
 					credentialIssuerIdentifier: url,
+					verifyNonce: secretManager.secretVerifier,
+					resolveKid: credentialIssuerCreateOptions.resolveProofKid,
 				});
 
 				if (!proofsVerificationResult.ok) {
@@ -449,10 +459,6 @@ export function createIssuerOpenID4VCI(url: string, credentialIssuerCreateOption
 				return send.value;
 			}
 
-			// check if proofs where not provided for a credential configuration id that exists in the requireKeyBindingInCredentialConfigurationIds array
-			if (!('proofs' in issueCredentialOptions.request.data) && credentialIssuerCreateOptions.requireKeyBindingInCredentialConfigurationIds.includes(credential_configuration_id)) {
-				return sendError(CredentialRequestErrors.InvalidRequest, 'The specific credential configuration requires key-binding');
-			}
 			return sendError(CredentialRequestErrors.InvalidRequest, 'No credential configuration is defined in the request');
 		},
 

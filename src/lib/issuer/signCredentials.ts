@@ -13,15 +13,14 @@ export async function signCredentials(credentialConfigurationId: string, metadat
 
 	// add error handling for signature generation
 	switch (credentialConfigurationSupported.format) {
-		case VerifiableCredentialFormat.DC_SDJWT:
-			if (attestedKeys.length) {
-				const disclosureFrame = disclosureFrameMap.get(credentialConfigurationId);
-				const signedCredentials = await Promise.all(attestedKeys.map((key) => createOpts.credentialSigner.signSdJwtVc({ ...claims, cnf: { jwk: key } }, {}, disclosureFrame ?? {})));
-				return ok(signedCredentials.map((c) => c.credential));
-			} else {
-				const { credential } = await createOpts.credentialSigner.signSdJwtVc({ ...claims }, {}, {});
-				return ok([credential]);
+		case VerifiableCredentialFormat.DC_SDJWT: {
+			if (!attestedKeys.length) {
+				return err(CredentialRequestErrors.InvalidProof, 'Cannot issue a key-bound dc+sd-jwt credential without a verified holder key');
 			}
+			const disclosureFrame = disclosureFrameMap.get(credentialConfigurationId);
+			const signedCredentials = await Promise.all(attestedKeys.map((key) => createOpts.credentialSigner.signSdJwtVc({ ...claims, cnf: { jwk: key } }, {}, disclosureFrame ?? {})));
+			return ok(signedCredentials.map((c) => c.credential));
+		}
 		case VerifiableCredentialFormat.MSO_MDOC:
 			if (attestedKeys.length) {
 				const { sub: _sub, ...claimsToBeSigned } = claims;
