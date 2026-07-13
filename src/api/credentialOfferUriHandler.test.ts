@@ -60,7 +60,7 @@ describe('credentialOfferUriHandler', () => {
 		issuerMock.getMetadata.mockResolvedValue({
 			metadata: {
 				credential_configurations_supported: {
-					pid_sd_jwt: {},
+					pid_sd_jwt: { scope: 'pid:sd_jwt_dc' },
 				},
 			},
 		});
@@ -96,7 +96,7 @@ describe('credentialOfferUriHandler', () => {
 		});
 	});
 
-	it('returns 501 unsupported_grant_type when authorization_code grant is missing', async () => {
+	it('returns 400 when a pre-authorized_code grant has no account_id', async () => {
 		const response = await executeHandler({
 			credential_configuration_ids: ['pid_sd_jwt'],
 			grants: {
@@ -104,10 +104,10 @@ describe('credentialOfferUriHandler', () => {
 			},
 		});
 
-		expect(response.statusCode).toBe(501);
+		expect(response.statusCode).toBe(400);
 		expect(response.body).toEqual({
-			error: 'unsupported_grant_type',
-			error_description: 'Only authorization_code grant is supported',
+			error: 'invalid_request',
+			error_description: 'Missing or invalid parameters',
 		});
 	});
 
@@ -123,7 +123,7 @@ describe('credentialOfferUriHandler', () => {
 		expect(response.statusCode).toBe(501);
 		expect(response.body).toEqual({
 			error: 'unsupported_grant_type',
-			error_description: 'Only authorization_code grant is supported',
+			error_description: 'Only authorization_code and pre-authorized_code grants are supported',
 		});
 	});
 
@@ -192,5 +192,43 @@ describe('credentialOfferUriHandler', () => {
 			grant_type: 'authorization_code',
 			issuerState: 'state-1',
 		});
+	});
+
+	it('creates a pre-authorized offer for the trusted API account_id', async () => {
+		const response = await executeHandler({
+			credential_configuration_ids: ['pid_sd_jwt'],
+			grants: {
+				'urn:ietf:params:oauth:grant-type:pre-authorized_code': {
+					account_id: 'api-account-1',
+				},
+			},
+		});
+
+		expect(response.statusCode).toBe(201);
+		expect(issuerMock.generateCredentialOffer).toHaveBeenCalledWith({
+			credentialConfigurationId: 'pid_sd_jwt',
+			grant_type: 'urn:ietf:params:oauth:grant-type:pre-authorized_code',
+			accountId: 'api-account-1',
+			scope: 'pid:sd_jwt_dc',
+			claimsContext: undefined,
+		});
+	});
+
+	it('stores claims_context in a pre-authorized offer', async () => {
+		const response = await executeHandler({
+			credential_configuration_ids: ['pid_sd_jwt'],
+			grants: {
+				'urn:ietf:params:oauth:grant-type:pre-authorized_code': {
+					account_id: 'api-account-1',
+					claims_context: 'opaque-transaction-reference',
+				},
+			},
+		});
+
+		expect(response.statusCode).toBe(201);
+		expect(issuerMock.generateCredentialOffer).toHaveBeenCalledWith(expect.objectContaining({
+			accountId: 'api-account-1',
+			claimsContext: 'opaque-transaction-reference',
+		}));
 	});
 });

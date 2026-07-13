@@ -46,7 +46,7 @@ export class RemoteClaimsProvider implements ClaimsProvider {
 			return { kind: 'denied', reason: 'Not supported scope' };
 		}
 
-		const fetchedClaimsResult = await this.getClaimsByUserId(accountId, supportedScope, context?.issuerState);
+		const fetchedClaimsResult = await this.getClaimsByUserId(accountId, supportedScope, context?.claimsContext);
 		if (fetchedClaimsResult.kind === 'failure') {
 			return { kind: 'denied', reason: `Could not fetch claims: ${fetchedClaimsResult.reason}` };
 		}
@@ -80,12 +80,7 @@ export class RemoteClaimsProvider implements ClaimsProvider {
 		return configuration.vct;
 	}
 
-	private async getClaimsByUserId(userId: string, scope: string, issuerState?: string): Promise<ClaimsFetchResult> {
-		if (!issuerState) {
-			logger.warn('Remote claims fetch skipped due to missing issuer_state', { scope });
-			return { kind: 'failure', reason: 'missing_issuer_state' };
-		}
-
+	private async getClaimsByUserId(userId: string, scope: string, claimsContext?: string): Promise<ClaimsFetchResult> {
 		const controller = new AbortController();
 		const timeout = setTimeout(() => controller.abort(), this.fetchTimeoutMs);
 
@@ -98,15 +93,16 @@ export class RemoteClaimsProvider implements ClaimsProvider {
 				headers.set(this.apiKeyHeaderName, this.apiKey);
 			}
 			console.log('Request headers', { headers: Object.fromEntries(headers.entries()) });
-			console.log('Request body', { sub: userId, issuer_state: issuerState });
+			const requestData = {
+				sub: userId,
+				...(claimsContext ? { claims_context: claimsContext } : {}),
+			};
+			console.log('Request body', requestData);
 			const response = await fetch(url, {
 				method: 'POST',
 				headers,
 				body: JSON.stringify({
-					data: {
-						sub: userId,
-						issuer_state: issuerState,
-					},
+					data: requestData,
 				}),
 				signal: controller.signal,
 			});

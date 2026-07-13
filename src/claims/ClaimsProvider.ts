@@ -6,7 +6,7 @@ export type ClaimsProviderResult =
 	| { kind: 'denied'; reason: string };
 
 export type ClaimsResolutionContext = {
-	issuerState?: string;
+	claimsContext?: string;
 };
 
 export interface ClaimsProvider {

@@ -25,6 +25,7 @@ export interface PreAuthorizedCodeStoreItem extends PreAuthorizedCodeGrant {
 	credential_configuration_ids?: string [];
 	account_id?: string;
 	scope?: string;
+	claims_context?: string;
 };
 
 export type CredentialIssuerCreateOptions = {
@@ -73,6 +74,7 @@ export interface IssuerOpenID4VCI {
 		credentialConfigurationId: string,
 		grant_type?: GrantType.AUTHORIZATION_CODE | GrantType.PRE_AUTHORIZED_CODE,
 		issuerState?: string,
+		claimsContext?: string,
 		accountId?: string,
 		scope?: string
 	}): Promise<CredentialOfferCreateSuccess>;
@@ -158,6 +160,7 @@ export function createIssuerOpenID4VCI(url: string, credentialIssuerCreateOption
 			credentialConfigurationId: string,
 			grant_type?: GrantType.AUTHORIZATION_CODE | GrantType.PRE_AUTHORIZED_CODE;
 			issuerState?: string;
+			claimsContext?: string;
 			accountId?: string;
 			scope?: string;
 		}): Promise<CredentialOfferCreateSuccess> => {
@@ -181,7 +184,8 @@ export function createIssuerOpenID4VCI(url: string, credentialIssuerCreateOption
 						credential_configuration_ids: [credentialOfferCreateOptions.credentialConfigurationId],
 						account_id: credentialOfferCreateOptions.accountId,
 						exp: Date.now() + config.preAuthorizedCodeGrantTtlMs,
-						scope: credentialOfferCreateOptions.scope
+						scope: credentialOfferCreateOptions.scope,
+						claims_context: credentialOfferCreateOptions.claimsContext
 					};
 
 					if (config.preAuthorizedCodeTxCodeLength > 0) {
