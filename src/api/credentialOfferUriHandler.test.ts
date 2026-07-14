@@ -96,6 +96,19 @@ describe('credentialOfferUriHandler', () => {
 		});
 	});
 
+	it('returns 400 instead of silently ignoring additional credential configuration ids', async () => {
+		const response = await executeHandler({
+			credential_configuration_ids: ['pid_sd_jwt', 'another_credential'],
+			grants: {
+				authorization_code: { issuer_state: 'state-1' },
+			},
+		});
+
+		expect(response.statusCode).toBe(400);
+		expect(issuerMock.getMetadata).not.toHaveBeenCalled();
+		expect(issuerMock.generateCredentialOffer).not.toHaveBeenCalled();
+	});
+
 	it('returns 400 when a pre-authorized_code grant has no account_id', async () => {
 		const response = await executeHandler({
 			credential_configuration_ids: ['pid_sd_jwt'],
@@ -140,6 +153,7 @@ describe('credentialOfferUriHandler', () => {
 			error: 'invalid_request',
 			error_description: 'Missing or invalid parameters',
 		});
+		expect(issuerMock.getMetadata).not.toHaveBeenCalled();
 	});
 
 	it('returns 400 invalid_request when authorization_code has extra fields', async () => {
@@ -213,22 +227,40 @@ describe('credentialOfferUriHandler', () => {
 		});
 	});
 
-	it('rejects claims_context in a pre-authorized offer', async () => {
+	it('returns 500 when offer generation fails without exposing the internal error', async () => {
+		issuerMock.generateCredentialOffer.mockRejectedValueOnce(new Error('sensitive internal failure'));
+
 		const response = await executeHandler({
 			credential_configuration_ids: ['pid_sd_jwt'],
 			grants: {
-				'urn:ietf:params:oauth:grant-type:pre-authorized_code': {
-					account_id: 'api-account-1',
-					claims_context: 'opaque-transaction-reference',
-				},
+				authorization_code: { issuer_state: 'state-1' },
 			},
 		});
 
-		expect(response.statusCode).toBe(400);
+		expect(response.statusCode).toBe(500);
 		expect(response.body).toEqual({
-			error: 'invalid_request',
-			error_description: 'Missing or invalid parameters',
+			error: 'server_error',
+			error_description: 'An unexpected error occurred',
 		});
-		expect(issuerMock.generateCredentialOffer).not.toHaveBeenCalled();
+		expect(JSON.stringify(response.body)).not.toContain('sensitive internal failure');
+	});
+
+	it('returns 500 when the generated offer has no credential_offer_uri', async () => {
+		issuerMock.generateCredentialOffer.mockResolvedValueOnce({
+			credentialOfferWithReference: new URL('https://issuer.example/offer'),
+		});
+
+		const response = await executeHandler({
+			credential_configuration_ids: ['pid_sd_jwt'],
+			grants: {
+				authorization_code: { issuer_state: 'state-1' },
+			},
+		});
+
+		expect(response.statusCode).toBe(500);
+		expect(response.body).toEqual({
+			error: 'server_error',
+			error_description: 'An unexpected error occurred',
+		});
 	});
 });
