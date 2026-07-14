@@ -210,11 +210,10 @@ describe('credentialOfferUriHandler', () => {
 			grant_type: 'urn:ietf:params:oauth:grant-type:pre-authorized_code',
 			accountId: 'api-account-1',
 			scope: 'pid:sd_jwt_dc',
-			claimsContext: undefined,
 		});
 	});
 
-	it('stores claims_context in a pre-authorized offer', async () => {
+	it('rejects claims_context in a pre-authorized offer', async () => {
 		const response = await executeHandler({
 			credential_configuration_ids: ['pid_sd_jwt'],
 			grants: {
@@ -225,10 +224,11 @@ describe('credentialOfferUriHandler', () => {
 			},
 		});
 
-		expect(response.statusCode).toBe(201);
-		expect(issuerMock.generateCredentialOffer).toHaveBeenCalledWith(expect.objectContaining({
-			accountId: 'api-account-1',
-			claimsContext: 'opaque-transaction-reference',
-		}));
+		expect(response.statusCode).toBe(400);
+		expect(response.body).toEqual({
+			error: 'invalid_request',
+			error_description: 'Missing or invalid parameters',
+		});
+		expect(issuerMock.generateCredentialOffer).not.toHaveBeenCalled();
 	});
 });

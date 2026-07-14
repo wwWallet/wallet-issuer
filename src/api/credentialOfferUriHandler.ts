@@ -29,7 +29,6 @@ const authorizationCodeGrantSchema = z.object({
 
 const preAuthorizedCodeGrantSchema = z.object({
 	account_id: z.string().trim().min(1).max(256),
-	claims_context: z.string().trim().min(1).max(2048).optional(),
 }).strict();
 
 export const credentialOfferUriHandler = async (req: express.Request, res: express.Response) => {
@@ -71,7 +70,6 @@ export const credentialOfferUriHandler = async (req: express.Request, res: expre
 				grant_type: GrantType.PRE_AUTHORIZED_CODE,
 				accountId: preAuthorizedCodeGrant.account_id,
 				scope,
-				claimsContext: preAuthorizedCodeGrant.claims_context,
 			});
 		}
 

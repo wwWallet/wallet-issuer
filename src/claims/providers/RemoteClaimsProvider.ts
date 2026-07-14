@@ -46,7 +46,7 @@ export class RemoteClaimsProvider implements ClaimsProvider {
 			return { kind: 'denied', reason: 'Not supported scope' };
 		}
 
-		const fetchedClaimsResult = await this.getClaimsByUserId(accountId, supportedScope, context?.claimsContext);
+		const fetchedClaimsResult = await this.getClaimsByUserId(accountId, supportedScope, context?.issuerState);
 		if (fetchedClaimsResult.kind === 'failure') {
 			return { kind: 'denied', reason: `Could not fetch claims: ${fetchedClaimsResult.reason}` };
 		}
@@ -80,7 +80,7 @@ export class RemoteClaimsProvider implements ClaimsProvider {
 		return configuration.vct;
 	}
 
-	private async getClaimsByUserId(userId: string, scope: string, claimsContext?: string): Promise<ClaimsFetchResult> {
+	private async getClaimsByUserId(userId: string, scope: string, issuerState?: string): Promise<ClaimsFetchResult> {
 		const controller = new AbortController();
 		const timeout = setTimeout(() => controller.abort(), this.fetchTimeoutMs);
 
@@ -95,7 +95,7 @@ export class RemoteClaimsProvider implements ClaimsProvider {
 			console.log('Request headers', { headers: Object.fromEntries(headers.entries()) });
 			const requestData = {
 				sub: userId,
-				...(claimsContext ? { claims_context: claimsContext } : {}),
+				...(issuerState ? { issuer_state: issuerState } : {}),
 			};
 			console.log('Request body', requestData);
 			const response = await fetch(url, {
