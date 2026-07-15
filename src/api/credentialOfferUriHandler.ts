@@ -92,8 +92,6 @@ export const credentialOfferUriHandler = async (req: express.Request, res: expre
 			generatedOffer = await issuer.generateCredentialOffer({
 				credentialConfigurationId,
 				grant_type: GrantType.PRE_AUTHORIZED_CODE,
-				// oidc-provider uses accountId internally and exposes it as `sub`
-				// through token introspection. Keep that mapping private to the issuer/AS.
 				accountId: parsedGrant.value.sub,
 				scope,
 			});
