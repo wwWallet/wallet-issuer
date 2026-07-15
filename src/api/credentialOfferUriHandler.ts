@@ -31,7 +31,7 @@ const authorizationCodeGrantSchema = z.object({
 }).strict();
 
 const preAuthorizedCodeGrantSchema = z.object({
-	account_id: z.string().trim().min(1).max(256),
+	sub: z.string().trim().min(1).max(256),
 }).strict();
 
 const logUnexpectedError = (error: unknown) => {
@@ -92,7 +92,9 @@ export const credentialOfferUriHandler = async (req: express.Request, res: expre
 			generatedOffer = await issuer.generateCredentialOffer({
 				credentialConfigurationId,
 				grant_type: GrantType.PRE_AUTHORIZED_CODE,
-				accountId: parsedGrant.value.account_id,
+				// oidc-provider uses accountId internally and exposes it as `sub`
+				// through token introspection. Keep that mapping private to the issuer/AS.
+				accountId: parsedGrant.value.sub,
 				scope,
 			});
 		}

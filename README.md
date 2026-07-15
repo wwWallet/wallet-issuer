@@ -43,14 +43,14 @@ For a pre-authorized offer, the authenticated API client supplies an opaque subj
   "credential_configuration_ids": ["urn:eudi:pid:1:dc"],
   "grants": {
     "urn:ietf:params:oauth:grant-type:pre-authorized_code": {
-      "account_id": "issuance-transaction-123"
+      "sub": "issuance-transaction-123"
     }
   }
 }
 ```
 
 Possession of `CREDENTIAL_OFFER_API_BEARER_TOKEN` authorizes the caller to select any
-`account_id`, so restrict this endpoint to trusted backend clients and protect the token as a
+`sub`, so restrict this endpoint to trusted backend clients and protect the token as a
 high-privilege credential. The value becomes the access token subject (`sub`) and is sent
 unchanged to the remote claims fetcher. It should be an opaque reference, not sensitive claims
 data.

@@ -109,7 +109,7 @@ describe('credentialOfferUriHandler', () => {
 		expect(issuerMock.generateCredentialOffer).not.toHaveBeenCalled();
 	});
 
-	it('returns 400 when a pre-authorized_code grant has no account_id', async () => {
+	it('returns 400 when a pre-authorized_code grant has no sub', async () => {
 		const response = await executeHandler({
 			credential_configuration_ids: ['pid_sd_jwt'],
 			grants: {
@@ -208,12 +208,12 @@ describe('credentialOfferUriHandler', () => {
 		});
 	});
 
-	it('creates a pre-authorized offer for the trusted API account_id', async () => {
+	it('creates a pre-authorized offer for the trusted API sub', async () => {
 		const response = await executeHandler({
 			credential_configuration_ids: ['pid_sd_jwt'],
 			grants: {
 				'urn:ietf:params:oauth:grant-type:pre-authorized_code': {
-					account_id: 'api-account-1',
+					sub: 'api-subject-1',
 				},
 			},
 		});
@@ -222,7 +222,7 @@ describe('credentialOfferUriHandler', () => {
 		expect(issuerMock.generateCredentialOffer).toHaveBeenCalledWith({
 			credentialConfigurationId: 'pid_sd_jwt',
 			grant_type: 'urn:ietf:params:oauth:grant-type:pre-authorized_code',
-			accountId: 'api-account-1',
+			accountId: 'api-subject-1',
 			scope: 'pid:sd_jwt_dc',
 		});
 	});
