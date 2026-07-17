@@ -241,7 +241,7 @@ export function createIssuerOpenID4VCI(url: string, credentialIssuerCreateOption
 				grants
 			};
 			const id = generateRandomIdentifier(18);
-			await credentialOfferStore.set(id, credentialOffer);
+			await credentialOfferStore.set(id, credentialOffer, config.credentialOfferTtlMs);
 			const container = new URL('openid-credential-offer://');
 			container.searchParams.append('credential_offer_uri', url + "/credential-offer/" + id);
 

@@ -8,6 +8,7 @@ export interface SetStore<TValue> {
 }
 
 export interface ConsumableStore<TKey, TValue> extends GenericStore<TKey, TValue> {
+	set(key: TKey, value: TValue, ttlMs?: number): Promise<void>;
 	consume(key: TKey): Promise<TValue | undefined>;
 }
 

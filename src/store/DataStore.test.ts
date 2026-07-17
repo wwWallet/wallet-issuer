@@ -40,6 +40,18 @@ describe('DataStore', () => {
 		expect(mockClient.set).toHaveBeenCalledWith('test:abc', JSON.stringify({ x: 1 }));
 	});
 
+	it('sets values without an expiry when the optional ttl is undefined', async () => {
+		await store.set('abc', { x: 1 }, undefined);
+
+		expect(mockClient.set).toHaveBeenCalledWith('test:abc', JSON.stringify({ x: 1 }));
+		expect(mockClient.set).not.toHaveBeenCalledWith(
+			'test:abc',
+			JSON.stringify({ x: 1 }),
+			'PX',
+			expect.anything(),
+		);
+	});
+
 	it('sets values with a millisecond ttl', async () => {
 		await store.set('abc', { x: 1 }, 5000);
 
