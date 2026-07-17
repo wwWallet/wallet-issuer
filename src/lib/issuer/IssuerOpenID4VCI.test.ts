@@ -36,4 +36,22 @@ describe('retrieveCredentialOffer', () => {
 
 		await expect(retrieveCredentialOffer(store as any, 'missing-offer', true)).resolves.toBeNull();
 	});
+
+	it('allows only one of two concurrent requests to consume an offer', async () => {
+		const store = {
+			consume: vi.fn()
+				.mockResolvedValueOnce(offer)
+				.mockResolvedValueOnce(undefined),
+		};
+
+		const results = await Promise.all([
+			retrieveCredentialOffer(store as any, 'single-use-offer', true),
+			retrieveCredentialOffer(store as any, 'single-use-offer', true),
+		]);
+
+		expect(results).toEqual(expect.arrayContaining([offer, null]));
+		expect(store.consume).toHaveBeenCalledTimes(2);
+		expect(store.consume).toHaveBeenNthCalledWith(1, 'single-use-offer');
+		expect(store.consume).toHaveBeenNthCalledWith(2, 'single-use-offer');
+	});
 });
