@@ -18,7 +18,7 @@ import { buildMetadata } from './buildMetadata';
 import { CredentialRequestHelper } from './CredentialRequestHelper';
 import { config } from '../../../config';
 import { generateNumericPin } from '../../util/generateTxCode';
-import { DataStore } from '../../store/DataStore';
+import { ConsumableStore, DataStore } from '../../store/DataStore';
 import { dataStoreClient } from '../../store/dataStoreClient';
 
 export interface PreAuthorizedCodeStoreItem extends PreAuthorizedCodeGrant {
@@ -33,8 +33,8 @@ export type CredentialIssuerCreateOptions = {
 	authorizationServerUrl: string;
 	stateStore?: GenericStore<string, State>;
 	stateByTransactionIdStore?: GenericStore<string, string>;
-	credentialOfferStore?: GenericStore<string, CredentialOffer>;
-	preAuthorizedCodeStore?: GenericStore<string, PreAuthorizedCodeStoreItem>;
+	credentialOfferStore?: ConsumableStore<string, CredentialOffer>;
+	preAuthorizedCodeStore?: ConsumableStore<string, PreAuthorizedCodeStoreItem>;
 
 	secret: string; // used for HS512 JWT signatures when issuing nonce values
 
@@ -89,7 +89,18 @@ export interface IssuerOpenID4VCI {
 
 	issueCredential(issueCredentialOptions: IssueCredentialRequestOptions): Promise<IssueCredentialResponse>;
 
-	preAuthorizedCodeStore: GenericStore<string, PreAuthorizedCodeStoreItem>;
+	preAuthorizedCodeStore: ConsumableStore<string, PreAuthorizedCodeStoreItem>;
+}
+
+export async function retrieveCredentialOffer(
+	credentialOfferStore: ConsumableStore<string, CredentialOffer>,
+	credentialOfferId: string,
+	revoke: boolean,
+): Promise<CredentialOffer | null> {
+	const offer = revoke
+		? await credentialOfferStore.consume(credentialOfferId)
+		: await credentialOfferStore.get(credentialOfferId);
+	return offer ?? null;
 }
 
 /**
@@ -218,7 +229,7 @@ export function createIssuerOpenID4VCI(url: string, credentialIssuerCreateOption
 						};
 					}
 
-					preAuthorizedCodeStore.set(preAuthorizedCode, preAuthorizedCodeStoreItem);
+					await preAuthorizedCodeStore.set(preAuthorizedCode, preAuthorizedCodeStoreItem);
 
 				} else {
 					grants = {};
@@ -230,7 +241,7 @@ export function createIssuerOpenID4VCI(url: string, credentialIssuerCreateOption
 				grants
 			};
 			const id = generateRandomIdentifier(18);
-			credentialOfferStore.set(id, credentialOffer);
+			await credentialOfferStore.set(id, credentialOffer);
 			const container = new URL('openid-credential-offer://');
 			container.searchParams.append('credential_offer_uri', url + "/credential-offer/" + id);
 
@@ -244,14 +255,7 @@ export function createIssuerOpenID4VCI(url: string, credentialIssuerCreateOption
 
 
 		getCredentialOffer: async (credentialOfferId: string, revoke: boolean = false): Promise<CredentialOffer | null> => {
-			const offer = await credentialOfferStore.get(credentialOfferId);
-			if (!offer) {
-				return null;
-			}
-			if (revoke) {
-				await credentialOfferStore.delete(credentialOfferId);
-			}
-			return offer;
+			return retrieveCredentialOffer(credentialOfferStore, credentialOfferId, revoke);
 		},
 
 		issueNonce: async () => {

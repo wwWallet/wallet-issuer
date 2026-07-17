@@ -3,8 +3,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 const { issuerMock } = vi.hoisted(() => ({
 	issuerMock: {
 		preAuthorizedCodeStore: {
-			get: vi.fn(),
-			delete: vi.fn(),
+			consume: vi.fn(),
 		},
 	},
 }));
@@ -72,7 +71,7 @@ describe('preAuthorizedCodeHandler', () => {
 	});
 
 	it('returns 400 invalid_grant when the grant is missing', async () => {
-		issuerMock.preAuthorizedCodeStore.get.mockResolvedValue(undefined);
+		issuerMock.preAuthorizedCodeStore.consume.mockResolvedValue(undefined);
 
 		const response = await executeHandler({
 			'pre-authorized_code': 'missing-code',
@@ -85,8 +84,8 @@ describe('preAuthorizedCodeHandler', () => {
 		});
 	});
 
-	it('returns 200 and deletes the grant for a valid request', async () => {
-		issuerMock.preAuthorizedCodeStore.get.mockResolvedValue({
+	it('returns 200 for a valid atomically consumed grant', async () => {
+		issuerMock.preAuthorizedCodeStore.consume.mockResolvedValue({
 			tx_code: true,
 			tx_value: '12345',
 			credential_configuration_ids: ['pid_sd_jwt'],
@@ -103,6 +102,43 @@ describe('preAuthorizedCodeHandler', () => {
 			tx_value: '12345',
 			credential_configuration_ids: ['pid_sd_jwt'],
 		});
-		expect(issuerMock.preAuthorizedCodeStore.delete).toHaveBeenCalledWith('valid-code');
+		expect(issuerMock.preAuthorizedCodeStore.consume).toHaveBeenCalledWith('valid-code');
+	});
+
+	it('rejects a wrong tx_code after atomically consuming the grant', async () => {
+		issuerMock.preAuthorizedCodeStore.consume.mockResolvedValue({
+			tx_code: true,
+			tx_value: '12345',
+			credential_configuration_ids: ['pid_sd_jwt'],
+		});
+
+		const response = await executeHandler({
+			'pre-authorized_code': 'single-attempt-code',
+			tx_code: '54321',
+		});
+
+		expect(response.statusCode).toBe(400);
+		expect(response.body).toEqual({
+			error: 'invalid_grant',
+			error_description: 'Invalid tx_code.',
+		});
+		expect(issuerMock.preAuthorizedCodeStore.consume).toHaveBeenCalledWith('single-attempt-code');
+	});
+
+	it('allows only one of two concurrent requests to consume a grant', async () => {
+		const grant = {
+			credential_configuration_ids: ['pid_sd_jwt'],
+		};
+		issuerMock.preAuthorizedCodeStore.consume
+			.mockResolvedValueOnce(grant)
+			.mockResolvedValueOnce(undefined);
+
+		const [firstResponse, secondResponse] = await Promise.all([
+			executeHandler({ 'pre-authorized_code': 'single-use-code' }),
+			executeHandler({ 'pre-authorized_code': 'single-use-code' }),
+		]);
+
+		expect([firstResponse.statusCode, secondResponse.statusCode].sort()).toEqual([200, 400]);
+		expect(issuerMock.preAuthorizedCodeStore.consume).toHaveBeenCalledTimes(2);
 	});
 });

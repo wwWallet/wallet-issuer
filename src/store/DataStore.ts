@@ -7,7 +7,11 @@ export interface SetStore<TValue> {
 	removeFromSet(key: string, value: TValue): Promise<void>;
 }
 
-export class DataStore<TValue> implements GenericStore<string, TValue>, SetStore<TValue> {
+export interface ConsumableStore<TKey, TValue> extends GenericStore<TKey, TValue> {
+	consume(key: TKey): Promise<TValue | undefined>;
+}
+
+export class DataStore<TValue> implements ConsumableStore<string, TValue>, SetStore<TValue> {
 	constructor(
 		private readonly client: Valkey,
 		private readonly prefix: string,
@@ -48,6 +52,11 @@ export class DataStore<TValue> implements GenericStore<string, TValue>, SetStore
 
 	async delete(key: string): Promise<void> {
 		await this.client.del(this.buildKey(key));
+	}
+
+	async consume(key: string): Promise<TValue | undefined> {
+		const value = await this.client.getdel(this.buildKey(key));
+		return value !== null ? this.deserializeValue(value) : undefined;
 	}
 
 	async addToSet(key: string, value: TValue): Promise<void> {

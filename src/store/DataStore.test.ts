@@ -5,6 +5,7 @@ const mockClient = {
 	get: vi.fn(),
 	set: vi.fn(),
 	del: vi.fn(),
+	getdel: vi.fn(),
 	sadd: vi.fn(),
 	smembers: vi.fn(),
 	srem: vi.fn(),
@@ -49,6 +50,19 @@ describe('DataStore', () => {
 		await store.delete('abc');
 
 		expect(mockClient.del).toHaveBeenCalledWith('test:abc');
+	});
+
+	it('atomically consumes a value by prefixed key', async () => {
+		mockClient.getdel.mockResolvedValueOnce(JSON.stringify({ x: 1 }));
+
+		await expect(store.consume('abc')).resolves.toEqual({ x: 1 });
+		expect(mockClient.getdel).toHaveBeenCalledWith('test:abc');
+	});
+
+	it('returns undefined when consuming a missing value', async () => {
+		mockClient.getdel.mockResolvedValueOnce(null);
+
+		await expect(store.consume('missing')).resolves.toBeUndefined();
 	});
 
 	it('adds a serialized member to a prefixed set', async () => {
