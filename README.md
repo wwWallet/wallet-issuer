@@ -36,6 +36,25 @@ Content-Type: application/json
 The issuer refuses to start when the API is enabled without a bearer token. Routes outside
 `/api`, including the generated `GET /openid/credential-offer/:id` URL, remain public.
 
+For a pre-authorized offer, the authenticated API client supplies an opaque subject identifier:
+
+```json
+{
+  "credential_configuration_ids": ["urn:eudi:pid:1:dc"],
+  "grants": {
+    "urn:ietf:params:oauth:grant-type:pre-authorized_code": {
+      "sub": "issuance-transaction-123"
+    }
+  }
+}
+```
+
+Possession of `CREDENTIAL_OFFER_API_BEARER_TOKEN` authorizes the caller to select any
+`sub`, so restrict this endpoint to trusted backend clients and protect the token as a
+high-privilege credential. The value becomes the access token subject (`sub`) and is sent
+unchanged to the remote claims fetcher. It should be an opaque reference, not sensitive claims
+data.
+
 ## Remote claims fetching
 
 Enable remote claims fetching explicitly:
