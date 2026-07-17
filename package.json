@@ -24,6 +24,7 @@
     "@sd-jwt/types": "^0.17.0",
     "dotenv": "^17.2.3",
     "express": "^5.2.1",
+    "iovalkey": "^0.3.3",
     "jose": "^6.1.3",
     "pug": "^3.0.3",
     "wallet-common": "git+https://github.com/wwWallet/wallet-common.git#c7b487b4bd99a5ee2800b330bfe077d7896d1ac9",

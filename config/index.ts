@@ -13,6 +13,10 @@ const issuerPath = rawIssuerPath
 
 const preAuthorizedCodeApiEnabled = process.env.PRE_AUTHORIZED_CODE_API_ENABLED?.trim() === 'true';
 const preAuthorizedCodeTxCodeLength = Number(process.env.PRE_AUTHORIZED_CODE_GRANT_TX_CODE_LENGTH);
+const configuredCredentialOfferTtlMs = Number(process.env.CREDENTIAL_OFFER_TTL_MS);
+const credentialOfferTtlMs = Number.isSafeInteger(configuredCredentialOfferTtlMs) && configuredCredentialOfferTtlMs > 0
+	? configuredCredentialOfferTtlMs
+	: undefined;
 
 function getClientIdAndSecret(): { clientId: string; clientSecret: string } {
 	const combined = process.env.PRE_AUTHORIZED_CODE_GRANT_CLIENT_ID_SECRET?.trim() || 'wallet_issuer:test';
@@ -23,6 +27,19 @@ function getClientIdAndSecret(): { clientId: string; clientSecret: string } {
 	};
 }
 
+const dataStoreHost = process.env.DATA_STORE_HOST || "localhost";
+const dataStorePort = Number(process.env.DATA_STORE_PORT) || 6379;
+const dataStorePassword = process.env.DATA_STORE_PASSWORD || null;
+
+if (process.env.NODE_ENV === "production" && !dataStorePassword) {
+	console.error(
+		`FATAL: Insecure data store found in production.`
+	);
+
+	process.exit(1);
+}
+
+
 export const config = {
 	url: url,
 	issuerIdentifier: `${url}${issuerPath}`,
@@ -31,6 +48,9 @@ export const config = {
 	credentialIssuanceBatchSize: parseInt(process.env.CREDENTIAL_ISSUANCE_BATCH_SIZE || '1', 10),
 	introspectionEndpointBasicAuthString: String(process.env.INTROSPECTION_ENDPOINT_BASIC_AUTH_HEADER || 'default_url'),
 	jweEncryptionAlg: String(process.env.JWE_ENCRYPTION_ALG || 'ECDH-ES'),
+	dataStoreHost: dataStoreHost,
+	dataStorePort: dataStorePort,
+	dataStorePassword: dataStorePassword,
 	display: [
 		{
 			name: String(process.env.DISPLAY_NAME || 'wwWallet Issuer'),
@@ -51,6 +71,7 @@ export const config = {
 	},
 	credentialOfferApiEnabled: process.env.CREDENTIAL_OFFER_API_ENABLED?.trim() === 'true',
 	credentialOfferApiBearerToken: process.env.CREDENTIAL_OFFER_API_BEARER_TOKEN?.trim() || '',
+	credentialOfferTtlMs,
 	vctRegistryUrl: process.env.VCT_REGISTRY_URL || 'http://localhost:8097/type-metadata',
 	vcClaimsFetcherEnabled: process.env.VC_CLAIMS_FETCHER_ENABLED?.trim() === 'true',
 	vcClaimsFetcherUrl: process.env.VC_CLAIMS_FETCHER_URL || '',

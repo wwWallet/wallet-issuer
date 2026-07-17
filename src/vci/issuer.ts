@@ -8,12 +8,13 @@ import { disclosureFrameMap, supportedCredentialConfigurations } from '../../con
 import { pemToBase64 } from '../util/pemToBase64';
 import { JWK } from 'jose';
 import { vctDocumentProvider } from '../../config/vctDocumentProvider';
-import { MemoryStore } from 'wallet-common';
 import { createCredentialRequestHelper, CredentialRequestWithClaims } from '../lib/issuer/CredentialRequestHelper';
 import { createFindAccount } from '../claims/createFindAccount';
 import { ClaimsProvider } from '../claims/ClaimsProvider';
 import { FilesystemClaimsProvider } from '../claims/providers/FilesystemClaimsProvider';
 import { RemoteClaimsProvider } from '../claims/providers/RemoteClaimsProvider';
+import { DataStore } from '../store/DataStore';
+import { dataStoreClient } from '../store/dataStoreClient';
 
 const localTrustedCertsManager = LocalTrustedCertificatesManager();
 
@@ -23,9 +24,10 @@ const privateKeyJwk = JSON.parse(fs.readFileSync(path.join(__dirname, '../../../
 
 const publicKeyJwk = JSON.parse(fs.readFileSync(path.join(__dirname, '../../../keys/public.enc.ecdh.jwk'), 'utf-8').toString().trim()) as JWK;
 
-const credentialRequestStore = new MemoryStore<string, CredentialRequestWithClaims>(10000);
+const credentialRequestStore = new DataStore<CredentialRequestWithClaims>(dataStoreClient, "credentialRequest");
+const credentialRequestIndexStore = new DataStore<string>(dataStoreClient, "credentialRequestIndex");
 
-export const credentialRequestHelper = createCredentialRequestHelper(credentialRequestStore);
+export const credentialRequestHelper = createCredentialRequestHelper(credentialRequestStore, credentialRequestIndexStore);
 
 const claimsProvider: ClaimsProvider = config.vcClaimsFetcherEnabled && config.vcClaimsFetcherUrl
 	? new RemoteClaimsProvider(config.vcClaimsFetcherUrl, { apiKey: config.vcClaimsFetcherApiKey })
