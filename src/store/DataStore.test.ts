@@ -5,6 +5,9 @@ const mockClient = {
 	get: vi.fn(),
 	set: vi.fn(),
 	del: vi.fn(),
+	sadd: vi.fn(),
+	smembers: vi.fn(),
+	srem: vi.fn(),
 };
 
 describe('DataStore', () => {
@@ -46,6 +49,28 @@ describe('DataStore', () => {
 		await store.delete('abc');
 
 		expect(mockClient.del).toHaveBeenCalledWith('test:abc');
+	});
+
+	it('adds a serialized member to a prefixed set', async () => {
+		await store.addToSet('abc', { x: 1 });
+
+		expect(mockClient.sadd).toHaveBeenCalledWith('test:abc', JSON.stringify({ x: 1 }));
+	});
+
+	it('returns deserialized set members', async () => {
+		mockClient.smembers.mockResolvedValueOnce([
+			JSON.stringify({ x: 1 }),
+			JSON.stringify({ x: 2 }),
+		]);
+
+		await expect(store.getSetMembers('abc')).resolves.toEqual([{ x: 1 }, { x: 2 }]);
+		expect(mockClient.smembers).toHaveBeenCalledWith('test:abc');
+	});
+
+	it('removes a serialized member from a prefixed set', async () => {
+		await store.removeFromSet('abc', { x: 1 });
+
+		expect(mockClient.srem).toHaveBeenCalledWith('test:abc', JSON.stringify({ x: 1 }));
 	});
 
 	it('does not support scanning all values', async () => {

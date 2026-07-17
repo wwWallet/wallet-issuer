@@ -1,7 +1,13 @@
 import Valkey from "iovalkey";
 import { GenericStore } from "wallet-common";
 
-export class DataStore<TValue> implements GenericStore<string, TValue> {
+export interface SetStore<TValue> {
+	addToSet(key: string, value: TValue): Promise<void>;
+	getSetMembers(key: string): Promise<TValue[]>;
+	removeFromSet(key: string, value: TValue): Promise<void>;
+}
+
+export class DataStore<TValue> implements GenericStore<string, TValue>, SetStore<TValue> {
 	constructor(
 		private readonly client: Valkey,
 		private readonly prefix: string,
@@ -42,6 +48,19 @@ export class DataStore<TValue> implements GenericStore<string, TValue> {
 
 	async delete(key: string): Promise<void> {
 		await this.client.del(this.buildKey(key));
+	}
+
+	async addToSet(key: string, value: TValue): Promise<void> {
+		await this.client.sadd(this.buildKey(key), this.serializeValue(value));
+	}
+
+	async getSetMembers(key: string): Promise<TValue[]> {
+		const members = await this.client.smembers(this.buildKey(key));
+		return members.map((member: string) => this.deserializeValue(member));
+	}
+
+	async removeFromSet(key: string, value: TValue): Promise<void> {
+		await this.client.srem(this.buildKey(key), this.serializeValue(value));
 	}
 
 	async getAll(): Promise<TValue[]> {

@@ -25,7 +25,7 @@ const privateKeyJwk = JSON.parse(fs.readFileSync(path.join(__dirname, '../../../
 const publicKeyJwk = JSON.parse(fs.readFileSync(path.join(__dirname, '../../../keys/public.enc.ecdh.jwk'), 'utf-8').toString().trim()) as JWK;
 
 const credentialRequestStore = new DataStore<CredentialRequestWithClaims>(dataStoreClient, "credentialRequest");
-const credentialRequestIndexStore = new DataStore<string[]>(dataStoreClient, "credentialRequestIndex");
+const credentialRequestIndexStore = new DataStore<string>(dataStoreClient, "credentialRequestIndex");
 
 export const credentialRequestHelper = createCredentialRequestHelper(credentialRequestStore, credentialRequestIndexStore);
 

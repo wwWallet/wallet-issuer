@@ -1,6 +1,7 @@
-import { GenericStore, MemoryStore } from 'wallet-common';
+import { GenericStore } from 'wallet-common';
 import { generateRandomIdentifier } from 'wallet-common';
 import { ClaimsFuture } from './ClaimsFuture';
+import { SetStore } from '../../store/DataStore';
 
 type CredentialRequest = {
 	transaction_id: string;
@@ -44,15 +45,12 @@ function toClaimsFuture(transaction: CredentialRequestWithClaims): ClaimsFuture<
 	};
 }
 
-export function createCredentialRequestHelper(store: GenericStore<string, CredentialRequestWithClaims>, transactionIdIndexStore: GenericStore<string, string[]> = new MemoryStore<string, string[]>(1)): CredentialRequestHelper {
+export function createCredentialRequestHelper(store: GenericStore<string, CredentialRequestWithClaims>, transactionIdIndexStore: SetStore<string>): CredentialRequestHelper {
 	return {
 		submitCredentialRequest: async (request) => {
 			const transaction_id = generateRandomIdentifier(12);
 			await store.set(transaction_id, { ...request, transaction_id, status: 'pending', claims: {} as GenericClaims });
-			const transactionIds = await transactionIdIndexStore.get(credentialRequestIndexKey) ?? [];
-			if (!transactionIds.includes(transaction_id)) {
-				await transactionIdIndexStore.set(credentialRequestIndexKey, [...transactionIds, transaction_id]);
-			}
+			await transactionIdIndexStore.addToSet(credentialRequestIndexKey, transaction_id);
 			return {
 				sub: request.sub,
 				scope: request.scope,
@@ -75,7 +73,7 @@ export function createCredentialRequestHelper(store: GenericStore<string, Creden
 
 		getCredentialRequests: async (transaction_id?: string) => {
 			if (!transaction_id) {
-				const transactionIds = await transactionIdIndexStore.get(credentialRequestIndexKey) ?? [];
+				const transactionIds = await transactionIdIndexStore.getSetMembers(credentialRequestIndexKey);
 				const transactions = await Promise.all(transactionIds.map((id) => store.get(id)));
 				return transactions.filter((transaction) => transaction !== undefined).map(toClaimsFuture);
 			}

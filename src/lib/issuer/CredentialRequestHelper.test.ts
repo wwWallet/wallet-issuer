@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { GenericStore } from 'wallet-common';
 import { createCredentialRequestHelper, CredentialRequestWithClaims } from './CredentialRequestHelper';
+import { SetStore } from '../../store/DataStore';
 
 class NoGetAllStore<TValue> implements GenericStore<string, TValue> {
 	private readonly values = new Map<string, TValue>();
@@ -22,10 +23,28 @@ class NoGetAllStore<TValue> implements GenericStore<string, TValue> {
 	}
 }
 
+class TestSetStore<TValue> implements SetStore<TValue> {
+	private readonly values = new Map<string, Set<TValue>>();
+
+	async addToSet(key: string, value: TValue): Promise<void> {
+		const members = this.values.get(key) ?? new Set<TValue>();
+		members.add(value);
+		this.values.set(key, members);
+	}
+
+	async getSetMembers(key: string): Promise<TValue[]> {
+		return [...(this.values.get(key) ?? [])];
+	}
+
+	async removeFromSet(key: string, value: TValue): Promise<void> {
+		this.values.get(key)?.delete(value);
+	}
+}
+
 describe('CredentialRequestHelper', () => {
 	it('uses the transaction id index when listing credential requests', async () => {
 		const requestStore = new NoGetAllStore<CredentialRequestWithClaims>();
-		const transactionIdIndexStore = new NoGetAllStore<string[]>();
+		const transactionIdIndexStore = new TestSetStore<string>();
 		const helper = createCredentialRequestHelper(requestStore, transactionIdIndexStore);
 
 		const pendingRequest = await helper.submitCredentialRequest({ sub: 'alice', scope: 'por:sd_jwt_vc' });
@@ -36,7 +55,7 @@ describe('CredentialRequestHelper', () => {
 
 	it('resolves individual credential requests directly by transaction id', async () => {
 		const requestStore = new NoGetAllStore<CredentialRequestWithClaims>();
-		const transactionIdIndexStore = new NoGetAllStore<string[]>();
+		const transactionIdIndexStore = new TestSetStore<string>();
 		const helper = createCredentialRequestHelper(requestStore, transactionIdIndexStore);
 		const pendingRequest = await helper.submitCredentialRequest({ sub: 'alice', scope: 'por:sd_jwt_vc' });
 
@@ -51,5 +70,20 @@ describe('CredentialRequestHelper', () => {
 				transaction_id: pendingRequest.transaction_id,
 			},
 		]);
+	});
+
+	it('does not lose transaction ids from concurrent submissions', async () => {
+		const requestStore = new NoGetAllStore<CredentialRequestWithClaims>();
+		const transactionIdIndexStore = new TestSetStore<string>();
+		const helper = createCredentialRequestHelper(requestStore, transactionIdIndexStore);
+
+		const pendingRequests = await Promise.all([
+			helper.submitCredentialRequest({ sub: 'alice', scope: 'por:sd_jwt_vc' }),
+			helper.submitCredentialRequest({ sub: 'bob', scope: 'por:sd_jwt_vc' }),
+		]);
+
+		const requests = await helper.getCredentialRequests();
+		expect(requests).toHaveLength(2);
+		expect(requests).toEqual(expect.arrayContaining(pendingRequests));
 	});
 });
