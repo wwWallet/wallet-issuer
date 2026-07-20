@@ -26,7 +26,7 @@ export const preAuthorizedCodeHandler = async (req: express.Request, res: expres
 		const parsedPreAuthorizedCode = parsedBody["pre-authorized_code"];
 		const parsedTxCode = parsedBody["tx_code"];
 
-		const grant = await issuer.preAuthorizedCodeStore.get(parsedPreAuthorizedCode);
+		const grant = await issuer.preAuthorizedCodeStore.consume(parsedPreAuthorizedCode);
 		const expectedTxCodeStructure = grant?.tx_code;
 		const expectedTxCodeValue = grant?.tx_value;
 		const expectedExpDateMs = grant?.exp;
@@ -50,8 +50,6 @@ export const preAuthorizedCodeHandler = async (req: express.Request, res: expres
 		if (expectedExpDateMs && expectedExpDateMs < Date.now()) {
 			return sendPreAuthorizedCodeHandlerError(res, 400, 'invalid_grant', 'Expired grant.');
 		}
-
-		await issuer.preAuthorizedCodeStore.delete(parsedPreAuthorizedCode);
 
 		return res.status(200).send(grant);
 	} catch (error) {
