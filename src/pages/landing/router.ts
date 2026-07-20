@@ -1,43 +1,51 @@
 import { Response, Router } from 'express';
 import { importJWK, jwtVerify } from 'jose';
 import { issuer } from '../../vci/issuer';
-import { fromBase64Url, GrantType, MemoryStore } from 'wallet-common';
+import { fromBase64Url, GrantType } from 'wallet-common';
 import type { CredentialConfigurationSupported } from 'wallet-common';
 import { config } from '../../../config';
 import { locale } from '../../../config/locale';
 import { logger } from '../../logger';
 import { randomUUID } from 'node:crypto';
+import { DataStore } from '../../store/DataStore';
+import { dataStoreClient } from '../../store/dataStoreClient';
 
 export const landingRouter = Router();
 const decoder = new TextDecoder();
 
 type OfferResult = {
-	id: string;
 	credentialOfferWithReference: URL;
 	credentialOfferWithReferenceForWwwallet: URL;
 	credentialName: string;
 	grantTypeLabel: string;
 	pageTitle: string;
 	txCode?: string;
-	expiresAt: number;
 };
 
-const offerResults = new MemoryStore<string, OfferResult>(100000);
+type SerializedOfferResult = Omit<OfferResult, 'credentialOfferWithReference' | 'credentialOfferWithReferenceForWwwallet'> & {
+	credentialOfferWithReference: string;
+	credentialOfferWithReferenceForWwwallet: string;
+};
 
-async function removeExpiredOfferResults(now = Date.now()): Promise<void> {
-	const results = await offerResults.getAll();
-	await Promise.all(results.map(async (result) => {
-		if (result.expiresAt <= now) {
-			await offerResults.delete(result.id);
-		}
-	}));
-}
+const deserializeOfferResult = (value: string): OfferResult => {
+	const result = JSON.parse(value) as SerializedOfferResult;
+	return {
+		...result,
+		credentialOfferWithReference: new URL(result.credentialOfferWithReference),
+		credentialOfferWithReferenceForWwwallet: new URL(result.credentialOfferWithReferenceForWwwallet),
+	};
+};
 
-async function storeOfferResult(result: Omit<OfferResult, 'id' | 'expiresAt'>): Promise<string> {
+const offerResults = new DataStore<OfferResult>(
+	dataStoreClient,
+	'landingPreAuthorizedOffer',
+	JSON.stringify,
+	deserializeOfferResult,
+);
+
+async function storeOfferResult(result: OfferResult): Promise<string> {
 	const id = randomUUID();
-	const now = Date.now();
-	await removeExpiredOfferResults(now);
-	await offerResults.set(id, { id, ...result, expiresAt: now + config.preAuthorizedCodeGrantTtlMs });
+	await offerResults.set(id, result, config.preAuthorizedCodeGrantTtlMs);
 	return id;
 }
 
@@ -245,11 +253,8 @@ landingRouter.get('/initialize-pre-authorized-offer/:id', async (req, res) => {
 });
 
 landingRouter.get('/pre-authorized-offer/:id', async (req, res) => {
-	const now = Date.now();
-	await removeExpiredOfferResults(now);
 	const offerResult = await offerResults.get(req.params.id);
-	if (!offerResult || offerResult.expiresAt <= now) {
-		await offerResults.delete(req.params.id);
+	if (!offerResult) {
 		res.render('error', { error: 'invalid-credential-offer' });
 		return;
 	}

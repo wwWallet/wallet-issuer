@@ -1,6 +1,6 @@
 import { beforeEach, afterEach, describe, expect, it, vi } from 'vitest';
 
-const { issuerMock, joseMock } = vi.hoisted(() => ({
+const { issuerMock, joseMock, dataStoreClientMock, storedOfferResults } = vi.hoisted(() => ({
 	issuerMock: {
 		getMetadata: vi.fn(),
 		generateCredentialOffer: vi.fn(),
@@ -9,6 +9,11 @@ const { issuerMock, joseMock } = vi.hoisted(() => ({
 		importJWK: vi.fn(),
 		jwtVerify: vi.fn(),
 	},
+	dataStoreClientMock: {
+		get: vi.fn(),
+		set: vi.fn(),
+	},
+	storedOfferResults: new Map<string, { value: string; expiresAt?: number }>(),
 }));
 
 vi.mock('../../vci/issuer', () => ({
@@ -16,6 +21,10 @@ vi.mock('../../vci/issuer', () => ({
 }));
 
 vi.mock('jose', () => joseMock);
+
+vi.mock('../../store/dataStoreClient', () => ({
+	dataStoreClient: dataStoreClientMock,
+}));
 
 type RouteLayer = {
 	route?: {
@@ -110,7 +119,29 @@ const mockSuccessfulTokenFlow = () => {
 describe('landingRouter pre-authorized offer flow', () => {
 	beforeEach(() => {
 		vi.clearAllMocks();
+		storedOfferResults.clear();
 		vi.useRealTimers();
+		dataStoreClientMock.set.mockImplementation(async (
+			key: string,
+			value: string,
+			_mode?: string,
+			ttlMs?: number,
+		) => {
+			storedOfferResults.set(key, {
+				value,
+				expiresAt: ttlMs === undefined ? undefined : Date.now() + ttlMs,
+			});
+			return 'OK';
+		});
+		dataStoreClientMock.get.mockImplementation(async (key: string) => {
+			const storedResult = storedOfferResults.get(key);
+			if (!storedResult || (storedResult.expiresAt !== undefined && storedResult.expiresAt <= Date.now())) {
+				storedOfferResults.delete(key);
+				return null;
+			}
+
+			return storedResult.value;
+		});
 		issuerMock.getMetadata.mockResolvedValue({ metadata });
 		issuerMock.generateCredentialOffer.mockResolvedValue({
 			credentialOfferWithReference: new URL(
@@ -174,6 +205,12 @@ describe('landingRouter pre-authorized offer flow', () => {
 		expect(res.redirect).toHaveBeenCalledOnce();
 		expect(res.redirect.mock.calls[0][0]).toBe(303);
 		expect(res.redirect.mock.calls[0][1]).toMatch(/^\/pre-authorized-offer\/.+/);
+		expect(dataStoreClientMock.set).toHaveBeenCalledWith(
+			expect.stringMatching(/^landingPreAuthorizedOffer:.+/),
+			expect.any(String),
+			'PX',
+			60000,
+		);
 	});
 
 	it('renders the stored offer result while it has not expired', async () => {
