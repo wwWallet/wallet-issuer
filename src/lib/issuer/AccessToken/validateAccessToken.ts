@@ -2,8 +2,12 @@ import { err, ok, OpenidCredentialIssuerMetadata, prependToPath, Result } from '
 import { CredentialIssuerCreateOptions } from '../IssuerOpenID4VCI';
 import { CredentialRequestError, CredentialRequestErrors } from '../CredentialRequest/CredentialRequestError';
 import { validateDpopProof } from './validateDpopProof';
+import { DataStore } from '../../../store/DataStore';
+import { dataStoreClient } from '../../../store/dataStoreClient';
 import { PlainIssueCredentialRequestOptions } from '../IssuerOpenID4VCITypes';
 import { IntrospectionResponse } from '../types';
+
+const dpopReplayStore = new DataStore<string>(dataStoreClient, 'dpopReplay');
 
 /**
  * * Validates if access token is valid
@@ -56,6 +60,7 @@ export async function validateAccessToken(credentialConfigurationId: string, met
 					clockTolerance: createOpts.clockTolerance,
 					htu: expectedDpopHtu,
 					method: 'POST',
+					replayStore: dpopReplayStore,
 				});
 				if (!response.ok) {
 					return response;

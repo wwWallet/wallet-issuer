@@ -1,22 +1,18 @@
 import { createHash } from 'node:crypto';
-import { GenericStore, MemoryStore, ok, err, Result } from 'wallet-common';
+import { ok, err, Result } from 'wallet-common';
 import { CredentialRequestError, CredentialRequestErrors } from '../CredentialRequest/CredentialRequestError';
 import { calculateJwkThumbprint, EmbeddedJWK, errors as JoseErrors, JWK, jwtVerify } from 'jose';
+import type { UniqueStore } from '../../../store/DataStore';
 
 const DPOP_SIGNING_ALG_VALUES = ['ES256'];
 const DPOP_PROOF_MAX_AGE_SECONDS = 300;
-const replayStore: GenericStore<string, DpopReplayStoreEntry> = new MemoryStore<string, DpopReplayStoreEntry>(10000);
-
-type DpopReplayStoreEntry = {
-	key: string;
-	expiresAt: number;
-};
 
 export type ValidateDpopProofOptions = {
 	method: string;
 	htu: string;
 	accessToken: string;
 	clockTolerance?: number;
+	replayStore: UniqueStore<string, string>;
 };
 
 /**
@@ -103,7 +99,17 @@ export async function validateDpopProof(dpopJwt: string, cnf: { jkt?: string } |
 			return fail('DPoP proof must have a non-empty jti claim');
 		}
 
-		if (!await markReplayStoreUnique(calculatedJkt, payload.jti, now + DPOP_PROOF_MAX_AGE_SECONDS + clockTolerance)) {
+		const replayMarkerTtlMs = Math.max(
+			1,
+			(payload.iat + DPOP_PROOF_MAX_AGE_SECONDS + clockTolerance + 1) * 1000 - Date.now(),
+		);
+		let replayMarkerCreated: boolean;
+		try {
+			replayMarkerCreated = await markReplayStoreUnique(options.replayStore, calculatedJkt, payload.jti, replayMarkerTtlMs);
+		} catch {
+			return err(CredentialRequestErrors.InternalServerError, 'Could not check DPoP proof replay state');
+		}
+		if (!replayMarkerCreated) {
 			return fail('DPoP proof replay detected');
 		}
 
@@ -134,20 +140,11 @@ function normalizeHtu(htu: string): string {
 	return url.href;
 }
 
-async function markReplayStoreUnique(jkt: string, jti: string, expiresAt: number): Promise<boolean> {
-	const now = Math.floor(Date.now() / 1000);
-	const entries = await replayStore.getAll();
-	for (const entry of entries) {
-		if (entry.expiresAt <= now) {
-			await replayStore.delete(entry.key);
-		}
-	}
-
-	const key = `${jkt}:${jti}`;
-	if (await replayStore.get(key)) {
-		return false;
-	}
-
-	await replayStore.set(key, { key, expiresAt });
-	return true;
+async function markReplayStoreUnique(replayStore: UniqueStore<string, string>, jkt: string, jti: string, ttlMs: number): Promise<boolean> {
+	const key = createHash('sha256')
+		.update(jkt)
+		.update('\0')
+		.update(jti)
+		.digest('base64url');
+	return replayStore.setIfAbsent(key, '1', ttlMs);
 }
