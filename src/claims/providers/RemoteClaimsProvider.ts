@@ -81,11 +81,6 @@ export class RemoteClaimsProvider implements ClaimsProvider {
 	}
 
 	private async getClaimsByUserId(userId: string, scope: string, issuerState?: string): Promise<ClaimsFetchResult> {
-		if (!issuerState) {
-			logger.warn('Remote claims fetch skipped due to missing issuer_state', { scope });
-			return { kind: 'failure', reason: 'missing_issuer_state' };
-		}
-
 		const controller = new AbortController();
 		const timeout = setTimeout(() => controller.abort(), this.fetchTimeoutMs);
 
@@ -98,15 +93,16 @@ export class RemoteClaimsProvider implements ClaimsProvider {
 				headers.set(this.apiKeyHeaderName, this.apiKey);
 			}
 			console.log('Request headers', { headers: Object.fromEntries(headers.entries()) });
-			console.log('Request body', { sub: userId, issuer_state: issuerState });
+			const requestData = {
+				sub: userId,
+				...(issuerState ? { issuer_state: issuerState } : {}),
+			};
+			console.log('Request body', requestData);
 			const response = await fetch(url, {
 				method: 'POST',
 				headers,
 				body: JSON.stringify({
-					data: {
-						sub: userId,
-						issuer_state: issuerState,
-					},
+					data: requestData,
 				}),
 				signal: controller.signal,
 			});
