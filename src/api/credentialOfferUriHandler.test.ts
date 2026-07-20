@@ -60,7 +60,7 @@ describe('credentialOfferUriHandler', () => {
 		issuerMock.getMetadata.mockResolvedValue({
 			metadata: {
 				credential_configurations_supported: {
-					pid_sd_jwt: {},
+					pid_sd_jwt: { scope: 'pid:sd_jwt_dc' },
 				},
 			},
 		});
@@ -96,7 +96,20 @@ describe('credentialOfferUriHandler', () => {
 		});
 	});
 
-	it('returns 501 unsupported_grant_type when authorization_code grant is missing', async () => {
+	it('returns 400 instead of silently ignoring additional credential configuration ids', async () => {
+		const response = await executeHandler({
+			credential_configuration_ids: ['pid_sd_jwt', 'another_credential'],
+			grants: {
+				authorization_code: { issuer_state: 'state-1' },
+			},
+		});
+
+		expect(response.statusCode).toBe(400);
+		expect(issuerMock.getMetadata).not.toHaveBeenCalled();
+		expect(issuerMock.generateCredentialOffer).not.toHaveBeenCalled();
+	});
+
+	it('returns 400 when a pre-authorized_code grant has no sub', async () => {
 		const response = await executeHandler({
 			credential_configuration_ids: ['pid_sd_jwt'],
 			grants: {
@@ -104,10 +117,10 @@ describe('credentialOfferUriHandler', () => {
 			},
 		});
 
-		expect(response.statusCode).toBe(501);
+		expect(response.statusCode).toBe(400);
 		expect(response.body).toEqual({
-			error: 'unsupported_grant_type',
-			error_description: 'Only authorization_code grant is supported',
+			error: 'invalid_request',
+			error_description: 'Missing or invalid parameters',
 		});
 	});
 
@@ -123,7 +136,7 @@ describe('credentialOfferUriHandler', () => {
 		expect(response.statusCode).toBe(501);
 		expect(response.body).toEqual({
 			error: 'unsupported_grant_type',
-			error_description: 'Only authorization_code grant is supported',
+			error_description: 'Only authorization_code and pre-authorized_code grants are supported',
 		});
 	});
 
@@ -140,6 +153,7 @@ describe('credentialOfferUriHandler', () => {
 			error: 'invalid_request',
 			error_description: 'Missing or invalid parameters',
 		});
+		expect(issuerMock.getMetadata).not.toHaveBeenCalled();
 	});
 
 	it('returns 400 invalid_request when authorization_code has extra fields', async () => {
@@ -191,6 +205,62 @@ describe('credentialOfferUriHandler', () => {
 			credentialConfigurationId: 'pid_sd_jwt',
 			grant_type: 'authorization_code',
 			issuerState: 'state-1',
+		});
+	});
+
+	it('creates a pre-authorized offer for the trusted API sub', async () => {
+		const response = await executeHandler({
+			credential_configuration_ids: ['pid_sd_jwt'],
+			grants: {
+				'urn:ietf:params:oauth:grant-type:pre-authorized_code': {
+					sub: 'api-subject-1',
+				},
+			},
+		});
+
+		expect(response.statusCode).toBe(201);
+		expect(issuerMock.generateCredentialOffer).toHaveBeenCalledWith({
+			credentialConfigurationId: 'pid_sd_jwt',
+			grant_type: 'urn:ietf:params:oauth:grant-type:pre-authorized_code',
+			accountId: 'api-subject-1',
+			scope: 'pid:sd_jwt_dc',
+		});
+	});
+
+	it('returns 500 when offer generation fails without exposing the internal error', async () => {
+		issuerMock.generateCredentialOffer.mockRejectedValueOnce(new Error('sensitive internal failure'));
+
+		const response = await executeHandler({
+			credential_configuration_ids: ['pid_sd_jwt'],
+			grants: {
+				authorization_code: { issuer_state: 'state-1' },
+			},
+		});
+
+		expect(response.statusCode).toBe(500);
+		expect(response.body).toEqual({
+			error: 'server_error',
+			error_description: 'An unexpected error occurred',
+		});
+		expect(JSON.stringify(response.body)).not.toContain('sensitive internal failure');
+	});
+
+	it('returns 500 when the generated offer has no credential_offer_uri', async () => {
+		issuerMock.generateCredentialOffer.mockResolvedValueOnce({
+			credentialOfferWithReference: new URL('https://issuer.example/offer'),
+		});
+
+		const response = await executeHandler({
+			credential_configuration_ids: ['pid_sd_jwt'],
+			grants: {
+				authorization_code: { issuer_state: 'state-1' },
+			},
+		});
+
+		expect(response.statusCode).toBe(500);
+		expect(response.body).toEqual({
+			error: 'server_error',
+			error_description: 'An unexpected error occurred',
 		});
 	});
 });
