@@ -200,6 +200,48 @@ describe('landingRouter pre-authorized offer flow', () => {
 		expect(res.redirect).not.toHaveBeenCalled();
 	});
 
+	it.each([
+		'/offer/:id',
+		'/initialize-pre-authorized-offer/:id',
+	])('renders an error for an unsupported credential configuration on %s', async (path) => {
+		const handler = await getRouteHandler(path);
+		const res = createResponse();
+		const unsupportedId = Buffer.from('unsupported').toString('base64url');
+
+		await handler({ params: { id: unsupportedId } }, res);
+
+		expect(res.render).toHaveBeenCalledWith('error', {
+			error: 'Invalid Credential Offer',
+			errorDescription: 'The requested credential is not available. Please return to the home page and choose another credential.',
+		});
+		expect(issuerMock.generateCredentialOffer).not.toHaveBeenCalled();
+		expect(res.redirect).not.toHaveBeenCalled();
+	});
+
+	it('renders an error when a pre-authorized credential configuration has no scope', async () => {
+		issuerMock.getMetadata.mockResolvedValue({
+			metadata: {
+				credential_configurations_supported: {
+					[credentialConfigurationId]: {
+						credential_metadata: {
+							display: [{ name: 'PID' }],
+						},
+					},
+				},
+			},
+		});
+		const handler = await getRouteHandler('/initialize-pre-authorized-offer/:id');
+		const res = createResponse();
+
+		await handler({ params: { id: encodedCredentialConfigurationId } }, res);
+
+		expect(res.render).toHaveBeenCalledWith('error', {
+			error: 'Credential Configuration Error',
+			errorDescription: 'This credential is temporarily unavailable. Please return to the home page and choose another credential.',
+		});
+		expect(res.redirect).not.toHaveBeenCalled();
+	});
+
 	it('stores callback result and redirects to the refreshable pre-authorized offer page', async () => {
 		vi.setSystemTime(new Date('2026-07-03T10:00:00.000Z'));
 		mockSuccessfulTokenFlow();

@@ -224,6 +224,13 @@ landingRouter.get('/offer/:id', async (req, res) => {
 	}
 	const { metadata } = await issuer.getMetadata();
 	const targetMetadata = metadata.credential_configurations_supported?.[credentialConfigurationId];
+	if (!targetMetadata) {
+		res.render('error', {
+			error: 'Invalid Credential Offer',
+			errorDescription: 'The requested credential is not available. Please return to the home page and choose another credential.',
+		});
+		return;
+	}
 	const credentialDisplay = getCredentialOfferDisplay(credentialConfigurationId, targetMetadata);
 
 	const { credentialOfferWithReference } = await issuer.generateCredentialOffer({ credentialConfigurationId: credentialConfigurationId });
@@ -261,7 +268,22 @@ landingRouter.get('/initialize-pre-authorized-offer/:id', async (req, res) => {
 	}
 	const { metadata } = await issuer.getMetadata();
 	const targetMetadata = metadata.credential_configurations_supported?.[credentialConfigurationId];
+	if (!targetMetadata) {
+		res.render('error', {
+			error: 'Invalid Credential Offer',
+			errorDescription: 'The requested credential is not available. Please return to the home page and choose another credential.',
+		});
+		return;
+	}
 	const scope = targetMetadata.scope;
+	if (!scope) {
+		logger.error(`Credential configuration ${credentialConfigurationId} does not define a scope`);
+		res.render('error', {
+			error: 'Credential Configuration Error',
+			errorDescription: 'This credential is temporarily unavailable. Please return to the home page and choose another credential.',
+		});
+		return;
+	}
 
 	const params = new URLSearchParams({
 		client_id: config.preAuthorizedCodeGrantClientId,
