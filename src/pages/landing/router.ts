@@ -215,7 +215,10 @@ landingRouter.get('/offer/:id', async (req, res) => {
 	const credentialOfferWithReferenceForWwwallet = getWwwalletCredentialOfferUrl(credentialOfferWithReference);
 	if (!credentialOfferWithReferenceForWwwallet) {
 		logger.error("No credential offer reference found");
-		res.render('error', { error: "invalid-credential-offer" });
+		res.render('error', {
+			error: 'Invalid Credential Offer',
+			errorDescription: 'The credential offer could not be generated. Please return to the home page and try again.',
+		});
 		return;
 	}
 	res.render('offer', {
@@ -255,7 +258,10 @@ landingRouter.get('/initialize-pre-authorized-offer/:id', async (req, res) => {
 landingRouter.get('/pre-authorized-offer/:id', async (req, res) => {
 	const offerResult = await offerResults.get(req.params.id);
 	if (!offerResult) {
-		res.render('error', { error: 'invalid-credential-offer' });
+		res.render('error', {
+			error: 'Invalid Credential Offer',
+			errorDescription: 'This credential offer has expired. Please authenticate again to generate a new offer.',
+		});
 		return;
 	}
 
@@ -298,19 +304,28 @@ landingRouter.get('/callback', async (req, res) => {
 	try {
 		parsedState = JSON.parse(String(state));
 	} catch {
-		res.render('error', { error: 'invalid-credential-offer' });
+		res.render('error', {
+			error: 'Invalid Credential Offer',
+			errorDescription: 'Unable to determine which credential to offer. Please return to the home page and try again.',
+		});
 		return;
 	}
 	const credentialConfigurationId = parsedState['credential_configuration_id'];
 	if (!credentialConfigurationId) {
-		res.render('error', { error: 'invalid-credential-offer' });
+		res.render('error', {
+			error: 'Invalid Credential Offer',
+			errorDescription: 'Unable to determine which credential to offer. Please return to the home page and try again.',
+		});
 		return;
 	}
 
 	const { metadata } = await issuer.getMetadata();
 	const targetMetadata = metadata.credential_configurations_supported?.[credentialConfigurationId];
 	if (!targetMetadata) {
-		res.render('error', { error: 'invalid-credential-offer' });
+		res.render('error', {
+			error: 'Invalid Credential Offer',
+			errorDescription: 'The requested credential is not available. Please return to the home page and choose another credential.',
+		});
 		return;
 	}
 	const scope = targetMetadata.scope;
@@ -320,7 +335,10 @@ landingRouter.get('/callback', async (req, res) => {
 	const credentialOfferWithReferenceForWwwallet = getWwwalletCredentialOfferUrl(credentialOfferWithReference);
 	if (!credentialOfferWithReferenceForWwwallet) {
 		logger.error("No credential offer reference found");
-		res.render('error', { error: "invalid-credential-offer" });
+		res.render('error', {
+			error: 'Invalid Credential Offer',
+			errorDescription: 'The credential offer could not be generated. Please return to the home page and try again.',
+		});
 		return;
 	}
 	const offerResultId = await storeOfferResult({

@@ -266,6 +266,43 @@ describe('landingRouter pre-authorized offer flow', () => {
 
 		await offerHandler({ params: { id: resultId } }, offerRes);
 
-		expect(offerRes.render).toHaveBeenCalledWith('error', { error: 'invalid-credential-offer' });
+		expect(offerRes.render).toHaveBeenCalledWith('error', {
+			error: 'Invalid Credential Offer',
+			errorDescription: 'This credential offer has expired or is no longer available. Please authenticate again to generate a new offer.',
+		});
+	});
+
+	it.each([
+		['malformed state', 'not-json'],
+		['missing credential configuration', JSON.stringify({})],
+	])('describes an invalid offer when callback state has %s', async (_scenario, state) => {
+		mockSuccessfulTokenFlow();
+		const callbackHandler = await getRouteHandler('/callback');
+		const res = createResponse();
+
+		await callbackHandler({ query: { code: 'authorization-code', state } }, res);
+
+		expect(res.render).toHaveBeenCalledWith('error', {
+			error: 'Invalid Credential Offer',
+			errorDescription: 'We could not determine which credential to offer. Please return to the home page and try again.',
+		});
+	});
+
+	it('describes an unavailable credential configuration returned in callback state', async () => {
+		mockSuccessfulTokenFlow();
+		const callbackHandler = await getRouteHandler('/callback');
+		const res = createResponse();
+
+		await callbackHandler({
+			query: {
+				code: 'authorization-code',
+				state: JSON.stringify({ credential_configuration_id: 'unavailable' }),
+			},
+		}, res);
+
+		expect(res.render).toHaveBeenCalledWith('error', {
+			error: 'Invalid Credential Offer',
+			errorDescription: 'The requested credential is not available. Please return to the home page and choose another credential.',
+		});
 	});
 });
