@@ -183,6 +183,23 @@ describe('landingRouter pre-authorized offer flow', () => {
 		});
 	});
 
+	it.each([
+		'/offer/:id',
+		'/initialize-pre-authorized-offer/:id',
+	])('renders an error for a malformed credential configuration ID on %s', async (path) => {
+		const handler = await getRouteHandler(path);
+		const res = createResponse();
+
+		await handler({ params: { id: 'a' } }, res);
+
+		expect(res.render).toHaveBeenCalledWith('error', {
+			error: 'Invalid Credential Offer',
+			errorDescription: 'The credential offer link is invalid. Please return to the home page and try again.',
+		});
+		expect(issuerMock.getMetadata).not.toHaveBeenCalled();
+		expect(res.redirect).not.toHaveBeenCalled();
+	});
+
 	it('stores callback result and redirects to the refreshable pre-authorized offer page', async () => {
 		vi.setSystemTime(new Date('2026-07-03T10:00:00.000Z'));
 		mockSuccessfulTokenFlow();
@@ -268,7 +285,7 @@ describe('landingRouter pre-authorized offer flow', () => {
 
 		expect(offerRes.render).toHaveBeenCalledWith('error', {
 			error: 'Invalid Credential Offer',
-			errorDescription: 'This credential offer has expired or is no longer available. Please authenticate again to generate a new offer.',
+			errorDescription: 'This credential offer has expired. Please authenticate again to generate a new offer.',
 		});
 	});
 
@@ -284,7 +301,7 @@ describe('landingRouter pre-authorized offer flow', () => {
 
 		expect(res.render).toHaveBeenCalledWith('error', {
 			error: 'Invalid Credential Offer',
-			errorDescription: 'We could not determine which credential to offer. Please return to the home page and try again.',
+			errorDescription: 'Unable to determine which credential to offer. Please return to the home page and try again.',
 		});
 	});
 

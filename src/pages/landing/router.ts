@@ -108,6 +108,14 @@ const getWwwalletCredentialOfferUrl = (credentialOfferWithReference: URL): URL |
 	return credentialOfferWithReferenceForWwwallet;
 };
 
+const decodeCredentialConfigurationId = (encodedId: string): string | null => {
+	try {
+		return decoder.decode(fromBase64Url(encodedId));
+	} catch {
+		return null;
+	}
+};
+
 async function verifyPayload(tokenRequestBody: { error?: unknown; id_token?: unknown }, res: Response): Promise<VerifiedPayload | null> {
 	const authErrorObj = {
 		error: 'Unable to authenticate',
@@ -206,7 +214,14 @@ landingRouter.get('/offer/:id', async (req, res) => {
 		res.redirect('/');
 		return;
 	}
-	const credentialConfigurationId = decoder.decode(fromBase64Url(credentialConfigurationIdB54U));
+	const credentialConfigurationId = decodeCredentialConfigurationId(credentialConfigurationIdB54U);
+	if (!credentialConfigurationId) {
+		res.render('error', {
+			error: 'Invalid Credential Offer',
+			errorDescription: 'The credential offer link is invalid. Please return to the home page and try again.',
+		});
+		return;
+	}
 	const { metadata } = await issuer.getMetadata();
 	const targetMetadata = metadata.credential_configurations_supported?.[credentialConfigurationId];
 	const credentialDisplay = getCredentialOfferDisplay(credentialConfigurationId, targetMetadata);
@@ -236,7 +251,14 @@ landingRouter.get('/initialize-pre-authorized-offer/:id', async (req, res) => {
 		res.redirect('/');
 		return;
 	}
-	const credentialConfigurationId = decoder.decode(fromBase64Url(credentialConfigurationIdB64U));
+	const credentialConfigurationId = decodeCredentialConfigurationId(credentialConfigurationIdB64U);
+	if (!credentialConfigurationId) {
+		res.render('error', {
+			error: 'Invalid Credential Offer',
+			errorDescription: 'The credential offer link is invalid. Please return to the home page and try again.',
+		});
+		return;
+	}
 	const { metadata } = await issuer.getMetadata();
 	const targetMetadata = metadata.credential_configurations_supported?.[credentialConfigurationId];
 	const scope = targetMetadata.scope;
