@@ -304,7 +304,7 @@ landingRouter.get('/pre-authorized-offer/:id', async (req, res) => {
 	if (!offerResult) {
 		res.render('error', {
 			error: 'Invalid Credential Offer',
-			errorDescription: 'This credential offer has expired. Please authenticate again to generate a new offer.',
+			errorDescription: 'This credential offer is not valid. Please authenticate again to generate a new offer.',
 		});
 		return;
 	}
