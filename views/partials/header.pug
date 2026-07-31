@@ -2,9 +2,9 @@ header.site-header
 	.container
 		.header-inner
 			a.brand(href="/")
-				img.brand-logo(src="/images/logo.png" alt=locale.app.title)
+				img.brand-logo(src=displayLogoUri alt=`${displayName} logo`)
 				.brand-texts
-					span.brand-title #{locale.app.title}
+					span.brand-title #{displayName}
 
 			nav.site-nav
 				a(href="/" class=currentPath === "/" ? "is-active" : "")= locale.nav.home

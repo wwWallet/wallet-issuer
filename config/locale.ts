@@ -1,10 +1,6 @@
 // src/locale.ts
 
 export const locale = {
-	app: {
-		title: "wwWallet Issuer",
-	},
-
 	nav: {
 		home: "Home",
 		about: "About",
