@@ -56,6 +56,18 @@ const baseSupportedCredentialConfigurations: CredentialConfigurationsSupported =
 					background_color: '#4CC3DD',
 					text_color: '#000000',
 					locale: 'en-US',
+					rendering: {
+						"svg_templates": [
+							{
+								"uri": new URL('/images/pid-svg-template.svg', config.vctRegistryUrl).toString(),
+								"properties": {
+									"orientation": "landscape",
+									"color_scheme": "light",
+									"contrast": "normal"
+								}
+							}
+						]
+					},
 				},
 			],
 			claims: [
@@ -68,6 +80,7 @@ const baseSupportedCredentialConfigurations: CredentialConfigurationsSupported =
 							locale: 'en-US',
 						},
 					],
+					svg_id: 'family_name'
 				},
 				{
 					path: ['eu.europa.ec.eudi.pid.1', 'given_name'],
@@ -78,6 +91,7 @@ const baseSupportedCredentialConfigurations: CredentialConfigurationsSupported =
 							locale: 'en-US',
 						},
 					],
+					svg_id: 'given_name'
 				},
 				{
 					path: ['eu.europa.ec.eudi.pid.1', 'birth_date'],
@@ -88,6 +102,7 @@ const baseSupportedCredentialConfigurations: CredentialConfigurationsSupported =
 							locale: 'en-US',
 						},
 					],
+					svg_id: 'birth_date'
 				},
 				{
 					path: ['eu.europa.ec.eudi.pid.1', 'place_of_birth'],
@@ -239,6 +254,7 @@ const baseSupportedCredentialConfigurations: CredentialConfigurationsSupported =
 							locale: 'en-US',
 						},
 					],
+					svg_id: 'picture'
 				},
 				{
 					path: ['eu.europa.ec.eudi.pid.1', 'family_name_birth'],
@@ -299,6 +315,7 @@ const baseSupportedCredentialConfigurations: CredentialConfigurationsSupported =
 							locale: 'en-US',
 						},
 					],
+					svg_id: 'expiry_date'
 				},
 				{
 					path: ['eu.europa.ec.eudi.pid.1', 'issuing_authority'],

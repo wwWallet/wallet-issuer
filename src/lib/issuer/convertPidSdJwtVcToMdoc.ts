@@ -2,13 +2,23 @@ import { logger } from "../../logger";
 
 type AnyObj = Record<string, any>;
 
-function base64ToBstr(dataUrl: string): Uint8Array | undefined {
-	const base64Data = dataUrl.split(',')[1];
-	if (!base64Data) {
-		logger.error("Invalid Data URL format. Returning underfined");
+function pictureDataUrlToBstr(value: unknown): Uint8Array | undefined {
+	if (typeof value !== 'string') return undefined;
+	const match = /^data:image\/(jpeg|jp2);base64,([a-z0-9+/]+={0,2})$/i.exec(value);
+	if (!match) {
+		logger.error("PID picture must be a Base64-encoded JPEG or JPEG 2000 data URL");
 		return undefined;
 	}
-	const buffer = Buffer.from(base64Data, 'base64');
+	const buffer = Buffer.from(match[2], 'base64');
+	if (buffer.length === 0) return undefined;
+	const isJpeg = buffer[0] === 0xff && buffer[1] === 0xd8 && buffer[2] === 0xff;
+	const isJp2 =
+		(buffer[0] === 0xff && buffer[1] === 0x4f && buffer[2] === 0xff && buffer[3] === 0x51) ||
+		(buffer.length >= 12 && buffer.subarray(0, 12).equals(Buffer.from([0x00, 0x00, 0x00, 0x0c, 0x6a, 0x50, 0x20, 0x20, 0x0d, 0x0a, 0x87, 0x0a])));
+	if ((match[1].toLowerCase() === 'jpeg' && !isJpeg) || (match[1].toLowerCase() === 'jp2' && !isJp2)) {
+		logger.error("PID picture contents do not match the declared image media type");
+		return undefined;
+	}
 	return new Uint8Array(buffer);
 }
 
@@ -54,7 +64,9 @@ export function convertPidSdJwtVcToMdoc(pid: AnyObj) {
 		resident_street: address?.street_address,
 		resident_house_number: address?.house_number,
 
-		portrait: base64ToBstr(pid?.picture),
+		// ARF PID mdoc uses a CBOR byte string; the data URL exists only in the
+		// source SD-JWT representation and must not be copied into the mdoc.
+		portrait: pictureDataUrlToBstr(pid?.picture),
 
 		email_address: pid?.email,
 		mobile_phone_number: pid?.phone_number,
