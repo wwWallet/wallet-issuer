@@ -55,18 +55,41 @@ high-privilege credential. The value becomes the access token subject (`sub`) an
 unchanged to the remote claims fetcher. It should be an opaque reference, not sensitive claims
 data.
 
-## Remote claims fetching
+## Claims sources
 
-Enable remote claims fetching explicitly:
+Claims sources can be selected per credential scope. Add
+`config/claimsSourceConfigurations.local.ts`; entries not listed there use
+`dataset/accounts.json`. This untracked file describes routing but does not contain endpoint
+values or secrets.
 
-```dotenv
-VC_CLAIMS_FETCHER_ENABLED=true
-VC_CLAIMS_FETCHER_URL=https://example.com/claims
-VC_CLAIMS_FETCHER_API_KEY=replace-with-a-random-secret
+```ts
+import { ClaimsSourceDefinition } from './claimsSourceConfigurations';
+
+export const claimsSourceConfigurations: Record<string, ClaimsSourceDefinition> = {
+  'pid': {
+    type: 'remote',
+    urlEnvironmentVariable: 'PID_CLAIMS_URL',
+    apiKeyEnvironmentVariable: 'PID_CLAIMS_API_KEY',
+  },
+  'ehic': {
+    type: 'remote',
+    urlEnvironmentVariable: 'EHIC_CLAIMS_URL',
+    apiKeyEnvironmentVariable: 'EHIC_CLAIMS_API_KEY',
+    apiKeyHeaderName: 'x-api-key', // optional; this is the default
+    fetchTimeoutMs: 8000,         // optional; defaults to 5000
+  },
+  'local-demo': { type: 'filesystem' },
+};
 ```
 
-When `VC_CLAIMS_FETCHER_ENABLED` is not `true`, the issuer uses filesystem claims even if
-`VC_CLAIMS_FETCHER_URL` and `VC_CLAIMS_FETCHER_API_KEY` are present.
+Set the values independently in the `.env` file:
+
+```dotenv
+PID_CLAIMS_URL=https://pid.example/claims
+PID_CLAIMS_API_KEY=pid-secret
+EHIC_CLAIMS_URL=https://ehic.example/claims
+EHIC_CLAIMS_API_KEY=ehic-secret
+```
 
 ## Local credential configuration overrides
 
