@@ -35,9 +35,8 @@ const baseSupportedCredentialConfigurations: CredentialConfigurationsSupported =
 		vct: 'urn:eudi:pid:1',
 		format: VerifiableCredentialFormat.DC_SDJWT,
 
-		// define proof_types_supported only to require attestations
 		proof_types_supported: {
-			attestation: {
+			jwt: {
 				key_attestations_required: {},
 			} as any, // force 'any' to avoid re-defining other elements of "proof_types_supported"
 		},

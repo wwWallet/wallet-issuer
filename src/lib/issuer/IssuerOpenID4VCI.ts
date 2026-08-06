@@ -275,11 +275,14 @@ export function createIssuerOpenID4VCI(url: string, credentialIssuerCreateOption
 					...credConf.proof_types_supported,
 					jwt: {
 						proof_signing_alg_values_supported: ['ES256'],
+						...(credConf.proof_types_supported?.jwt?.key_attestations_required !== undefined
+							? { key_attestations_required: credConf.proof_types_supported.jwt.key_attestations_required }
+							: {}),
 					},
 					attestation: credConf.proof_types_supported?.attestation?.key_attestations_required
 						? {
 								proof_signing_alg_values_supported: ['ES256'],
-								key_attestations_required: {},
+								key_attestations_required: credConf.proof_types_supported.attestation.key_attestations_required,
 							}
 						: undefined,
 				},
@@ -407,11 +410,17 @@ export function createIssuerOpenID4VCI(url: string, credentialIssuerCreateOption
 
 			// 'proofs' validation
 			if ('proofs' in issueCredentialOptions.request.data && issueCredentialOptions.request.data.proofs !== undefined) {
+				const proofType = 'attestation' in issueCredentialOptions.request.data.proofs ? 'attestation' : 'jwt';
+				const keyAttestationRequirements = metadata.credential_configurations_supported[credential_configuration_id]
+					?.proof_types_supported?.[proofType]?.key_attestations_required;
 				const proofsVerificationResult = await verifyProofsWrapper(issueCredentialOptions.request.data.proofs, {
 					clockTolerance: credentialIssuerCreateOptions.clockTolerance,
 					getAllTrustedPemCertificates: credentialIssuerCreateOptions.getAllTrustedPemCertificates,
 					requiredVerificationMechanisms: ['x5c'],
 					credentialIssuerIdentifier: url,
+					verifyNonce: secretManager.secretVerifier,
+					keyAttestationRequired: keyAttestationRequirements !== undefined,
+					keyAttestationRequirements,
 				});
 
 				if (!proofsVerificationResult.ok) {

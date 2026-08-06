@@ -3,14 +3,18 @@ import { err, ok, Result } from 'wallet-common';
 import { CredentialRequestError, CredentialRequestErrors } from '../CredentialRequestError';
 import { verifyProofJwt } from './verifyProofJwt';
 import { verifyProofKeyAttestation } from './verifyProofKeyAttestation';
+import { KeyAttestationRequirements } from './keyAttestationValidation';
 
 export type VerifyProofOptions = {
 	getAllTrustedPemCertificates: () => Promise<string[]>;
 	requiredVerificationMechanisms: ('x5c' | 'jwk' | 'kid')[];
 	expectedNonce?: string;
+	verifyNonce?: (nonce: string) => Promise<boolean>;
 	cliend_id?: string;
 	credentialIssuerIdentifier: string;
 	clockTolerance?: number;
+	keyAttestationRequirements?: KeyAttestationRequirements;
+	keyAttestationRequired?: boolean;
 };
 
 export async function verifyProofsWrapper(proofs: { jwt: string[] } | { attestation: string[] }, options: VerifyProofOptions): Promise<Result<{ attested_keys: JWK[] }, CredentialRequestError>> {
@@ -18,7 +22,7 @@ export async function verifyProofsWrapper(proofs: { jwt: string[] } | { attestat
 		if ('jwt' in proofs) {
 			return Promise.all(proofs.jwt.map(async (proof) => verifyProofJwt(proof, options)));
 		} else if ('attestation' in proofs) {
-			return Promise.all(proofs.attestation.map(async (proof) => verifyProofKeyAttestation(proof, options)));
+			return Promise.all(proofs.attestation.map(async (proof) => verifyProofKeyAttestation(proof, options, true)));
 		}
 		return undefined;
 	})();

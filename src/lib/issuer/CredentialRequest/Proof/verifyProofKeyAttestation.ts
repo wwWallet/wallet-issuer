@@ -5,11 +5,19 @@ import { err, ok, Result, fromBase64Url, verifyX5C } from 'wallet-common';
 import { CredentialRequestError, CredentialRequestErrors } from '../CredentialRequestError';
 import { importJWK, importX509, JWK, jwtVerify } from 'jose';
 import { VerifyProofOptions } from './verifyProof';
+import { validateKeyAttestationAssurance, validateKeyAttestationStatus } from './keyAttestationValidation';
 
-export async function verifyProofKeyAttestation(attestation: string, options: VerifyProofOptions): Promise<Result<{ attested_keys: JWK[] }, CredentialRequestError>> {
-	const dec = new TextDecoder();
-	const [attestationHeader, attestationPayload] = attestation.split('.');
-	const [parsedHeader, parsedPayload] = [JSON.parse(dec.decode(fromBase64Url(attestationHeader))), JSON.parse(dec.decode(fromBase64Url(attestationPayload)))] as [Record<string, unknown>, Record<string, unknown>];
+export async function verifyProofKeyAttestation(attestation: string, options: VerifyProofOptions, nonceRequired: boolean = false): Promise<Result<{ attested_keys: JWK[] }, CredentialRequestError>> {
+	let parsedHeader: Record<string, unknown>;
+	let parsedPayload: Record<string, unknown>;
+	try {
+		const dec = new TextDecoder();
+		const [attestationHeader, attestationPayload] = attestation.split('.');
+		[parsedHeader, parsedPayload] = [JSON.parse(dec.decode(fromBase64Url(attestationHeader))), JSON.parse(dec.decode(fromBase64Url(attestationPayload)))] as [Record<string, unknown>, Record<string, unknown>];
+	}
+	catch {
+		return err(CredentialRequestErrors.InvalidProof, 'Key attestation is not a valid JWT');
+	}
 
 	if (!parsedHeader.typ || typeof parsedHeader.typ !== 'string' || parsedHeader.typ !== 'key-attestation+jwt') {
 		return err(CredentialRequestErrors.InvalidProof, "Wrong key attestation header. Expected 'key-attestation+jwt'");
@@ -36,7 +44,11 @@ export async function verifyProofKeyAttestation(attestation: string, options: Ve
 			-----END CERTIFICATE-----`;
 			const publicKey = await importX509(leafCertPem, parsedHeader.alg);
 			try {
-				await jwtVerify(attestation, publicKey, { clockTolerance: options.clockTolerance });
+				const verified = await jwtVerify(attestation, publicKey, {
+					algorithms: [parsedHeader.alg],
+					clockTolerance: options.clockTolerance,
+				});
+				parsedPayload = verified.payload;
 			} catch {
 				return err(CredentialRequestErrors.InvalidProof, 'key attestation signature is invalid');
 			}
@@ -44,7 +56,19 @@ export async function verifyProofKeyAttestation(attestation: string, options: Ve
 			return err(CredentialRequestErrors.CredentialRequestDenied, "'x5c' header missing from key attestation");
 		}
 	}
+	if (nonceRequired) {
+		if (typeof parsedPayload.nonce !== 'string') {
+			return err(CredentialRequestErrors.InvalidNonce, 'Key attestation is missing a nonce');
+		}
+		if (options.verifyNonce && !await options.verifyNonce(parsedPayload.nonce)) {
+			return err(CredentialRequestErrors.InvalidNonce, 'Key attestation contains an invalid or expired nonce');
+		}
+	}
 
+	const assuranceError = validateKeyAttestationAssurance(parsedPayload, options.keyAttestationRequirements);
+	if (assuranceError) {
+		return err(CredentialRequestErrors.CredentialRequestDenied, assuranceError);
+	}
 	// verify validity of 'attested_keys' payload attribute
 	if (!('attested_keys' in parsedPayload) || !(parsedPayload.attested_keys instanceof Array) || parsedPayload.attested_keys.length === 0) {
 		return err(CredentialRequestErrors.InvalidProof, "Key attestation cannot have missing or empty 'attested_keys' payload attribute");
@@ -53,6 +77,14 @@ export async function verifyProofKeyAttestation(attestation: string, options: Ve
 		await Promise.all(parsedPayload.attested_keys.map((jwk: JWK) => importJWK(jwk, jwk.alg ?? 'ES256')));
 	} catch {
 		return err(CredentialRequestErrors.InvalidProof, 'Invalid Key attestation: At least one of the attested_keys is invalid');
+	}
+
+	const statusError = await validateKeyAttestationStatus(
+		parsedPayload,
+		await options.getAllTrustedPemCertificates(),
+	);
+	if (statusError) {
+		return err(CredentialRequestErrors.CredentialRequestDenied, statusError);
 	}
 
 	return ok({ attested_keys: parsedPayload.attested_keys as JWK[] });
