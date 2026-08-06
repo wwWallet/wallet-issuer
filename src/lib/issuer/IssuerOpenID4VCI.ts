@@ -73,7 +73,8 @@ type JWTVCIssuerMetadata = {
 
 export interface IssuerOpenID4VCI {
 	generateCredentialOffer(credentialOfferCreateOptions: {
-		credentialConfigurationId: string,
+		credentialConfigurationId?: string,
+		credentialConfigurationIds?: string[],
 		grant_type?: GrantType.AUTHORIZATION_CODE | GrantType.PRE_AUTHORIZED_CODE,
 		issuerState?: string,
 		accountId?: string,
@@ -170,12 +171,26 @@ export function createIssuerOpenID4VCI(url: string, credentialIssuerCreateOption
 
 	return {
 		generateCredentialOffer: async (credentialOfferCreateOptions: {
-			credentialConfigurationId: string,
+			credentialConfigurationId?: string,
+			credentialConfigurationIds?: string[],
 			grant_type?: GrantType.AUTHORIZATION_CODE | GrantType.PRE_AUTHORIZED_CODE;
 			issuerState?: string;
 			accountId?: string;
 			scope?: string;
 		}): Promise<CredentialOfferCreateSuccess> => {
+				const credentialConfigurationIds = [...new Set(credentialOfferCreateOptions.credentialConfigurationIds
+					?? (credentialOfferCreateOptions.credentialConfigurationId
+						? [credentialOfferCreateOptions.credentialConfigurationId]
+						: []))];
+				if (credentialConfigurationIds.length === 0) {
+					throw new Error('At least one credential configuration id is required');
+				}
+				const unsupportedCredentialConfigurationIds = credentialConfigurationIds.filter(
+					(id) => metadata.credential_configurations_supported[id] === undefined,
+				);
+				if (unsupportedCredentialConfigurationIds.length > 0) {
+					throw new Error(`Unsupported credential configuration id(s): ${unsupportedCredentialConfigurationIds.join(', ')}`);
+				}
 
 				let grants: Grants;
 				let tx_value;
@@ -193,7 +208,7 @@ export function createIssuerOpenID4VCI(url: string, credentialIssuerCreateOption
 
 					let preAuthorizedCodeStoreItem: PreAuthorizedCodeStoreItem = {
 						"pre-authorized_code": preAuthorizedCode,
-						credential_configuration_ids: [credentialOfferCreateOptions.credentialConfigurationId],
+						credential_configuration_ids: credentialConfigurationIds,
 						account_id: credentialOfferCreateOptions.accountId,
 						exp: Date.now() + config.preAuthorizedCodeGrantTtlMs,
 						scope: credentialOfferCreateOptions.scope
@@ -237,7 +252,7 @@ export function createIssuerOpenID4VCI(url: string, credentialIssuerCreateOption
 
 			const credentialOffer: CredentialOffer = {
 				credential_issuer: url,
-				credential_configuration_ids: [credentialOfferCreateOptions.credentialConfigurationId],
+				credential_configuration_ids: credentialConfigurationIds,
 				grants
 			};
 			const id = generateRandomIdentifier(18);
@@ -335,6 +350,10 @@ export function createIssuerOpenID4VCI(url: string, credentialIssuerCreateOption
 			}
 
 			const { sub, client_id, scope } = accessTokenValidationResult.value;
+			const credentialScope = metadata.credential_configurations_supported[credential_configuration_id]?.scope;
+			if (!credentialScope) {
+				return sendError(CredentialRequestErrors.InvalidRequest, `Credential configuration '${credential_configuration_id}' does not define a scope`);
+			}
 			if (!state) {
 				const stateId = generateRandomIdentifier(12);
 				const newState = {
@@ -367,7 +386,7 @@ export function createIssuerOpenID4VCI(url: string, credentialIssuerCreateOption
 			}
 
 			if ('transaction_id' in issueCredentialOptions.request.data && state !== null && state.attestedKeys !== null) {
-				const claimsFutureResult = account?.claims ? await account?.claims('issue', scope) : null;
+				const claimsFutureResult = account?.claims ? await account?.claims('issue', credentialScope) : null;
 				if (claimsFutureResult === null) {
 					return sendError(CredentialRequestErrors.CredentialRequestDenied, 'Could not retrieve claims for this account');
 				}
@@ -418,7 +437,7 @@ export function createIssuerOpenID4VCI(url: string, credentialIssuerCreateOption
 					return sendError(proofsVerificationResult.error, proofsVerificationResult.error_description);
 				}
 				const { attested_keys } = proofsVerificationResult.value;
-				const claimsFutureResult = account?.claims ? await account?.claims('issue', scope) : null;
+				const claimsFutureResult = account?.claims ? await account?.claims('issue', credentialScope) : null;
 				if (claimsFutureResult === null) {
 					return sendError(CredentialRequestErrors.CredentialRequestDenied, 'Could not retrieve claims for this account');
 				}

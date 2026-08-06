@@ -60,7 +60,8 @@ describe('credentialOfferUriHandler', () => {
 		issuerMock.getMetadata.mockResolvedValue({
 			metadata: {
 				credential_configurations_supported: {
-					pid_sd_jwt: { scope: 'pid:sd_jwt_dc' },
+					pid_sd_jwt: { format: 'dc+sd-jwt', scope: 'pid:sd_jwt_dc', vct: 'urn:eudi:pid:1' },
+					pid_mso_mdoc: { format: 'mso_mdoc', scope: 'pid:mso_mdoc', doctype: 'eu.europa.ec.eudi.pid.1' },
 				},
 			},
 		});
@@ -96,17 +97,20 @@ describe('credentialOfferUriHandler', () => {
 		});
 	});
 
-	it('returns 400 instead of silently ignoring additional credential configuration ids', async () => {
+	it('creates one authorization-code offer containing every credential configuration id', async () => {
 		const response = await executeHandler({
-			credential_configuration_ids: ['pid_sd_jwt', 'another_credential'],
+			credential_configuration_ids: ['pid_sd_jwt', 'pid_mso_mdoc'],
 			grants: {
 				authorization_code: { issuer_state: 'state-1' },
 			},
 		});
 
-		expect(response.statusCode).toBe(400);
-		expect(issuerMock.getMetadata).not.toHaveBeenCalled();
-		expect(issuerMock.generateCredentialOffer).not.toHaveBeenCalled();
+		expect(response.statusCode).toBe(201);
+		expect(issuerMock.generateCredentialOffer).toHaveBeenCalledWith({
+			credentialConfigurationIds: ['pid_sd_jwt', 'pid_mso_mdoc'],
+			grant_type: 'authorization_code',
+			issuerState: 'state-1',
+		});
 	});
 
 	it('returns 400 when a pre-authorized_code grant has no sub', async () => {
@@ -202,7 +206,7 @@ describe('credentialOfferUriHandler', () => {
 			credential_offer_uri: 'https://issuer.example/credential-offer/ref-123',
 		});
 		expect(issuerMock.generateCredentialOffer).toHaveBeenCalledWith({
-			credentialConfigurationId: 'pid_sd_jwt',
+			credentialConfigurationIds: ['pid_sd_jwt'],
 			grant_type: 'authorization_code',
 			issuerState: 'state-1',
 		});
@@ -220,10 +224,38 @@ describe('credentialOfferUriHandler', () => {
 
 		expect(response.statusCode).toBe(201);
 		expect(issuerMock.generateCredentialOffer).toHaveBeenCalledWith({
-			credentialConfigurationId: 'pid_sd_jwt',
+			credentialConfigurationIds: ['pid_sd_jwt'],
 			grant_type: 'urn:ietf:params:oauth:grant-type:pre-authorized_code',
 			accountId: 'api-subject-1',
 			scope: 'pid:sd_jwt_dc',
+		});
+	});
+
+	it('combines and de-duplicates scopes for a multi-configuration pre-authorized offer', async () => {
+		issuerMock.getMetadata.mockResolvedValueOnce({
+			metadata: {
+				credential_configurations_supported: {
+					pid_sd_jwt: { scope: 'pid' },
+					pid_mso_mdoc: { scope: 'pid' },
+				},
+			},
+		});
+
+		const response = await executeHandler({
+			credential_configuration_ids: ['pid_sd_jwt', 'pid_mso_mdoc'],
+			grants: {
+				'urn:ietf:params:oauth:grant-type:pre-authorized_code': {
+					sub: 'api-subject-1',
+				},
+			},
+		});
+
+		expect(response.statusCode).toBe(201);
+		expect(issuerMock.generateCredentialOffer).toHaveBeenCalledWith({
+			credentialConfigurationIds: ['pid_sd_jwt', 'pid_mso_mdoc'],
+			grant_type: 'urn:ietf:params:oauth:grant-type:pre-authorized_code',
+			accountId: 'api-subject-1',
+			scope: 'pid',
 		});
 	});
 

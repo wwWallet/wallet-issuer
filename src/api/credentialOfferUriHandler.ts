@@ -22,7 +22,7 @@ const sendCredentialOfferUriError = (
 };
 
 const credentialOfferUriRequestSchema = z.object({
-	credential_configuration_ids: z.array(z.string().min(1)).length(1),
+	credential_configuration_ids: z.array(z.string().min(1)).min(1),
 	grants: z.record(z.string(), z.unknown()),
 }).strict();
 
@@ -76,24 +76,26 @@ export const credentialOfferUriHandler = async (req: express.Request, res: expre
 			return sendCredentialOfferUriError(res, 400, 'invalid_request', INVALID_PARAMETERS_DESCRIPTION);
 		}
 
-		const credentialConfigurationId = parsedBody.credential_configuration_ids[0];
+		const credentialConfigurationIds = parsedBody.credential_configuration_ids;
 		let generatedOffer;
 		if (parsedGrant.grantType === AUTHORIZATION_CODE_GRANT) {
 			generatedOffer = await issuer.generateCredentialOffer({
-				credentialConfigurationId,
+				credentialConfigurationIds,
 				grant_type: GrantType.AUTHORIZATION_CODE,
 				issuerState: parsedGrant.value.issuer_state,
 			});
 		} else {
-			const scope = metadata.credential_configurations_supported?.[credentialConfigurationId]?.scope;
-			if (!scope) {
+			const scopes = credentialConfigurationIds.map(
+				(credentialConfigurationId) => metadata.credential_configurations_supported?.[credentialConfigurationId]?.scope,
+			);
+			if (scopes.some((scope) => !scope)) {
 				return sendCredentialOfferUriError(res, 400, 'invalid_request', INVALID_PARAMETERS_DESCRIPTION);
 			}
 			generatedOffer = await issuer.generateCredentialOffer({
-				credentialConfigurationId,
+				credentialConfigurationIds,
 				grant_type: GrantType.PRE_AUTHORIZED_CODE,
 				accountId: parsedGrant.value.sub,
-				scope,
+				scope: [...new Set(scopes)].join(' '),
 			});
 		}
 
