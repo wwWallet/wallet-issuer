@@ -6,6 +6,7 @@ import { DataStore } from '../../../store/DataStore';
 import { dataStoreClient } from '../../../store/dataStoreClient';
 import { PlainIssueCredentialRequestOptions } from '../IssuerOpenID4VCITypes';
 import { IntrospectionResponse } from '../types';
+import { config } from '../../../../config';
 
 const dpopReplayStore = new DataStore<string>(dataStoreClient, 'dpopReplay');
 
@@ -61,6 +62,7 @@ export async function validateAccessToken(credentialConfigurationId: string, met
 					htu: expectedDpopHtu,
 					method: 'POST',
 					replayStore: dpopReplayStore,
+					dpopNonceSecret: config.dpopNonceRequired ? createOpts.secret : undefined,
 				});
 				if (!response.ok) {
 					return response;

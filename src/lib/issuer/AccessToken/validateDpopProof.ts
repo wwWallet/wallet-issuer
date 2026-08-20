@@ -3,6 +3,7 @@ import { ok, err, Result } from 'wallet-common';
 import { CredentialRequestError, CredentialRequestErrors } from '../CredentialRequest/CredentialRequestError';
 import { calculateJwkThumbprint, EmbeddedJWK, errors as JoseErrors, JWK, jwtVerify } from 'jose';
 import type { UniqueStore } from '../../../store/DataStore';
+import { isValidDpopNonce } from './dpopNonce';
 
 const DPOP_SIGNING_ALG_VALUES = ['ES256'];
 const DPOP_PROOF_MAX_AGE_SECONDS = 300;
@@ -13,6 +14,7 @@ export type ValidateDpopProofOptions = {
 	accessToken: string;
 	clockTolerance?: number;
 	replayStore: UniqueStore<string, string>;
+	dpopNonceSecret?: string;
 };
 
 /**
@@ -87,6 +89,9 @@ export async function validateDpopProof(dpopJwt: string, cnf: { jkt?: string } |
 		}
 
 		const now = Math.floor(Date.now() / 1000);
+		if (options.dpopNonceSecret && (typeof payload.nonce !== 'string' || !isValidDpopNonce(payload.nonce, options.dpopNonceSecret, now))) {
+			return fail('DPoP proof nonce is missing or invalid');
+		}
 		if (payload.iat > now + clockTolerance) {
 			return fail('DPoP proof iat is in the future');
 		}

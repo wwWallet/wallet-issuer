@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { logger } from '../logger';
 import express from 'express';
-import { issuer } from './issuer';
+import { createDpopNonce, issuer } from './issuer';
 import { config } from '../../config';
 import fs from 'fs';
 import path from 'path';
@@ -40,7 +40,10 @@ vciRouter.post('/credential', express.json(), async (req, res) => {
 	} catch (e) {
 		console.error(e);
 		logger.error(JSON.stringify(e));
-		res.status(500).send({ error: 'internal_server_error' });
+		if (config.dpopNonceRequired && req.get('DPoP')) {
+			res.setHeader('DPoP-Nonce', createDpopNonce());
+		}
+		res.status(400).send({ error: 'invalid_or_missing_dpop_proof' });
 	}
 });
 
@@ -60,7 +63,10 @@ vciRouter.post('/deferred-credential', express.json(), async (req, res) => {
 	} catch (e) {
 		console.error(e);
 		logger.error(JSON.stringify(e));
-		res.status(500).send({ error: 'internal_server_error' });
+		if (config.dpopNonceRequired && req.get('DPoP')) {
+			res.setHeader('DPoP-Nonce', createDpopNonce());
+		}
+		res.status(400).send({ error: 'invalid_or_missing_dpop_proof' });
 	}
 });
 
