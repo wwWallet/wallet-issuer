@@ -15,10 +15,15 @@ import { FilesystemClaimsProvider } from '../claims/providers/FilesystemClaimsPr
 import { RemoteClaimsProvider } from '../claims/providers/RemoteClaimsProvider';
 import { DataStore } from '../store/DataStore';
 import { dataStoreClient } from '../store/dataStoreClient';
+import { createDpopNonce as createDpopNonceWithSecret } from '../lib/issuer/AccessToken/dpopNonce';
 
 const localTrustedCertsManager = LocalTrustedCertificatesManager();
 
 const secret = fs.readFileSync(path.join(__dirname, '../../../keys/secret.hs512.b64'), 'utf-8').toString().trim();
+
+export function createDpopNonce(now = Math.floor(Date.now() / 1000)): string {
+	return createDpopNonceWithSecret(secret, now);
+}
 
 const privateKeyJwk = JSON.parse(fs.readFileSync(path.join(__dirname, '../../../keys/private.enc.ecdh.jwk'), 'utf-8').toString().trim()) as JWK;
 

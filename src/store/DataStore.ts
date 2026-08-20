@@ -12,7 +12,11 @@ export interface ConsumableStore<TKey, TValue> extends GenericStore<TKey, TValue
 	consume(key: TKey): Promise<TValue | undefined>;
 }
 
-export class DataStore<TValue> implements ConsumableStore<string, TValue>, SetStore<TValue> {
+export interface UniqueStore<TKey, TValue> {
+	setIfAbsent(key: TKey, value: TValue, ttlMs: number): Promise<boolean>;
+}
+
+export class DataStore<TValue> implements ConsumableStore<string, TValue>, SetStore<TValue>, UniqueStore<string, TValue> {
 	constructor(
 		private readonly client: Valkey,
 		private readonly prefix: string,
@@ -58,6 +62,17 @@ export class DataStore<TValue> implements ConsumableStore<string, TValue>, SetSt
 	async consume(key: string): Promise<TValue | undefined> {
 		const value = await this.client.getdel(this.buildKey(key));
 		return value !== null ? this.deserializeValue(value) : undefined;
+	}
+
+	async setIfAbsent(key: string, value: TValue, ttlMs: number): Promise<boolean> {
+		const result = await this.client.set(
+			this.buildKey(key),
+			this.serializeValue(value),
+			"PX",
+			ttlMs,
+			"NX",
+		);
+		return result === "OK";
 	}
 
 	async addToSet(key: string, value: TValue): Promise<void> {
