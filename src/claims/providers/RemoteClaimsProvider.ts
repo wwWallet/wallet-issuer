@@ -86,18 +86,16 @@ export class RemoteClaimsProvider implements ClaimsProvider {
 
 		try {
 			const url = new URL(this.claimsFetcherUrl);
-			console.log('Fetching claims from remote service', { url: url.toString(), scope });
+			logger.debug('Fetching claims from remote service', { url: url.toString(), scope });
 			const headers = new Headers();
 			headers.set('content-type', 'application/json');
 			if (this.apiKey) {
 				headers.set(this.apiKeyHeaderName, this.apiKey);
 			}
-			console.log('Request headers', { headers: Object.fromEntries(headers.entries()) });
 			const requestData = {
 				sub: userId,
 				...(issuerState ? { issuer_state: issuerState } : {}),
 			};
-			console.log('Request body', requestData);
 			const response = await fetch(url, {
 				method: 'POST',
 				headers,
@@ -113,7 +111,6 @@ export class RemoteClaimsProvider implements ClaimsProvider {
 			}
 
 			const body = await response.json() as unknown;
-			console.log('Fetched claims response body', { body });
 			if (!this.isRecord(body) || !this.isRecord(body.data)) {
 				logger.warn('Remote claims fetch returned invalid payload', { scope });
 				return { kind: 'failure', reason: 'invalid_response_payload' };

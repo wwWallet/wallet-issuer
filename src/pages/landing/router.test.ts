@@ -327,7 +327,7 @@ describe('landingRouter pre-authorized offer flow', () => {
 
 		expect(offerRes.render).toHaveBeenCalledWith('error', {
 			error: 'Invalid Credential Offer',
-			errorDescription: 'This credential offer has expired. Please authenticate again to generate a new offer.',
+			errorDescription: 'This credential offer is not valid. Please authenticate again to generate a new offer.',
 		});
 	});
 

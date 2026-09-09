@@ -5,14 +5,13 @@ import fs from 'fs';
 import path from 'path';
 import { signer } from '../signer';
 import { disclosureFrameMap, supportedCredentialConfigurations } from '../../config/supportedCredentialConfigurations';
+import { claimsSourceConfigurations } from '../../config/claimsSourceConfigurations';
 import { pemToBase64 } from '../util/pemToBase64';
 import { JWK } from 'jose';
 import { vctDocumentProvider } from '../../config/vctDocumentProvider';
 import { createCredentialRequestHelper, CredentialRequestWithClaims } from '../lib/issuer/CredentialRequestHelper';
 import { createFindAccount } from '../claims/createFindAccount';
-import { ClaimsProvider } from '../claims/ClaimsProvider';
-import { FilesystemClaimsProvider } from '../claims/providers/FilesystemClaimsProvider';
-import { RemoteClaimsProvider } from '../claims/providers/RemoteClaimsProvider';
+import { ConfigurationClaimsProvider } from '../claims/providers/ConfigurationClaimsProvider';
 import { DataStore } from '../store/DataStore';
 import { dataStoreClient } from '../store/dataStoreClient';
 
@@ -29,9 +28,7 @@ const credentialRequestIndexStore = new DataStore<string>(dataStoreClient, "cred
 
 export const credentialRequestHelper = createCredentialRequestHelper(credentialRequestStore, credentialRequestIndexStore);
 
-const claimsProvider: ClaimsProvider = config.vcClaimsFetcherEnabled && config.vcClaimsFetcherUrl
-	? new RemoteClaimsProvider(config.vcClaimsFetcherUrl, { apiKey: config.vcClaimsFetcherApiKey })
-	: new FilesystemClaimsProvider();
+const claimsProvider = new ConfigurationClaimsProvider(claimsSourceConfigurations);
 
 claimsProvider.startBackgroundJobs?.(credentialRequestHelper);
 const configuredFindAccount = createFindAccount(claimsProvider);
