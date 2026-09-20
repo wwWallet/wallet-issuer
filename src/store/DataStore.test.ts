@@ -77,6 +77,25 @@ describe('DataStore', () => {
 		await expect(store.consume('missing')).resolves.toBeUndefined();
 	});
 
+	it('atomically stores an expiring value when the key is absent', async () => {
+		mockClient.set.mockResolvedValueOnce('OK');
+
+		await expect(store.setIfAbsent('abc', { x: 1 }, 5000)).resolves.toBe(true);
+		expect(mockClient.set).toHaveBeenCalledWith(
+			'test:abc',
+			JSON.stringify({ x: 1 }),
+			'PX',
+			5000,
+			'NX',
+		);
+	});
+
+	it('reports an existing value without replacing or extending it', async () => {
+		mockClient.set.mockResolvedValueOnce(null);
+
+		await expect(store.setIfAbsent('abc', { x: 1 }, 5000)).resolves.toBe(false);
+	});
+
 	it('adds a serialized member to a prefixed set', async () => {
 		await store.addToSet('abc', { x: 1 });
 
