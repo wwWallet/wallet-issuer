@@ -103,6 +103,13 @@ export async function retrieveCredentialOffer(
 	return offer ?? null;
 }
 
+export function defaultCryptographicBindingMethodsSupported(
+	format: VerifiableCredentialFormat,
+	configured?: string[],
+): string[] | undefined {
+	return configured ?? (format === VerifiableCredentialFormat.MSO_MDOC ? ['cose_key'] : ['jwk']);
+}
+
 /**
  *
  * @param url the Credential Issuer Identifier according to OpenID4VCI 1.0 spec
@@ -271,6 +278,10 @@ export function createIssuerOpenID4VCI(url: string, credentialIssuerCreateOption
 		registerSupportedCredentialConfiguration: (credentialConfigurationId, credConf, disclosureFrame) => {
 			metadata.credential_configurations_supported[credentialConfigurationId] = {
 				...credConf,
+				cryptographic_binding_methods_supported: defaultCryptographicBindingMethodsSupported(
+					credConf.format,
+					credConf.cryptographic_binding_methods_supported,
+				),
 				proof_types_supported: {
 					...credConf.proof_types_supported,
 					jwt: {

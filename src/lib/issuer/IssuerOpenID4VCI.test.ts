@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
-import { retrieveCredentialOffer } from './IssuerOpenID4VCI';
+import { defaultCryptographicBindingMethodsSupported, retrieveCredentialOffer } from './IssuerOpenID4VCI';
+import { VerifiableCredentialFormat } from 'wallet-common';
 
 describe('retrieveCredentialOffer', () => {
 	const offer = {
@@ -53,5 +54,19 @@ describe('retrieveCredentialOffer', () => {
 		expect(store.consume).toHaveBeenCalledTimes(2);
 		expect(store.consume).toHaveBeenNthCalledWith(1, 'single-use-offer');
 		expect(store.consume).toHaveBeenNthCalledWith(2, 'single-use-offer');
+	});
+});
+
+describe('defaultCryptographicBindingMethodsSupported', () => {
+	it('advertises JWK binding for JSON credentials', () => {
+		expect(defaultCryptographicBindingMethodsSupported(VerifiableCredentialFormat.DC_SDJWT)).toEqual(['jwk']);
+	});
+
+	it('advertises COSE key binding for mdoc credentials', () => {
+		expect(defaultCryptographicBindingMethodsSupported(VerifiableCredentialFormat.MSO_MDOC)).toEqual(['cose_key']);
+	});
+
+	it('preserves explicitly configured binding methods', () => {
+		expect(defaultCryptographicBindingMethodsSupported(VerifiableCredentialFormat.DC_SDJWT, ['did:example'])).toEqual(['did:example']);
 	});
 });
