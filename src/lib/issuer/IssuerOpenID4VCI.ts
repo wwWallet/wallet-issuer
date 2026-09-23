@@ -286,6 +286,7 @@ export function createIssuerOpenID4VCI(url: string, credentialIssuerCreateOption
 					...credConf.proof_types_supported,
 					jwt: {
 						proof_signing_alg_values_supported: ['ES256'],
+						key_attestations_required: {}
 					},
 					attestation: credConf.proof_types_supported?.attestation?.key_attestations_required
 						? {
