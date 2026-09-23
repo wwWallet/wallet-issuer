@@ -1,5 +1,5 @@
 import { err, ok, Result } from 'wallet-common';
-import { IssueCredentialRequestOptions, PlainIssueCredentialRequestOptions } from '../IssuerOpenID4VCITypes';
+import { IssueCredentialRequestOptions, PlainIssueCredentialRequestOptions, PlainIssueCredentialRequestOptionsData } from '../IssuerOpenID4VCITypes';
 import { CredentialRequestError, CredentialRequestErrors } from './CredentialRequestError';
 import { compactDecrypt, importJWK, JWK } from 'jose';
 import { OpenidCredentialIssuerMetadata } from 'wallet-common';
@@ -31,8 +31,18 @@ export async function handleEncryptedCredentialRequest(
 			if (metadata.credential_request_encryption && !metadata.credential_request_encryption.enc_values_supported.includes(protectedHeader.enc)) {
 				return err(CredentialRequestErrors.InvalidRequest, "'enc' value not supported");
 			}
-			const data = JSON.parse(decoder.decode(plaintext)) as PlainIssueCredentialRequestOptions;
-			return ok(data);
+			const decodedData = JSON.parse(decoder.decode(plaintext)) as PlainIssueCredentialRequestOptionsData;
+
+			const response: PlainIssueCredentialRequestOptions = {
+				request: {
+					headers: {
+						...requestOpts.request.headers,
+						'content-type': 'application/json'
+					},
+					data: decodedData,
+				}
+			};
+			return ok(response);
 		} catch {
 			return err(CredentialRequestErrors.InvalidRequest, 'Request decryption failed');
 		}

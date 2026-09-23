@@ -24,13 +24,13 @@ vciRouter.post('/nonce', async (_req, res) => {
 	}
 });
 
-vciRouter.post('/credential', express.json(), async (req, res) => {
+vciRouter.post('/credential', express.raw({ type: 'application/jwt' }), express.json(), async (req, res) => {
 	try {
 		logger.info('New credential request received');
 		const response = await issuer.issueCredential({
 			request: {
 				headers: req.headers as any,
-				data: req.body,
+				data: Buffer.isBuffer(req.body) ? req.body.toString('utf8') : req.body,
 			},
 		});
 
