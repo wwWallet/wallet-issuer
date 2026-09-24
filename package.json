@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "main": "src/app.js",
   "author": "wwWallet team",
-  "license": "MIT",
+  "license": "BSD-2-Clause",
   "scripts": {
     "gen:qrcode-module": "npx esbuild node_modules/qrcode/lib/index.js --bundle --minify --format=iife --outfile=public/js/qr.min.js --global-name=QRCode",
     "cmd:hs512-keygen": "ts-node cmd/hs512-keygen.ts",
