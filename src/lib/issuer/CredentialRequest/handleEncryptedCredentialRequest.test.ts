@@ -74,6 +74,12 @@ describe('handleEncryptedCredentialRequest', () => {
 		});
 	});
 
+	it('accepts a content type with parameters', async () => {
+		const request = { request: { headers: { 'content-type': 'application/json; charset=utf-8', authorization: 'Bearer token', dpop: 'proof' }, data: plainData } } as any;
+		const result = await handleEncryptedCredentialRequest(metadata, request, encryption);
+		expect(result).toEqual({ ok: true, value: request });
+	});
+
 	it('returns an invalid request when decryption fails', async () => {
 		vi.mocked(importJWK).mockResolvedValue({} as CryptoKey);
 		vi.mocked(compactDecrypt).mockRejectedValue(new Error('bad JWE'));

@@ -20,7 +20,8 @@ export async function handleEncryptedCredentialRequest(
 	},
 ): Promise<Result<PlainIssueCredentialRequestOptions, CredentialRequestError>> {
 	const decoder = new TextDecoder();
-	if (requestOpts.request.headers['content-type'] === 'application/jwt' && typeof requestOpts.request.data === 'string') {
+	const contentType = requestOpts.request.headers['content-type']?.split(';', 1)[0].trim().toLowerCase();
+	if (contentType === 'application/jwt' && typeof requestOpts.request.data === 'string') {
 		if (!credentialRequestEncryption) {
 			return err(CredentialRequestErrors.InvalidRequest, 'Endpoint does not support request encryption');
 		}
@@ -46,11 +47,11 @@ export async function handleEncryptedCredentialRequest(
 		} catch {
 			return err(CredentialRequestErrors.InvalidRequest, 'Request decryption failed');
 		}
-	} else if (requestOpts.request.headers['content-type'] === 'application/jwt' || typeof requestOpts.request.data === 'string') {
+	} else if (contentType === 'application/jwt' || typeof requestOpts.request.data === 'string') {
 		return err(CredentialRequestErrors.InvalidRequest, 'Invalid header or request body');
 	} else if (credentialRequestEncryption && credentialRequestEncryption.encryptionRequired) {
 		return err(CredentialRequestErrors.InvalidRequest, 'Request is expected to be encrypted');
-	} else if (requestOpts.request.headers['content-type'] === 'application/json' && typeof requestOpts.request.data === 'object') {
+	} else if (contentType === 'application/json' && typeof requestOpts.request.data === 'object') {
 		return ok(requestOpts as PlainIssueCredentialRequestOptions);
 	}
 
