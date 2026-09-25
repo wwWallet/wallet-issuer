@@ -1,5 +1,5 @@
 import { err, ok, Result } from 'wallet-common';
-import { IssueCredentialRequestOptions, PlainIssueCredentialRequestOptions } from '../IssuerOpenID4VCITypes';
+import { IssueCredentialRequestOptions, PlainIssueCredentialRequestOptions, PlainIssueCredentialRequestOptionsData } from '../IssuerOpenID4VCITypes';
 import { CredentialRequestError, CredentialRequestErrors } from './CredentialRequestError';
 import { compactDecrypt, importJWK, JWK } from 'jose';
 import { OpenidCredentialIssuerMetadata } from 'wallet-common';
@@ -20,7 +20,8 @@ export async function handleEncryptedCredentialRequest(
 	},
 ): Promise<Result<PlainIssueCredentialRequestOptions, CredentialRequestError>> {
 	const decoder = new TextDecoder();
-	if (requestOpts.request.headers['content-type'] === 'application/jwt' && typeof requestOpts.request.data === 'string') {
+	const contentType = requestOpts.request.headers['content-type']?.split(';', 1)[0].trim().toLowerCase();
+	if (contentType === 'application/jwt' && typeof requestOpts.request.data === 'string') {
 		if (!credentialRequestEncryption) {
 			return err(CredentialRequestErrors.InvalidRequest, 'Endpoint does not support request encryption');
 		}
@@ -31,16 +32,26 @@ export async function handleEncryptedCredentialRequest(
 			if (metadata.credential_request_encryption && !metadata.credential_request_encryption.enc_values_supported.includes(protectedHeader.enc)) {
 				return err(CredentialRequestErrors.InvalidRequest, "'enc' value not supported");
 			}
-			const data = JSON.parse(decoder.decode(plaintext)) as PlainIssueCredentialRequestOptions;
-			return ok(data);
+			const decodedData = JSON.parse(decoder.decode(plaintext)) as PlainIssueCredentialRequestOptionsData;
+
+			const response: PlainIssueCredentialRequestOptions = {
+				request: {
+					headers: {
+						...requestOpts.request.headers,
+						'content-type': 'application/json'
+					},
+					data: decodedData,
+				}
+			};
+			return ok(response);
 		} catch {
 			return err(CredentialRequestErrors.InvalidRequest, 'Request decryption failed');
 		}
-	} else if (requestOpts.request.headers['content-type'] === 'application/jwt' || typeof requestOpts.request.data === 'string') {
+	} else if (contentType === 'application/jwt' || typeof requestOpts.request.data === 'string') {
 		return err(CredentialRequestErrors.InvalidRequest, 'Invalid header or request body');
 	} else if (credentialRequestEncryption && credentialRequestEncryption.encryptionRequired) {
 		return err(CredentialRequestErrors.InvalidRequest, 'Request is expected to be encrypted');
-	} else if (requestOpts.request.headers['content-type'] === 'application/json' && typeof requestOpts.request.data === 'object') {
+	} else if (contentType === 'application/json' && typeof requestOpts.request.data === 'object') {
 		return ok(requestOpts as PlainIssueCredentialRequestOptions);
 	}
 
