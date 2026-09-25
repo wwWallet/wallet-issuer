@@ -96,7 +96,7 @@ EHIC_CLAIMS_API_KEY=ehic-secret
 You can add local-only credential configurations without changing tracked files.
 
 1. Create a local config `supportedCredentialConfigurations.local.ts` file like the following:
-```
+```ts
 import { OpenidCredentialIssuerMetadata, VerifiableCredentialFormat } from 'wallet-common';
 
 type CredentialConfigurationsSupported = OpenidCredentialIssuerMetadata['credential_configurations_supported'];
