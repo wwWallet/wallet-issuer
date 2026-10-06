@@ -54,6 +54,9 @@ export const issuer = createIssuerOpenID4VCI(config.issuerIdentifier, {
 			privateKeyJwk: privateKeyJwk,
 		},
 	},
+	credentialResponseEncryption: {
+		encryptionRequired: false,
+	},
 	display: config.display,
 	vctDocumentProvider: vctDocumentProvider,
 });
