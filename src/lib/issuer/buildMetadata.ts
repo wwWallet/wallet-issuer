@@ -16,8 +16,10 @@ export function buildMetadata(url: string, credentialIssuerCreateOptions: Creden
 					jwks: {
 						keys: [
 							{
-								kid: credentialIssuerCreateOptions.credentialRequestEncryption.keypair.publicKeyJwk.kid as string,
 								...credentialIssuerCreateOptions.credentialRequestEncryption.keypair.publicKeyJwk,
+								kid: credentialIssuerCreateOptions.credentialRequestEncryption.keypair.publicKeyJwk.kid,
+								alg: credentialIssuerCreateOptions.credentialRequestEncryption.keypair.alg,
+								use: 'enc'
 							}
 						]
 					},

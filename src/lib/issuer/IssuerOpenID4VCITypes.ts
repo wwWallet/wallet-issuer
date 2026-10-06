@@ -16,10 +16,12 @@ export type IssueCredentialRequestProofsExtension = {
 	proofs?: { jwt: string[] } | { attestation: string[] };
 };
 
+export type PlainIssueCredentialRequestOptionsData = ({ credential_identifier: string } & IssueCredentialRequestProofsExtension & IssueCredentialRequestBase) | ({ credential_configuration_id: string } & IssueCredentialRequestProofsExtension & IssueCredentialRequestBase) | ({ transaction_id: string } & IssueCredentialRequestBase);
+
 export type PlainIssueCredentialRequestOptions = {
 	request: {
 		headers: { 'content-type': 'application/json'; authorization: string; dpop: string };
-		data: ({ credential_identifier: string } & IssueCredentialRequestProofsExtension & IssueCredentialRequestBase) | ({ credential_configuration_id: string } & IssueCredentialRequestProofsExtension & IssueCredentialRequestBase) | ({ transaction_id: string } & IssueCredentialRequestBase);
+		data: PlainIssueCredentialRequestOptionsData;
 	};
 };
 
