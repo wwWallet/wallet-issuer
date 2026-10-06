@@ -80,6 +80,28 @@ describe('handleEncryptedCredentialRequest', () => {
 		expect(result).toEqual({ ok: true, value: request });
 	});
 
+	it('normalizes a decrypted deferred poll while preserving authorization and DPoP headers', async () => {
+		const poll = { transaction_id: 'pending-transaction' };
+		vi.mocked(importJWK).mockResolvedValue({} as CryptoKey);
+		vi.mocked(compactDecrypt).mockResolvedValue({
+			plaintext: new TextEncoder().encode(JSON.stringify(poll)),
+			protectedHeader: { enc: 'A256GCM' },
+		} as any);
+
+		const result = await handleEncryptedCredentialRequest(metadata, {
+			request: {
+				headers: { 'content-type': 'application/jwt', authorization: 'Bearer token', dpop: 'proof' },
+				data: 'encrypted-poll',
+			},
+		}, encryption);
+
+		expect(compactDecrypt).toHaveBeenCalledWith('encrypted-poll', expect.anything());
+		expect(result).toEqual({ ok: true, value: { request: {
+			headers: { 'content-type': 'application/json', authorization: 'Bearer token', dpop: 'proof' },
+			data: poll,
+		} } });
+	});
+
 	it('returns an invalid request when decryption fails', async () => {
 		vi.mocked(importJWK).mockResolvedValue({} as CryptoKey);
 		vi.mocked(compactDecrypt).mockRejectedValue(new Error('bad JWE'));

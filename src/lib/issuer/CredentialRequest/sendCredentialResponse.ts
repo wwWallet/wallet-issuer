@@ -29,7 +29,7 @@ export async function sendCredentialResponse(metadata: OpenidCredentialIssuerMet
 		return ok({
 			headers: { 'content-type': 'application/jwt' },
 			data: jwe,
-			status: 200,
+			status: responseOpts.status,
 		});
 	}
 	return ok(responseOpts);
