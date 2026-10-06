@@ -1,6 +1,6 @@
 {
   "name": "wallet-issuer",
-  "version": "1.0.0",
+  "version": "1.0.0-test",
   "main": "src/app.js",
   "author": "wwWallet team",
   "license": "BSD-2-Clause",
