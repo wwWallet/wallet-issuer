@@ -34,6 +34,7 @@ const baseSupportedCredentialConfigurations: CredentialConfigurationsSupported =
 		scope: 'pid:sd_jwt_dc',
 		vct: 'urn:eudi:pid:1',
 		format: VerifiableCredentialFormat.DC_SDJWT,
+		cryptographic_binding_methods_supported: ['jwk'],
 
 		// define proof_types_supported only to require attestations
 		proof_types_supported: {
@@ -399,16 +400,19 @@ const baseSupportedCredentialConfigurations: CredentialConfigurationsSupported =
 		scope: 'diploma',
 		vct: 'urn:credential:diploma',
 		format: VerifiableCredentialFormat.DC_SDJWT,
+		cryptographic_binding_methods_supported: ['jwk'],
 	},
 	'urn:eudi:ehic:1': {
 		scope: 'ehic',
 		vct: 'urn:eudi:ehic:1',
 		format: VerifiableCredentialFormat.DC_SDJWT,
+		cryptographic_binding_methods_supported: ['jwk'],
 	},
 	'urn:eu.europa.ec.eudi:por:1': {
 		scope: 'por:sd_jwt_vc',
 		vct: 'urn:eu.europa.ec.eudi:por:1',
 		format: VerifiableCredentialFormat.DC_SDJWT,
+		cryptographic_binding_methods_supported: ['jwk'],
 	},
 };
 
