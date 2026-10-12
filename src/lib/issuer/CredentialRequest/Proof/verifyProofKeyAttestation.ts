@@ -23,6 +23,10 @@ export async function verifyProofKeyAttestation(attestation: string, options: Ve
 		return err(CredentialRequestErrors.InvalidNonce, 'Wrong key attestation payload. Invalid nonce.');
 	}
 
+	if (!options.requiredVerificationMechanisms.includes('x5c')) {
+		return err(CredentialRequestErrors.InvalidProof, 'No supported key attestation trust verification configured');
+	}
+
 	// verify attestation signature using JWS 'x5c' header
 	if (options.requiredVerificationMechanisms.includes('x5c')) {
 		if (parsedHeader.x5c && parsedHeader.x5c instanceof Array && typeof parsedHeader.alg === 'string') {

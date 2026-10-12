@@ -1,7 +1,7 @@
 // OpenID4VCI F.1. jwt Proof Type
 // https://openid.net/specs/openid-4-verifiable-credential-issuance-1_0.html#name-jwt-proof-type
 
-import { importJWK, importX509, JWK, jwtVerify } from 'jose';
+import { calculateJwkThumbprint, importJWK, importX509, JWK, jwtVerify } from 'jose';
 import { err, ok, Result, fromBase64Url, verifyX5C } from 'wallet-common';
 import { CredentialRequestError, CredentialRequestErrors } from '../CredentialRequestError';
 import { verifyProofKeyAttestation } from './verifyProofKeyAttestation';
@@ -26,10 +26,37 @@ export async function verifyProofJwt(jwt: string, options: VerifyProofOptions): 
 		return err(CredentialRequestErrors.InvalidNonce, 'Wrong proof jwt payload. Invalid nonce.');
 	}
 
-	if (parsedHeader.jwk) {
-		const publicKey = await importJWK(parsedHeader.jwk, (parsedHeader.jwk as JWK).alg ?? parsedHeader.alg);
+	let keyAttestationKeys: JWK[] | undefined;
+	if ('key_attestation' in parsedHeader) {
+		if (typeof parsedHeader.key_attestation !== 'string' || !parsedHeader.key_attestation) {
+			return err(CredentialRequestErrors.InvalidProof, 'Invalid key_attestation header');
+		}
+		const attestation = await verifyProofKeyAttestation(parsedHeader.key_attestation, options);
+		if (!attestation.ok) {
+			return attestation;
+		}
+		keyAttestationKeys = attestation.value.attested_keys;
+		if ('kid' in parsedHeader || 'x5c' in parsedHeader) {
+			return err(CredentialRequestErrors.InvalidProof, 'Conflicting key identifiers in KA-bound proof');
+		}
+		if ('jwk' in parsedHeader) {
+			if (!parsedHeader.jwk) {
+				return err(CredentialRequestErrors.InvalidProof, 'Proof jwk does not match attested_keys[0]');
+			}
+			const headerJwkThumbprint = await calculateJwkThumbprint(parsedHeader.jwk as JWK);
+			const kaJwkThumbprint = await calculateJwkThumbprint(keyAttestationKeys[0]);
+			if (headerJwkThumbprint !== kaJwkThumbprint) {
+				return err(CredentialRequestErrors.InvalidProof, 'Proof jwk does not match attested_keys[0]');
+			}
+		}
+	}
+
+	// A verified KA selects the proof key even when the outer header omits jwk.
+	const proofJwk = keyAttestationKeys?.[0] ?? parsedHeader.jwk as JWK | undefined;
+	if (proofJwk) {
+		const publicKey = await importJWK(proofJwk, proofJwk.alg ?? parsedHeader.alg);
 		try {
-			const { payload, protectedHeader } = await jwtVerify(jwt, publicKey, { clockTolerance: options.clockTolerance });
+			const { payload, protectedHeader } = await jwtVerify(jwt, publicKey, { clockTolerance: options.clockTolerance, ...(keyAttestationKeys ? { audience: options.credentialIssuerIdentifier } : {}) });
 			if (protectedHeader.jwk) {
 				attestedKeys.push(protectedHeader.jwk);
 			}
@@ -65,9 +92,5 @@ export async function verifyProofJwt(jwt: string, options: VerifyProofOptions): 
 		}
 	}
 
-	if (parsedHeader.key_attestation && typeof parsedHeader.key_attestation === 'string') {
-		return verifyProofKeyAttestation(parsedHeader.key_attestation, options);
-	}
-
-	return ok({ attested_keys: attestedKeys });
+	return ok({ attested_keys: keyAttestationKeys ?? attestedKeys });
 }
