@@ -13,4 +13,3 @@ repos:
         name: Check .editorconfig rules
         args: ["-no-color"]
         types_or: [text]
-        exclude: ^(node_modules|assets|dist|build)/|^public/js/qr\.min\.js$
