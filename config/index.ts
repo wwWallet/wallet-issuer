@@ -62,6 +62,7 @@ export const config = {
 	],
 	wwwalletURL: process.env.WWWALLET_URL || 'http://localhost:3000',
 	clockTolerance: parseInt(process.env.CLOCK_TOLERANCE || '60', 10),
+	dpopNonceRequired: process.env.DPOP_NONCE_REQUIRED?.trim() === 'true',
 	deferredCredentialResponseInterval: parseInt(process.env.DEFERRED_CREDENTIAL_RESPONSE_INTERVAL_SEC || '60', 10),
 	siteConfig: {
 		name: process.env.SITE_NAME || 'wwWallet Issuer',
