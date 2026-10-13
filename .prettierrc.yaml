@@ -1,5 +1,3 @@
-useEditorConfig: true
-
 singleQuote: true
 trailingComma: 'all'
 printWidth: 1000
