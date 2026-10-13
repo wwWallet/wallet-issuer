@@ -19,8 +19,7 @@ export async function signCredentials(credentialConfigurationId: string, metadat
 				const signedCredentials = await Promise.all(attestedKeys.map((key) => createOpts.credentialSigner.signSdJwtVc({ ...claims, cnf: { jwk: key } }, {}, disclosureFrame ?? {})));
 				return ok(signedCredentials.map((c) => c.credential));
 			} else {
-				const { credential } = await createOpts.credentialSigner.signSdJwtVc({ ...claims }, {}, {});
-				return ok([credential]);
+				return err(CredentialRequestErrors.InvalidProof, 'Cannot issue a key-bound dc+sd-jwt credential without a verified holder key');
 			}
 		case VerifiableCredentialFormat.MSO_MDOC:
 			if (attestedKeys.length) {
