@@ -18,7 +18,9 @@
     "start": "node dist/src/app.js",
     "dev": "npx nodemon --config nodemon.json --exec \"npx tsc --outdir dist && yarn start-debug\"",
     "test": "vitest run",
-    "lint": "npx eslint ."
+    "lint": "npx eslint .",
+    "format": "prettier . --write",
+    "format:check": "prettier . --check"
   },
   "dependencies": {
     "@owf/mdoc": "^0.6.0",
