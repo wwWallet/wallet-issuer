@@ -1,7 +1,6 @@
 import eslint from '@eslint/js';
 import tseslint from 'typescript-eslint';
-import prettierConfig from 'eslint-config-prettier';
-import prettierPlugin from 'eslint-plugin-prettier';
+import prettierConfig from 'eslint-config-prettier/flat';
 
 export default tseslint.config(
 	eslint.configs.recommended,
@@ -9,18 +8,14 @@ export default tseslint.config(
 	...tseslint.configs.recommended,
 
 	{
-		plugins: {
-			prettier: prettierPlugin,
-		},
 		rules: {
-			'prettier/prettier': 'off',
 			'@typescript-eslint/no-explicit-any': 'off',
 			'no-undef': 'off',
 			'@typescript-eslint/no-unused-vars': 'off',
 		},
 	},
 	{
-		ignores: ['dist/', 'node_modules/', 'build/'],
+		ignores: ['dist/', 'node_modules/', 'build/', 'public/js/qr.min.js'],
 	},
 
 	prettierConfig,
