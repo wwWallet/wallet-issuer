@@ -6,39 +6,36 @@ const supportedCredentialScopesWhitelist = (process.env.SUPPORTED_CREDENTIAL_SCO
 	.split(',')
 	.map((scope) => scope.trim())
 	.filter(Boolean);
-const rawIssuerPath = process.env.ISSUER_PATH?.trim() || "";
-const issuerPath = rawIssuerPath
-	? `/${rawIssuerPath.replace(/^\/+|\/+$/g, "")}`
-	: "";
+const rawIssuerPath = process.env.ISSUER_PATH?.trim() || '';
+const issuerPath = rawIssuerPath ? `/${rawIssuerPath.replace(/^\/+|\/+$/g, '')}` : '';
 
 const preAuthorizedCodeApiEnabled = process.env.PRE_AUTHORIZED_CODE_API_ENABLED?.trim() === 'true';
 const preAuthorizedCodeTxCodeLength = Number(process.env.PRE_AUTHORIZED_CODE_GRANT_TX_CODE_LENGTH);
 const configuredCredentialOfferTtlMs = Number(process.env.CREDENTIAL_OFFER_TTL_MS);
-const credentialOfferTtlMs = Number.isSafeInteger(configuredCredentialOfferTtlMs) && configuredCredentialOfferTtlMs > 0
-	? configuredCredentialOfferTtlMs
-	: undefined;
+const credentialOfferTtlMs =
+	Number.isSafeInteger(configuredCredentialOfferTtlMs) && configuredCredentialOfferTtlMs > 0
+		? configuredCredentialOfferTtlMs
+		: undefined;
 
 function getClientIdAndSecret(): { clientId: string; clientSecret: string } {
-	const combined = process.env.PRE_AUTHORIZED_CODE_GRANT_CLIENT_ID_SECRET?.trim() || 'wallet_issuer:test';
+	const combined =
+		process.env.PRE_AUTHORIZED_CODE_GRANT_CLIENT_ID_SECRET?.trim() || 'wallet_issuer:test';
 	const [clientId, clientSecret] = combined.split(':');
 	return {
 		clientId: clientId?.trim() || 'wallet_issuer',
-		clientSecret: clientSecret?.trim() || 'test'
+		clientSecret: clientSecret?.trim() || 'test',
 	};
 }
 
-const dataStoreHost = process.env.DATA_STORE_HOST || "localhost";
+const dataStoreHost = process.env.DATA_STORE_HOST || 'localhost';
 const dataStorePort = Number(process.env.DATA_STORE_PORT) || 6379;
 const dataStorePassword = process.env.DATA_STORE_PASSWORD || null;
 
-if (process.env.NODE_ENV === "production" && !dataStorePassword) {
-	console.error(
-		`FATAL: Insecure data store found in production.`
-	);
+if (process.env.NODE_ENV === 'production' && !dataStorePassword) {
+	console.error(`FATAL: Insecure data store found in production.`);
 
 	process.exit(1);
 }
-
 
 export const config = {
 	url: url,
@@ -46,7 +43,9 @@ export const config = {
 	port: parseInt(process.env.SERVICE_PORT || '8003'),
 	authorizationServerUrl: String(process.env.AUTHORIZATION_SERVER_URL || 'default_url'),
 	credentialIssuanceBatchSize: parseInt(process.env.CREDENTIAL_ISSUANCE_BATCH_SIZE || '1', 10),
-	introspectionEndpointBasicAuthString: String(process.env.INTROSPECTION_ENDPOINT_BASIC_AUTH_HEADER || 'default_url'),
+	introspectionEndpointBasicAuthString: String(
+		process.env.INTROSPECTION_ENDPOINT_BASIC_AUTH_HEADER || 'default_url',
+	),
 	jweEncryptionAlg: String(process.env.JWE_ENCRYPTION_ALG || 'ECDH-ES'),
 	dataStoreHost: dataStoreHost,
 	dataStorePort: dataStorePort,
@@ -62,7 +61,10 @@ export const config = {
 	],
 	wwwalletURL: process.env.WWWALLET_URL || 'http://localhost:3000',
 	clockTolerance: parseInt(process.env.CLOCK_TOLERANCE || '60', 10),
-	deferredCredentialResponseInterval: parseInt(process.env.DEFERRED_CREDENTIAL_RESPONSE_INTERVAL_SEC || '60', 10),
+	deferredCredentialResponseInterval: parseInt(
+		process.env.DEFERRED_CREDENTIAL_RESPONSE_INTERVAL_SEC || '60',
+		10,
+	),
 	siteConfig: {
 		name: process.env.SITE_NAME || 'wwWallet Issuer',
 		short_name: process.env.SITE_SHORT_NAME || 'wwWallet Issuer',
@@ -77,8 +79,10 @@ export const config = {
 	revokeCredentialOffers: process.env.REVOKE_CREDENTIAL_OFFERS === 'true' || false,
 	preAuthorizedCodeApiEnabled,
 	preAuthorizedCodeApiBearerToken: process.env.PRE_AUTHORIZED_CODE_API_BEARER_TOKEN || '',
-	preAuthorizedCodeTxCodeLength: !Number.isNaN(preAuthorizedCodeTxCodeLength) ? preAuthorizedCodeTxCodeLength : 0,
+	preAuthorizedCodeTxCodeLength: !Number.isNaN(preAuthorizedCodeTxCodeLength)
+		? preAuthorizedCodeTxCodeLength
+		: 0,
 	preAuthorizedCodeGrantTtlMs: Number(process.env.PRE_AUTHORIZED_CODE_GRANT_TTL_MS) || 60000,
 	preAuthorizedCodeGrantClientId: getClientIdAndSecret().clientId,
-	preAuthorizedCodeGrantClientSecret: getClientIdAndSecret().clientSecret
+	preAuthorizedCodeGrantClientSecret: getClientIdAndSecret().clientSecret,
 };

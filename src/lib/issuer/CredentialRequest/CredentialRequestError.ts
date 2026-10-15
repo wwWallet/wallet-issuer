@@ -12,4 +12,5 @@ export const CredentialRequestErrors = {
 	InternalServerError: 'internal_server_error',
 } as const;
 
-export type CredentialRequestError = (typeof CredentialRequestErrors)[keyof typeof CredentialRequestErrors];
+export type CredentialRequestError =
+	(typeof CredentialRequestErrors)[keyof typeof CredentialRequestErrors];

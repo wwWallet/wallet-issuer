@@ -36,7 +36,8 @@ const loadRouterModule = async (
 		},
 	}));
 
-	const { createApiRouter, apiBearerAuth, preAuthorizedCodeApiBearerAuth } = await import('./router');
+	const { createApiRouter, apiBearerAuth, preAuthorizedCodeApiBearerAuth } =
+		await import('./router');
 
 	return { createApiRouter, apiBearerAuth, preAuthorizedCodeApiBearerAuth };
 };
@@ -50,7 +51,12 @@ const getRoute = (
 
 describe('API router configuration', () => {
 	it('does not register any API routes when both APIs are disabled', async () => {
-		const { createApiRouter } = await loadRouterModule(false, 'test-token', false, 'pre-auth-token');
+		const { createApiRouter } = await loadRouterModule(
+			false,
+			'test-token',
+			false,
+			'pre-auth-token',
+		);
 		const router = createApiRouter();
 
 		expect(getRoute(router, '/credential-offer-uri')).toBeUndefined();
@@ -65,8 +71,16 @@ describe('API router configuration', () => {
 
 		expect(credentialOfferRoute).toBeDefined();
 		expect(preAuthorizedCodeRoute).toBeDefined();
-		expect(credentialOfferRoute?.route?.stack?.some((layer: { name?: string }) => layer.name === 'apiBearerAuth')).toBe(true);
-		expect(preAuthorizedCodeRoute?.route?.stack?.some((layer: { name?: string }) => layer.name === 'preAuthorizedCodeApiBearerAuth')).toBe(true);
+		expect(
+			credentialOfferRoute?.route?.stack?.some(
+				(layer: { name?: string }) => layer.name === 'apiBearerAuth',
+			),
+		).toBe(true);
+		expect(
+			preAuthorizedCodeRoute?.route?.stack?.some(
+				(layer: { name?: string }) => layer.name === 'preAuthorizedCodeApiBearerAuth',
+			),
+		).toBe(true);
 	});
 
 	it('throws when credential-offer API is enabled without a bearer token', async () => {
@@ -83,8 +97,16 @@ describe('API router configuration', () => {
 });
 
 describe('/api authentication', () => {
-	const executeAuth = async (authorization?: string, type: 'credential-offer' | 'pre-authorized' = 'credential-offer') => {
-		const { apiBearerAuth, preAuthorizedCodeApiBearerAuth } = await loadRouterModule(true, 'test-token', true, 'pre-auth-token');
+	const executeAuth = async (
+		authorization?: string,
+		type: 'credential-offer' | 'pre-authorized' = 'credential-offer',
+	) => {
+		const { apiBearerAuth, preAuthorizedCodeApiBearerAuth } = await loadRouterModule(
+			true,
+			'test-token',
+			true,
+			'pre-auth-token',
+		);
 		const response: TestResponse & { headers: Record<string, string> } = {
 			statusCode: 0,
 			body: undefined,

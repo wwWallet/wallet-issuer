@@ -1,5 +1,15 @@
 {
-  "exclude": ["node_modules", "dist", "docs", "samples", ".vscode", ".devcontainer", "public", "cli/", "lib/"],
+  "exclude": [
+    "node_modules",
+    "dist",
+    "docs",
+    "samples",
+    ".vscode",
+    ".devcontainer",
+    "public",
+    "cli/",
+    "lib/"
+  ],
   "compilerOptions": {
     "experimentalDecorators": true,
     /* Visit https://aka.ms/tsconfig to read more about this file */

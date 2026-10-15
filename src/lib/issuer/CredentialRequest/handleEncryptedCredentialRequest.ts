@@ -1,5 +1,9 @@
 import { err, ok, Result } from 'wallet-common';
-import { IssueCredentialRequestOptions, PlainIssueCredentialRequestOptions, PlainIssueCredentialRequestOptionsData } from '../IssuerOpenID4VCITypes';
+import {
+	IssueCredentialRequestOptions,
+	PlainIssueCredentialRequestOptions,
+	PlainIssueCredentialRequestOptionsData,
+} from '../IssuerOpenID4VCITypes';
 import { CredentialRequestError, CredentialRequestErrors } from './CredentialRequestError';
 import { compactDecrypt, importJWK, JWK } from 'jose';
 import { OpenidCredentialIssuerMetadata } from 'wallet-common';
@@ -20,28 +24,45 @@ export async function handleEncryptedCredentialRequest(
 	},
 ): Promise<Result<PlainIssueCredentialRequestOptions, CredentialRequestError>> {
 	const decoder = new TextDecoder();
-	const contentType = requestOpts.request.headers['content-type']?.split(';', 1)[0].trim().toLowerCase();
+	const contentType = requestOpts.request.headers['content-type']
+		?.split(';', 1)[0]
+		.trim()
+		.toLowerCase();
 	if (contentType === 'application/jwt' && typeof requestOpts.request.data === 'string') {
 		if (!credentialRequestEncryption) {
-			return err(CredentialRequestErrors.InvalidRequest, 'Endpoint does not support request encryption');
+			return err(
+				CredentialRequestErrors.InvalidRequest,
+				'Endpoint does not support request encryption',
+			);
 		}
 
 		try {
-			const importedPrivateKey = await importJWK(credentialRequestEncryption.keypair.privateKeyJwk, credentialRequestEncryption.keypair.alg);
-			const { plaintext, protectedHeader } = await compactDecrypt(requestOpts.request.data, importedPrivateKey);
-			if (metadata.credential_request_encryption && !metadata.credential_request_encryption.enc_values_supported.includes(protectedHeader.enc)) {
+			const importedPrivateKey = await importJWK(
+				credentialRequestEncryption.keypair.privateKeyJwk,
+				credentialRequestEncryption.keypair.alg,
+			);
+			const { plaintext, protectedHeader } = await compactDecrypt(
+				requestOpts.request.data,
+				importedPrivateKey,
+			);
+			if (
+				metadata.credential_request_encryption &&
+				!metadata.credential_request_encryption.enc_values_supported.includes(protectedHeader.enc)
+			) {
 				return err(CredentialRequestErrors.InvalidRequest, "'enc' value not supported");
 			}
-			const decodedData = JSON.parse(decoder.decode(plaintext)) as PlainIssueCredentialRequestOptionsData;
+			const decodedData = JSON.parse(
+				decoder.decode(plaintext),
+			) as PlainIssueCredentialRequestOptionsData;
 
 			const response: PlainIssueCredentialRequestOptions = {
 				request: {
 					headers: {
 						...requestOpts.request.headers,
-						'content-type': 'application/json'
+						'content-type': 'application/json',
 					},
 					data: decodedData,
-				}
+				},
 			};
 			return ok(response);
 		} catch {

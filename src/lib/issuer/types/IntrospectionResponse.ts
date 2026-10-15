@@ -13,4 +13,4 @@ export type IntrospectionResponse = {
 	jti?: string;
 	issuer_state?: string;
 	cnf?: { jkt?: string };
-}
+};

@@ -228,7 +228,9 @@ describe('credentialOfferUriHandler', () => {
 	});
 
 	it('returns 500 when offer generation fails without exposing the internal error', async () => {
-		issuerMock.generateCredentialOffer.mockRejectedValueOnce(new Error('sensitive internal failure'));
+		issuerMock.generateCredentialOffer.mockRejectedValueOnce(
+			new Error('sensitive internal failure'),
+		);
 
 		const response = await executeHandler({
 			credential_configuration_ids: ['pid_sd_jwt'],
