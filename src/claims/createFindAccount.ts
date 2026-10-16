@@ -15,7 +15,9 @@ export const createFindAccount = (claimsProvider: ClaimsProvider): FindAccount =
 			accountId,
 			async claims(_use, scope, _claims) {
 				if (ctx.request.transactionId) {
-					const claimsFutures = await ctx.credentialRequestHelper.getCredentialRequests(ctx.request.transactionId);
+					const claimsFutures = await ctx.credentialRequestHelper.getCredentialRequests(
+						ctx.request.transactionId,
+					);
 					if (claimsFutures[0]) {
 						return ok(claimsFutures[0]);
 					}
@@ -28,15 +30,19 @@ export const createFindAccount = (claimsProvider: ClaimsProvider): FindAccount =
 					return err(CredentialRequestErrors.CredentialRequestDenied, claimsResult.reason);
 				}
 				if (claimsResult.kind === 'pending') {
-					return ok(await ctx.credentialRequestHelper.submitCredentialRequest({ sub: accountId, scope }));
+					return ok(
+						await ctx.credentialRequestHelper.submitCredentialRequest({ sub: accountId, scope }),
+					);
 				}
 
-				return ok(createClaimsFuture<{ sub: string;[key: string]: unknown }>(accountId, scope, {
-					claims: {
-						sub: accountId,
-						...claimsResult.claims,
-					},
-				}));
+				return ok(
+					createClaimsFuture<{ sub: string; [key: string]: unknown }>(accountId, scope, {
+						claims: {
+							sub: accountId,
+							...claimsResult.claims,
+						},
+					}),
+				);
 			},
 		};
 	};

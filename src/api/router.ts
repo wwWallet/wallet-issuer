@@ -24,7 +24,10 @@ export const apiBearerAuth = (
 
 	const suppliedToken = Buffer.from(match[1]);
 	const expectedToken = Buffer.from(config.credentialOfferApiBearerToken);
-	if (suppliedToken.length !== expectedToken.length || !timingSafeEqual(suppliedToken, expectedToken)) {
+	if (
+		suppliedToken.length !== expectedToken.length ||
+		!timingSafeEqual(suppliedToken, expectedToken)
+	) {
 		return unauthorized(res);
 	}
 
@@ -43,37 +46,38 @@ export const preAuthorizedCodeApiBearerAuth = (
 
 	const suppliedToken = Buffer.from(match[1]);
 	const expectedToken = Buffer.from(config.preAuthorizedCodeApiBearerToken);
-	if (suppliedToken.length !== expectedToken.length || !timingSafeEqual(suppliedToken, expectedToken)) {
+	if (
+		suppliedToken.length !== expectedToken.length ||
+		!timingSafeEqual(suppliedToken, expectedToken)
+	) {
 		return unauthorized(res);
 	}
 
 	return next();
 };
 
-
 export const createApiRouter = () => {
 	const router = Router();
 
 	if (config.credentialOfferApiEnabled) {
 		if (!config.credentialOfferApiBearerToken) {
-			throw new Error('CREDENTIAL_OFFER_API_BEARER_TOKEN is required when CREDENTIAL_OFFER_API_ENABLED=true');
+			throw new Error(
+				'CREDENTIAL_OFFER_API_BEARER_TOKEN is required when CREDENTIAL_OFFER_API_ENABLED=true',
+			);
 		}
-		router.post(
-			'/credential-offer-uri',
-			express.json(),
-			apiBearerAuth,
-			credentialOfferUriHandler
-		);
+		router.post('/credential-offer-uri', express.json(), apiBearerAuth, credentialOfferUriHandler);
 	}
 	if (config.preAuthorizedCodeApiEnabled) {
 		if (!config.preAuthorizedCodeApiBearerToken) {
-			throw new Error('PRE_AUTHORIZED_CODE_API_BEARER_TOKEN is required when PRE_AUTHORIZED_CODE_API_ENABLED=true');
+			throw new Error(
+				'PRE_AUTHORIZED_CODE_API_BEARER_TOKEN is required when PRE_AUTHORIZED_CODE_API_ENABLED=true',
+			);
 		}
 		router.post(
 			'/pre-authorized-code',
 			express.json(),
 			preAuthorizedCodeApiBearerAuth,
-			preAuthorizedCodeHandler
+			preAuthorizedCodeHandler,
 		);
 	}
 

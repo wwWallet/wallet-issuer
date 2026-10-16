@@ -1,6 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import { GenericStore } from 'wallet-common';
-import { createCredentialRequestHelper, CredentialRequestWithClaims } from './CredentialRequestHelper';
+import {
+	createCredentialRequestHelper,
+	CredentialRequestWithClaims,
+} from './CredentialRequestHelper';
 import { SetStore } from '../../store/DataStore';
 
 class NoGetAllStore<TValue> implements GenericStore<string, TValue> {
@@ -47,7 +50,10 @@ describe('CredentialRequestHelper', () => {
 		const transactionIdIndexStore = new TestSetStore<string>();
 		const helper = createCredentialRequestHelper(requestStore, transactionIdIndexStore);
 
-		const pendingRequest = await helper.submitCredentialRequest({ sub: 'alice', scope: 'por:sd_jwt_vc' });
+		const pendingRequest = await helper.submitCredentialRequest({
+			sub: 'alice',
+			scope: 'por:sd_jwt_vc',
+		});
 		const requests = await helper.getCredentialRequests();
 
 		expect(requests).toEqual([pendingRequest]);
@@ -57,9 +63,15 @@ describe('CredentialRequestHelper', () => {
 		const requestStore = new NoGetAllStore<CredentialRequestWithClaims>();
 		const transactionIdIndexStore = new TestSetStore<string>();
 		const helper = createCredentialRequestHelper(requestStore, transactionIdIndexStore);
-		const pendingRequest = await helper.submitCredentialRequest({ sub: 'alice', scope: 'por:sd_jwt_vc' });
+		const pendingRequest = await helper.submitCredentialRequest({
+			sub: 'alice',
+			scope: 'por:sd_jwt_vc',
+		});
 
-		await helper.fulfilCredentialRequest(pendingRequest.transaction_id, { sub: 'alice', family_name: 'Doe' });
+		await helper.fulfilCredentialRequest(pendingRequest.transaction_id, {
+			sub: 'alice',
+			family_name: 'Doe',
+		});
 
 		await expect(helper.getCredentialRequests(pendingRequest.transaction_id)).resolves.toEqual([
 			{

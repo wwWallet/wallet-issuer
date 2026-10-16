@@ -1,7 +1,8 @@
 import { OpenidCredentialIssuerMetadata, VerifiableCredentialFormat } from 'wallet-common';
 import { config } from './index';
 
-type CredentialConfigurationsSupported = OpenidCredentialIssuerMetadata['credential_configurations_supported'];
+type CredentialConfigurationsSupported =
+	OpenidCredentialIssuerMetadata['credential_configurations_supported'];
 type DisclosureFrameMap = Record<string, Record<string, unknown>>;
 type LocalSupportedCredentialConfigurations = {
 	supportedCredentialConfigurations?: CredentialConfigurationsSupported;
@@ -499,7 +500,6 @@ const filterSupportedCredentialConfigurationsByScopeWhitelist = (
 	credentialConfigurations: CredentialConfigurationsSupported,
 	whitelistedScopes: ReadonlySet<string>,
 ): CredentialConfigurationsSupported => {
-
 	return Object.fromEntries(
 		Object.entries(credentialConfigurations).filter(([, configuration]) => {
 			return typeof configuration.scope === 'string' && whitelistedScopes.has(configuration.scope);
@@ -531,10 +531,11 @@ const allDisclosureFrameMap: DisclosureFrameMap = {
 
 const supportedScopesWhitelist = new Set(config.supportedCredentialScopesWhitelist);
 
-export const supportedCredentialConfigurations = filterSupportedCredentialConfigurationsByScopeWhitelist(
-	allSupportedCredentialConfigurations,
-	supportedScopesWhitelist,
-);
+export const supportedCredentialConfigurations =
+	filterSupportedCredentialConfigurationsByScopeWhitelist(
+		allSupportedCredentialConfigurations,
+		supportedScopesWhitelist,
+	);
 
 export const disclosureFrameMap = filterDisclosureFrameMapBySupportedCredentialConfigurations(
 	allDisclosureFrameMap,
