@@ -60,7 +60,7 @@
 }
 
 .site-nav a.is-active::after {
-	content: "";
+	content: '';
 	position: absolute;
 	left: 0;
 	right: 0;

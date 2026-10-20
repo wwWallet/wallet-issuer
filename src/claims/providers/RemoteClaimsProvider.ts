@@ -31,22 +31,31 @@ export class RemoteClaimsProvider implements ClaimsProvider {
 		this.supportedScopesSet = new Set(supportedScopes);
 		this.apiKey = (options.apiKey ?? '').trim();
 		this.apiKeyHeaderName = (options.apiKeyHeaderName ?? 'x-api-key').trim() || 'x-api-key';
-		this.fetchTimeoutMs = options.fetchTimeoutMs && options.fetchTimeoutMs > 0
-			? options.fetchTimeoutMs
-			: DEFAULT_FETCH_TIMEOUT_MS;
+		this.fetchTimeoutMs =
+			options.fetchTimeoutMs && options.fetchTimeoutMs > 0
+				? options.fetchTimeoutMs
+				: DEFAULT_FETCH_TIMEOUT_MS;
 	}
 
 	async resolveAccountId(sub: string): Promise<string | null> {
 		return sub;
 	}
 
-	async resolveClaims(accountId: string, scope: string, context?: ClaimsResolutionContext): Promise<ClaimsProviderResult> {
+	async resolveClaims(
+		accountId: string,
+		scope: string,
+		context?: ClaimsResolutionContext,
+	): Promise<ClaimsProviderResult> {
 		const supportedScope = this.resolveSupportedScope(scope);
 		if (!supportedScope) {
 			return { kind: 'denied', reason: 'Not supported scope' };
 		}
 
-		const fetchedClaimsResult = await this.getClaimsByUserId(accountId, supportedScope, context?.issuerState);
+		const fetchedClaimsResult = await this.getClaimsByUserId(
+			accountId,
+			supportedScope,
+			context?.issuerState,
+		);
 		if (fetchedClaimsResult.kind === 'failure') {
 			return { kind: 'denied', reason: `Could not fetch claims: ${fetchedClaimsResult.reason}` };
 		}
@@ -72,7 +81,9 @@ export class RemoteClaimsProvider implements ClaimsProvider {
 	}
 
 	private resolveVct(scope: string): string | undefined {
-		const configurationEntry = Object.entries(supportedCredentialConfigurations).find(([, configuration]) => configuration.scope === scope);
+		const configurationEntry = Object.entries(supportedCredentialConfigurations).find(
+			([, configuration]) => configuration.scope === scope,
+		);
 		const configuration = configurationEntry?.[1];
 		if (!configuration || !('vct' in configuration)) {
 			return undefined;
@@ -80,7 +91,11 @@ export class RemoteClaimsProvider implements ClaimsProvider {
 		return configuration.vct;
 	}
 
-	private async getClaimsByUserId(userId: string, scope: string, issuerState?: string): Promise<ClaimsFetchResult> {
+	private async getClaimsByUserId(
+		userId: string,
+		scope: string,
+		issuerState?: string,
+	): Promise<ClaimsFetchResult> {
 		const controller = new AbortController();
 		const timeout = setTimeout(() => controller.abort(), this.fetchTimeoutMs);
 
@@ -110,7 +125,7 @@ export class RemoteClaimsProvider implements ClaimsProvider {
 				return { kind: 'failure', reason };
 			}
 
-			const body = await response.json() as unknown;
+			const body = (await response.json()) as unknown;
 			if (!this.isRecord(body) || !this.isRecord(body.data)) {
 				logger.warn('Remote claims fetch returned invalid payload', { scope });
 				return { kind: 'failure', reason: 'invalid_response_payload' };

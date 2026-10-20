@@ -39,7 +39,11 @@ describe('handleEncryptedCredentialRequest', () => {
 	it('preserves the request shape for plain JSON requests', async () => {
 		const request = {
 			request: {
-				headers: { 'content-type': 'application/json', authorization: 'Bearer token', dpop: 'proof' },
+				headers: {
+					'content-type': 'application/json',
+					authorization: 'Bearer token',
+					dpop: 'proof',
+				},
 				data: plainData,
 			},
 		} as any;
@@ -56,18 +60,30 @@ describe('handleEncryptedCredentialRequest', () => {
 			protectedHeader: { enc: 'A256GCM' },
 		} as any);
 
-		const result = await handleEncryptedCredentialRequest(metadata, {
-			request: {
-				headers: { 'content-type': 'application/jwt', authorization: 'Bearer token', dpop: 'proof' },
-				data: 'encrypted-request',
+		const result = await handleEncryptedCredentialRequest(
+			metadata,
+			{
+				request: {
+					headers: {
+						'content-type': 'application/jwt',
+						authorization: 'Bearer token',
+						dpop: 'proof',
+					},
+					data: 'encrypted-request',
+				},
 			},
-		}, encryption);
+			encryption,
+		);
 
 		expect(result).toEqual({
 			ok: true,
 			value: {
 				request: {
-					headers: { 'content-type': 'application/json', authorization: 'Bearer token', dpop: 'proof' },
+					headers: {
+						'content-type': 'application/json',
+						authorization: 'Bearer token',
+						dpop: 'proof',
+					},
 					data: plainData,
 				},
 			},
@@ -75,7 +91,16 @@ describe('handleEncryptedCredentialRequest', () => {
 	});
 
 	it('accepts a content type with parameters', async () => {
-		const request = { request: { headers: { 'content-type': 'application/json; charset=utf-8', authorization: 'Bearer token', dpop: 'proof' }, data: plainData } } as any;
+		const request = {
+			request: {
+				headers: {
+					'content-type': 'application/json; charset=utf-8',
+					authorization: 'Bearer token',
+					dpop: 'proof',
+				},
+				data: plainData,
+			},
+		} as any;
 		const result = await handleEncryptedCredentialRequest(metadata, request, encryption);
 		expect(result).toEqual({ ok: true, value: request });
 	});
@@ -88,30 +113,55 @@ describe('handleEncryptedCredentialRequest', () => {
 			protectedHeader: { enc: 'A256GCM' },
 		} as any);
 
-		const result = await handleEncryptedCredentialRequest(metadata, {
-			request: {
-				headers: { 'content-type': 'application/jwt', authorization: 'Bearer token', dpop: 'proof' },
-				data: 'encrypted-poll',
+		const result = await handleEncryptedCredentialRequest(
+			metadata,
+			{
+				request: {
+					headers: {
+						'content-type': 'application/jwt',
+						authorization: 'Bearer token',
+						dpop: 'proof',
+					},
+					data: 'encrypted-poll',
+				},
 			},
-		}, encryption);
+			encryption,
+		);
 
 		expect(compactDecrypt).toHaveBeenCalledWith('encrypted-poll', expect.anything());
-		expect(result).toEqual({ ok: true, value: { request: {
-			headers: { 'content-type': 'application/json', authorization: 'Bearer token', dpop: 'proof' },
-			data: poll,
-		} } });
+		expect(result).toEqual({
+			ok: true,
+			value: {
+				request: {
+					headers: {
+						'content-type': 'application/json',
+						authorization: 'Bearer token',
+						dpop: 'proof',
+					},
+					data: poll,
+				},
+			},
+		});
 	});
 
 	it('returns an invalid request when decryption fails', async () => {
 		vi.mocked(importJWK).mockResolvedValue({} as CryptoKey);
 		vi.mocked(compactDecrypt).mockRejectedValue(new Error('bad JWE'));
 
-		const result = await handleEncryptedCredentialRequest(metadata, {
-			request: {
-				headers: { 'content-type': 'application/jwt', authorization: 'Bearer token', dpop: 'proof' },
-				data: 'invalid-request',
+		const result = await handleEncryptedCredentialRequest(
+			metadata,
+			{
+				request: {
+					headers: {
+						'content-type': 'application/jwt',
+						authorization: 'Bearer token',
+						dpop: 'proof',
+					},
+					data: 'invalid-request',
+				},
 			},
-		}, encryption);
+			encryption,
+		);
 
 		expect(result).toMatchObject({ ok: false, error: 'invalid_credential_request' });
 	});

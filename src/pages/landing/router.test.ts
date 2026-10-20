@@ -34,7 +34,8 @@ type RouteLayer = {
 };
 
 const credentialConfigurationId = 'pid_sd_jwt';
-const encodedCredentialConfigurationId = Buffer.from(credentialConfigurationId).toString('base64url');
+const encodedCredentialConfigurationId =
+	Buffer.from(credentialConfigurationId).toString('base64url');
 
 const metadata = {
 	credential_configurations_supported: {
@@ -99,18 +100,22 @@ const mockSuccessfulTokenFlow = () => {
 		keys: [{ kid: 'kid-1', alg: 'RS256', kty: 'RSA' }],
 	};
 
-	vi.stubGlobal('fetch', vi.fn()
-		.mockResolvedValueOnce({
-			json: vi.fn().mockResolvedValue(tokenResponse),
-		})
-		.mockResolvedValueOnce({
-			ok: true,
-			json: vi.fn().mockResolvedValue(discoveryResponse),
-		})
-		.mockResolvedValueOnce({
-			ok: true,
-			json: vi.fn().mockResolvedValue(jwksResponse),
-		}));
+	vi.stubGlobal(
+		'fetch',
+		vi
+			.fn()
+			.mockResolvedValueOnce({
+				json: vi.fn().mockResolvedValue(tokenResponse),
+			})
+			.mockResolvedValueOnce({
+				ok: true,
+				json: vi.fn().mockResolvedValue(discoveryResponse),
+			})
+			.mockResolvedValueOnce({
+				ok: true,
+				json: vi.fn().mockResolvedValue(jwksResponse),
+			}),
+	);
 
 	joseMock.importJWK.mockResolvedValue('public-key');
 	joseMock.jwtVerify.mockResolvedValue({ payload: { sub: 'account-1' } });
@@ -121,21 +126,21 @@ describe('landingRouter pre-authorized offer flow', () => {
 		vi.clearAllMocks();
 		storedOfferResults.clear();
 		vi.useRealTimers();
-		dataStoreClientMock.set.mockImplementation(async (
-			key: string,
-			value: string,
-			_mode?: string,
-			ttlMs?: number,
-		) => {
-			storedOfferResults.set(key, {
-				value,
-				expiresAt: ttlMs === undefined ? undefined : Date.now() + ttlMs,
-			});
-			return 'OK';
-		});
+		dataStoreClientMock.set.mockImplementation(
+			async (key: string, value: string, _mode?: string, ttlMs?: number) => {
+				storedOfferResults.set(key, {
+					value,
+					expiresAt: ttlMs === undefined ? undefined : Date.now() + ttlMs,
+				});
+				return 'OK';
+			},
+		);
 		dataStoreClientMock.get.mockImplementation(async (key: string) => {
 			const storedResult = storedOfferResults.get(key);
-			if (!storedResult || (storedResult.expiresAt !== undefined && storedResult.expiresAt <= Date.now())) {
+			if (
+				!storedResult ||
+				(storedResult.expiresAt !== undefined && storedResult.expiresAt <= Date.now())
+			) {
 				storedOfferResults.delete(key);
 				return null;
 			}
@@ -183,40 +188,42 @@ describe('landingRouter pre-authorized offer flow', () => {
 		});
 	});
 
-	it.each([
-		'/offer/:id',
-		'/initialize-pre-authorized-offer/:id',
-	])('renders an error for a malformed credential configuration ID on %s', async (path) => {
-		const handler = await getRouteHandler(path);
-		const res = createResponse();
+	it.each(['/offer/:id', '/initialize-pre-authorized-offer/:id'])(
+		'renders an error for a malformed credential configuration ID on %s',
+		async (path) => {
+			const handler = await getRouteHandler(path);
+			const res = createResponse();
 
-		await handler({ params: { id: 'a' } }, res);
+			await handler({ params: { id: 'a' } }, res);
 
-		expect(res.render).toHaveBeenCalledWith('error', {
-			error: 'Invalid Credential Offer',
-			errorDescription: 'The credential offer link is invalid. Please return to the home page and try again.',
-		});
-		expect(issuerMock.getMetadata).not.toHaveBeenCalled();
-		expect(res.redirect).not.toHaveBeenCalled();
-	});
+			expect(res.render).toHaveBeenCalledWith('error', {
+				error: 'Invalid Credential Offer',
+				errorDescription:
+					'The credential offer link is invalid. Please return to the home page and try again.',
+			});
+			expect(issuerMock.getMetadata).not.toHaveBeenCalled();
+			expect(res.redirect).not.toHaveBeenCalled();
+		},
+	);
 
-	it.each([
-		'/offer/:id',
-		'/initialize-pre-authorized-offer/:id',
-	])('renders an error for an unsupported credential configuration on %s', async (path) => {
-		const handler = await getRouteHandler(path);
-		const res = createResponse();
-		const unsupportedId = Buffer.from('unsupported').toString('base64url');
+	it.each(['/offer/:id', '/initialize-pre-authorized-offer/:id'])(
+		'renders an error for an unsupported credential configuration on %s',
+		async (path) => {
+			const handler = await getRouteHandler(path);
+			const res = createResponse();
+			const unsupportedId = Buffer.from('unsupported').toString('base64url');
 
-		await handler({ params: { id: unsupportedId } }, res);
+			await handler({ params: { id: unsupportedId } }, res);
 
-		expect(res.render).toHaveBeenCalledWith('error', {
-			error: 'Invalid Credential Offer',
-			errorDescription: 'The requested credential is not available. Please return to the home page and choose another credential.',
-		});
-		expect(issuerMock.generateCredentialOffer).not.toHaveBeenCalled();
-		expect(res.redirect).not.toHaveBeenCalled();
-	});
+			expect(res.render).toHaveBeenCalledWith('error', {
+				error: 'Invalid Credential Offer',
+				errorDescription:
+					'The requested credential is not available. Please return to the home page and choose another credential.',
+			});
+			expect(issuerMock.generateCredentialOffer).not.toHaveBeenCalled();
+			expect(res.redirect).not.toHaveBeenCalled();
+		},
+	);
 
 	it('renders an error when a pre-authorized credential configuration has no scope', async () => {
 		issuerMock.getMetadata.mockResolvedValue({
@@ -237,7 +244,8 @@ describe('landingRouter pre-authorized offer flow', () => {
 
 		expect(res.render).toHaveBeenCalledWith('error', {
 			error: 'Credential Configuration Error',
-			errorDescription: 'This credential is temporarily unavailable. Please return to the home page and choose another credential.',
+			errorDescription:
+				'This credential is temporarily unavailable. Please return to the home page and choose another credential.',
 		});
 		expect(res.redirect).not.toHaveBeenCalled();
 	});
@@ -248,12 +256,15 @@ describe('landingRouter pre-authorized offer flow', () => {
 		const callbackHandler = await getRouteHandler('/callback');
 		const res = createResponse();
 
-		await callbackHandler({
-			query: {
-				code: 'authorization-code',
-				state: JSON.stringify({ credential_configuration_id: credentialConfigurationId }),
+		await callbackHandler(
+			{
+				query: {
+					code: 'authorization-code',
+					state: JSON.stringify({ credential_configuration_id: credentialConfigurationId }),
+				},
 			},
-		}, res);
+			res,
+		);
 
 		expect(issuerMock.generateCredentialOffer).toHaveBeenCalledWith({
 			credentialConfigurationId,
@@ -279,12 +290,15 @@ describe('landingRouter pre-authorized offer flow', () => {
 		const callbackHandler = getRouteHandlerFromRouter(router, '/callback');
 		const callbackRes = createResponse();
 
-		await callbackHandler({
-			query: {
-				code: 'authorization-code',
-				state: JSON.stringify({ credential_configuration_id: credentialConfigurationId }),
+		await callbackHandler(
+			{
+				query: {
+					code: 'authorization-code',
+					state: JSON.stringify({ credential_configuration_id: credentialConfigurationId }),
+				},
 			},
-		}, callbackRes);
+			callbackRes,
+		);
 
 		const resultPath = callbackRes.redirect.mock.calls[0][1] as string;
 		const resultPathParts = resultPath.split('/');
@@ -294,12 +308,15 @@ describe('landingRouter pre-authorized offer flow', () => {
 
 		await offerHandler({ params: { id: resultId } }, offerRes);
 
-		expect(offerRes.render).toHaveBeenCalledWith('offer', expect.objectContaining({
-			credentialName: 'PID',
-			txCode: '1234',
-			credentialOfferWithReference: expect.any(URL),
-			credentialOfferWithReferenceForWwwallet: expect.any(URL),
-		}));
+		expect(offerRes.render).toHaveBeenCalledWith(
+			'offer',
+			expect.objectContaining({
+				credentialName: 'PID',
+				txCode: '1234',
+				credentialOfferWithReference: expect.any(URL),
+				credentialOfferWithReferenceForWwwallet: expect.any(URL),
+			}),
+		);
 	});
 
 	it('rejects a stored offer result after preAuthorizedCodeGrantTtlMs expires', async () => {
@@ -309,12 +326,15 @@ describe('landingRouter pre-authorized offer flow', () => {
 		const callbackHandler = getRouteHandlerFromRouter(router, '/callback');
 		const callbackRes = createResponse();
 
-		await callbackHandler({
-			query: {
-				code: 'authorization-code',
-				state: JSON.stringify({ credential_configuration_id: credentialConfigurationId }),
+		await callbackHandler(
+			{
+				query: {
+					code: 'authorization-code',
+					state: JSON.stringify({ credential_configuration_id: credentialConfigurationId }),
+				},
 			},
-		}, callbackRes);
+			callbackRes,
+		);
 
 		const resultPath = callbackRes.redirect.mock.calls[0][1] as string;
 		const resultPathParts = resultPath.split('/');
@@ -327,7 +347,8 @@ describe('landingRouter pre-authorized offer flow', () => {
 
 		expect(offerRes.render).toHaveBeenCalledWith('error', {
 			error: 'Invalid Credential Offer',
-			errorDescription: 'This credential offer is not valid. Please authenticate again to generate a new offer.',
+			errorDescription:
+				'This credential offer is not valid. Please authenticate again to generate a new offer.',
 		});
 	});
 
@@ -343,7 +364,8 @@ describe('landingRouter pre-authorized offer flow', () => {
 
 		expect(res.render).toHaveBeenCalledWith('error', {
 			error: 'Invalid Credential Offer',
-			errorDescription: 'Unable to determine which credential to offer. Please return to the home page and try again.',
+			errorDescription:
+				'Unable to determine which credential to offer. Please return to the home page and try again.',
 		});
 	});
 
@@ -352,16 +374,20 @@ describe('landingRouter pre-authorized offer flow', () => {
 		const callbackHandler = await getRouteHandler('/callback');
 		const res = createResponse();
 
-		await callbackHandler({
-			query: {
-				code: 'authorization-code',
-				state: JSON.stringify({ credential_configuration_id: 'unavailable' }),
+		await callbackHandler(
+			{
+				query: {
+					code: 'authorization-code',
+					state: JSON.stringify({ credential_configuration_id: 'unavailable' }),
+				},
 			},
-		}, res);
+			res,
+		);
 
 		expect(res.render).toHaveBeenCalledWith('error', {
 			error: 'Invalid Credential Offer',
-			errorDescription: 'The requested credential is not available. Please return to the home page and choose another credential.',
+			errorDescription:
+				'The requested credential is not available. Please return to the home page and choose another credential.',
 		});
 	});
 });

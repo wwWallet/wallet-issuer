@@ -64,22 +64,22 @@ app.get('/metadata/:filename', (req, res) => {
 	const manifest = {
 		name: config.siteConfig.name,
 		short_name: config.siteConfig.short_name,
-		start_url: "/",
-		display: "standalone",
+		start_url: '/',
+		display: 'standalone',
 		background_color: config.siteConfig.background_color,
 		theme_color: config.siteConfig.theme_color,
 		icons: [
 			{
-				src: "/images/favicon-192x192.png",
-				sizes: "192x192",
-				type: "image/png"
+				src: '/images/favicon-192x192.png',
+				sizes: '192x192',
+				type: 'image/png',
 			},
 			{
-				src: "/images/favicon-512x512.png",
-				sizes: "512x512",
-				type: "image/png"
-			}
-		]
+				src: '/images/favicon-512x512.png',
+				sizes: '512x512',
+				type: 'image/png',
+			},
+		],
 	};
 
 	res.setHeader('Content-Type', 'application/manifest+json');

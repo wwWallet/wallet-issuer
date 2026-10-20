@@ -11,7 +11,9 @@ type AccountEntry = {
 };
 
 const findSupportedCredentialByScope = (scope: string) => {
-	const result = Object.entries(supportedCredentialConfigurations).filter(([_k, v]) => v.scope === scope)[0];
+	const result = Object.entries(supportedCredentialConfigurations).filter(
+		([_k, v]) => v.scope === scope,
+	)[0];
 	if (!result) {
 		return null;
 	}
@@ -33,7 +35,10 @@ export class FilesystemClaimsProvider implements ClaimsProvider {
 	private loopRunning = false;
 
 	private async getAccountEntryById(id: string): Promise<AccountEntry | null> {
-		const data = await fs.readFile(path.join(__dirname, '../../../../dataset/accounts.json'), 'utf-8');
+		const data = await fs.readFile(
+			path.join(__dirname, '../../../../dataset/accounts.json'),
+			'utf-8',
+		);
 		const parsedData = JSON.parse(data.toString());
 		return parsedData.accounts.filter((r: AccountEntry) => r.id === id)[0] ?? null;
 	}
@@ -43,7 +48,11 @@ export class FilesystemClaimsProvider implements ClaimsProvider {
 		return account?.id ?? null;
 	}
 
-	async resolveClaims(accountId: string, scope: string, _context?: ClaimsResolutionContext): Promise<ClaimsProviderResult> {
+	async resolveClaims(
+		accountId: string,
+		scope: string,
+		_context?: ClaimsResolutionContext,
+	): Promise<ClaimsProviderResult> {
 		const account = await this.getAccountEntryById(accountId);
 		if (!account) {
 			return { kind: 'denied', reason: 'Account not found' };
@@ -100,7 +109,9 @@ export class FilesystemClaimsProvider implements ClaimsProvider {
 				}
 				await Promise.all(
 					requests
-						.filter((req) => req.status === 'pending' && req.scope.split(' ').includes('por:sd_jwt_vc'))
+						.filter(
+							(req) => req.status === 'pending' && req.scope.split(' ').includes('por:sd_jwt_vc'),
+						)
 						.map(async (r) => {
 							const supportedConf = findSupportedCredentialByScope('por:sd_jwt_vc');
 							if (!supportedConf || !('vct' in supportedConf)) {
