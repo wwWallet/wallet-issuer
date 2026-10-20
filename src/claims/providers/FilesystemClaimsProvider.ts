@@ -17,7 +17,7 @@ const findSupportedCredentialByScope = (scope: string) => {
 	if (!result) {
 		return null;
 	}
-	const [_credentialConfigurationId, credentialConfiguration] = result;
+	const [, credentialConfiguration] = result;
 	return credentialConfiguration;
 };
 
