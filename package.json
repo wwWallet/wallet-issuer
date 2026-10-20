@@ -18,7 +18,9 @@
     "start": "node dist/src/app.js",
     "dev": "npx nodemon --config nodemon.json --exec \"npx tsc --outdir dist && yarn start-debug\"",
     "test": "vitest run",
-    "lint": "npx eslint ."
+    "lint": "eslint .",
+    "format": "prettier . --write",
+    "format:check": "prettier . --check"
   },
   "dependencies": {
     "@owf/mdoc": "^0.6.0",
@@ -35,7 +37,6 @@
     "zod": "^4.1.13"
   },
   "devDependencies": {
-    "@prettier/plugin-xml": "^3.4.2",
     "@types/express": "^5.0.6",
     "@types/node": "^24.10.2",
     "@types/qrcode": "^1.5.6",
@@ -43,7 +44,6 @@
     "@typescript-eslint/parser": "^8.53.0",
     "eslint": "^9.39.5",
     "eslint-config-prettier": "^10.1.8",
-    "eslint-plugin-prettier": "^5.5.5",
     "nodemon": "^3.1.11",
     "prettier": "^3.8.0",
     "qrcode": "^1.5.4",
