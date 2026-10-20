@@ -27,14 +27,15 @@ export class ConfigurationClaimsProvider implements ClaimsProvider {
 				this.validateRemoteUrl(scope, source.url);
 				hasRemoteProvider = true;
 			}
-			const provider = source.type === 'remote'
-				? new RemoteClaimsProvider(source.url, {
-					supportedScopes: [scope],
-					apiKey: source.apiKey,
-					apiKeyHeaderName: source.apiKeyHeaderName,
-					fetchTimeoutMs: source.fetchTimeoutMs,
-				})
-				: this.filesystemProvider;
+			const provider =
+				source.type === 'remote'
+					? new RemoteClaimsProvider(source.url, {
+							supportedScopes: [scope],
+							apiKey: source.apiKey,
+							apiKeyHeaderName: source.apiKeyHeaderName,
+							fetchTimeoutMs: source.fetchTimeoutMs,
+						})
+					: this.filesystemProvider;
 
 			this.providersByScope.set(scope, provider);
 		}
@@ -56,7 +57,11 @@ export class ConfigurationClaimsProvider implements ClaimsProvider {
 		return this.hasRemoteProvider ? sub : this.filesystemProvider.resolveAccountId(sub);
 	}
 
-	async resolveClaims(accountId: string, scope: string, context?: ClaimsResolutionContext): Promise<ClaimsProviderResult> {
+	async resolveClaims(
+		accountId: string,
+		scope: string,
+		context?: ClaimsResolutionContext,
+	): Promise<ClaimsProviderResult> {
 		for (const scopeToken of scope.split(' ')) {
 			const provider = this.providersByScope.get(scopeToken);
 			if (provider) {

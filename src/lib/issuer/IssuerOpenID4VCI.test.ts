@@ -39,9 +39,7 @@ describe('retrieveCredentialOffer', () => {
 
 	it('allows only one of two concurrent requests to consume an offer', async () => {
 		const store = {
-			consume: vi.fn()
-				.mockResolvedValueOnce(offer)
-				.mockResolvedValueOnce(undefined),
+			consume: vi.fn().mockResolvedValueOnce(offer).mockResolvedValueOnce(undefined),
 		};
 
 		const results = await Promise.all([

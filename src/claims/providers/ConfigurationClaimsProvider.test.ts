@@ -15,16 +15,24 @@ describe('ConfigurationClaimsProvider', () => {
 	afterEach(() => vi.restoreAllMocks());
 
 	it('routes different credential configurations to filesystem and remote sources', async () => {
-		const fetchMock = vi.spyOn(globalThis, 'fetch').mockResolvedValue(new Response(JSON.stringify({
-			data: { family_name: 'Remote' },
-		}), { status: 200, headers: { 'content-type': 'application/json' } }));
-		const provider = new ConfigurationClaimsProvider({
-			'pid:sd_jwt_dc': {
-				type: 'remote',
-				url: 'https://pid.example/claims',
-				apiKey: 'pid-secret',
+		const fetchMock = vi.spyOn(globalThis, 'fetch').mockResolvedValue(
+			new Response(
+				JSON.stringify({
+					data: { family_name: 'Remote' },
+				}),
+				{ status: 200, headers: { 'content-type': 'application/json' } },
+			),
+		);
+		const provider = new ConfigurationClaimsProvider(
+			{
+				'pid:sd_jwt_dc': {
+					type: 'remote',
+					url: 'https://pid.example/claims',
+					apiKey: 'pid-secret',
+				},
 			},
-		}, filesystemProvider);
+			filesystemProvider,
+		);
 
 		expect(await provider.resolveAccountId('test')).toBe('test');
 		expect(await provider.resolveAccountId('opaque-remote-subject')).toBe('opaque-remote-subject');
@@ -48,8 +56,14 @@ describe('ConfigurationClaimsProvider', () => {
 	});
 
 	it('fails at startup when a remote URL is missing or invalid', () => {
-		expect(() => new ConfigurationClaimsProvider({
-			'pid:sd_jwt_dc': { type: 'remote', url: '' },
-		}, filesystemProvider)).toThrow("Invalid remote claims URL for scope 'pid:sd_jwt_dc'");
+		expect(
+			() =>
+				new ConfigurationClaimsProvider(
+					{
+						'pid:sd_jwt_dc': { type: 'remote', url: '' },
+					},
+					filesystemProvider,
+				),
+		).toThrow("Invalid remote claims URL for scope 'pid:sd_jwt_dc'");
 	});
 });

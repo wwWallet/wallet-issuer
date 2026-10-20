@@ -1,4 +1,5 @@
 # wwWallet Issuer
+
 wwWallet Issuer is a standalone digital credential issuer implementing OpenID4VCI.
 
 > [!NOTE]
@@ -7,11 +8,13 @@ wwWallet Issuer is a standalone digital credential issuer implementing OpenID4VC
 ## How to run
 
 Install dependencies
+
 ```
 yarn install
 ```
 
 Run in dev mode
+
 ```
 yarn run dev
 ```
@@ -66,17 +69,17 @@ values or secrets.
 import { ClaimsSourceDefinition } from './claimsSourceConfigurations';
 
 export const claimsSourceConfigurations: Record<string, ClaimsSourceDefinition> = {
-  'pid': {
+  pid: {
     type: 'remote',
     urlEnvironmentVariable: 'PID_CLAIMS_URL',
     apiKeyEnvironmentVariable: 'PID_CLAIMS_API_KEY',
   },
-  'ehic': {
+  ehic: {
     type: 'remote',
     urlEnvironmentVariable: 'EHIC_CLAIMS_URL',
     apiKeyEnvironmentVariable: 'EHIC_CLAIMS_API_KEY',
     apiKeyHeaderName: 'x-api-key', // optional; this is the default
-    fetchTimeoutMs: 8000,         // optional; defaults to 5000
+    fetchTimeoutMs: 8000, // optional; defaults to 5000
   },
   'local-demo': { type: 'filesystem' },
 };
@@ -96,10 +99,12 @@ EHIC_CLAIMS_API_KEY=ehic-secret
 You can add local-only credential configurations without changing tracked files.
 
 1. Create a local config `supportedCredentialConfigurations.local.ts` file like the following:
+
 ```ts
 import { OpenidCredentialIssuerMetadata, VerifiableCredentialFormat } from 'wallet-common';
 
-type CredentialConfigurationsSupported = OpenidCredentialIssuerMetadata['credential_configurations_supported'];
+type CredentialConfigurationsSupported =
+  OpenidCredentialIssuerMetadata['credential_configurations_supported'];
 type DisclosureFrameMap = Record<string, Record<string, unknown>>;
 
 // Copy to `supportedCredentialConfigurations.local.ts` and edit locally.
@@ -120,9 +125,11 @@ export const disclosureFrameMap: DisclosureFrameMap = {
   },
 };
 ```
+
 2. Restart the issuer.
 
 Notes:
+
 - `config/*.local.ts` is ignored by git in this repo.
 - Local entries are merged into the base `supportedCredentialConfigurations` at runtime.
 - If a local credential configuration id matches a base one, the local one overrides it.

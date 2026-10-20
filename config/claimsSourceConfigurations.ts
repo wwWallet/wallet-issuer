@@ -4,22 +4,22 @@ import { logger } from '../src/logger';
 export type ClaimsSourceDefinition =
 	| { type: 'filesystem' }
 	| {
-		type: 'remote';
-		urlEnvironmentVariable: string;
-		apiKeyEnvironmentVariable?: string;
-		apiKeyHeaderName?: string;
-		fetchTimeoutMs?: number;
-	};
+			type: 'remote';
+			urlEnvironmentVariable: string;
+			apiKeyEnvironmentVariable?: string;
+			apiKeyHeaderName?: string;
+			fetchTimeoutMs?: number;
+	  };
 
 export type ClaimsSourceConfiguration =
 	| { type: 'filesystem' }
 	| {
-		type: 'remote';
-		url: string;
-		apiKey?: string;
-		apiKeyHeaderName?: string;
-		fetchTimeoutMs?: number;
-	};
+			type: 'remote';
+			url: string;
+			apiKey?: string;
+			apiKeyHeaderName?: string;
+			fetchTimeoutMs?: number;
+	  };
 
 type LocalClaimsSourceConfigurations = {
 	claimsSourceConfigurations?: Record<string, ClaimsSourceDefinition>;
@@ -51,9 +51,11 @@ const localClaimsSources = loadLocalClaimsSourceConfigurations().claimsSourceCon
 /** When the local map exists it is authoritative: omitted credentials use filesystem. */
 const claimsSourceEntries: Array<[string, ClaimsSourceConfiguration]> = [];
 if (localClaimsSources) {
-	const supportedScopes = new Set(Object.values(supportedCredentialConfigurations)
-		.map((credentialConfiguration) => credentialConfiguration.scope)
-		.filter((scope): scope is string => typeof scope === 'string'));
+	const supportedScopes = new Set(
+		Object.values(supportedCredentialConfigurations)
+			.map((credentialConfiguration) => credentialConfiguration.scope)
+			.filter((scope): scope is string => typeof scope === 'string'),
+	);
 	for (const scope of Object.keys(localClaimsSources)) {
 		if (!supportedScopes.has(scope)) {
 			logger.warn('Ignoring claims source configuration for unknown scope', { scope });
@@ -71,16 +73,20 @@ if (localClaimsSources) {
 			continue;
 		}
 
-		claimsSourceEntries.push([scope, {
-			type: 'remote',
-			url: environmentValue(source.urlEnvironmentVariable),
-			apiKey: source.apiKeyEnvironmentVariable
-				? environmentValue(source.apiKeyEnvironmentVariable) || undefined
-				: undefined,
-			apiKeyHeaderName: source.apiKeyHeaderName,
-			fetchTimeoutMs: source.fetchTimeoutMs,
-		}]);
+		claimsSourceEntries.push([
+			scope,
+			{
+				type: 'remote',
+				url: environmentValue(source.urlEnvironmentVariable),
+				apiKey: source.apiKeyEnvironmentVariable
+					? environmentValue(source.apiKeyEnvironmentVariable) || undefined
+					: undefined,
+				apiKeyHeaderName: source.apiKeyHeaderName,
+				fetchTimeoutMs: source.fetchTimeoutMs,
+			},
+		]);
 	}
 }
 
-export const claimsSourceConfigurations: Record<string, ClaimsSourceConfiguration> = Object.fromEntries(claimsSourceEntries);
+export const claimsSourceConfigurations: Record<string, ClaimsSourceConfiguration> =
+	Object.fromEntries(claimsSourceEntries);

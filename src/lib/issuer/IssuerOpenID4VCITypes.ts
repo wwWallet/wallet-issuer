@@ -2,7 +2,11 @@ import { JWK } from 'jose';
 import { ResponseMessage } from 'wallet-common';
 import { CredentialRequestError } from './CredentialRequest/CredentialRequestError';
 
-export type CredentialOfferCreateSuccess = { credentialOfferId: string; credentialOfferWithReference: URL, txCode?: string };
+export type CredentialOfferCreateSuccess = {
+	credentialOfferId: string;
+	credentialOfferWithReference: URL;
+	txCode?: string;
+};
 
 export type IssueCredentialRequestBase = {
 	credential_response_encryption?: {
@@ -16,7 +20,12 @@ export type IssueCredentialRequestProofsExtension = {
 	proofs?: { jwt: string[] } | { attestation: string[] };
 };
 
-export type PlainIssueCredentialRequestOptionsData = ({ credential_identifier: string } & IssueCredentialRequestProofsExtension & IssueCredentialRequestBase) | ({ credential_configuration_id: string } & IssueCredentialRequestProofsExtension & IssueCredentialRequestBase) | ({ transaction_id: string } & IssueCredentialRequestBase);
+export type PlainIssueCredentialRequestOptionsData =
+	| ({ credential_identifier: string } & IssueCredentialRequestProofsExtension &
+			IssueCredentialRequestBase)
+	| ({ credential_configuration_id: string } & IssueCredentialRequestProofsExtension &
+			IssueCredentialRequestBase)
+	| ({ transaction_id: string } & IssueCredentialRequestBase);
 
 export type PlainIssueCredentialRequestOptions = {
 	request: {
@@ -32,24 +41,28 @@ export type EncryptedIssueCredentialRequestOptions = {
 	};
 };
 
-export type IssueCredentialRequestOptions = EncryptedIssueCredentialRequestOptions | PlainIssueCredentialRequestOptions;
+export type IssueCredentialRequestOptions =
+	| EncryptedIssueCredentialRequestOptions
+	| PlainIssueCredentialRequestOptions;
 
-export type PlainIssueCredentialResponse = ResponseMessage & { headers: { 'content-type': 'application/json' } } & (
+export type PlainIssueCredentialResponse = ResponseMessage & {
+	headers: { 'content-type': 'application/json' };
+} & (
 		| {
-			data: { credentials: { credential: string }[] };
-			status: 200;
-		}
-	| {
-			data: { transaction_id: string; interval: number };
-			status: 202;
-	}
-	| {
-			data: {
-				error: CredentialRequestError;
-				error_description: string;
-			};
-			status: 400;
-		}
+				data: { credentials: { credential: string }[] };
+				status: 200;
+		  }
+		| {
+				data: { transaction_id: string; interval: number };
+				status: 202;
+		  }
+		| {
+				data: {
+					error: CredentialRequestError;
+					error_description: string;
+				};
+				status: 400;
+		  }
 	);
 
 export type EncryptedIssueCredentialResponse = ResponseMessage & {
@@ -57,4 +70,6 @@ export type EncryptedIssueCredentialResponse = ResponseMessage & {
 	data: string;
 };
 
-export type IssueCredentialResponse = EncryptedIssueCredentialResponse | PlainIssueCredentialResponse;
+export type IssueCredentialResponse =
+	| EncryptedIssueCredentialResponse
+	| PlainIssueCredentialResponse;
