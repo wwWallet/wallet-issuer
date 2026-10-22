@@ -37,7 +37,7 @@ const loadRouterModule = async (
 	}));
 
 	const { createApiRouter, apiBearerAuth, preAuthorizedCodeApiBearerAuth } =
-		await import('./router');
+		await import('./router.js');
 
 	return { createApiRouter, apiBearerAuth, preAuthorizedCodeApiBearerAuth };
 };

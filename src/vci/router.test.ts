@@ -18,7 +18,7 @@ describe('VCI credential endpoint request parsing', () => {
 			headers: { 'content-type': 'application/json' },
 			data: { credential: 'ok' },
 		});
-		const { vciRouter } = await import('./router');
+		const { vciRouter } = await import('./router.js');
 		const app = express().use(vciRouter);
 		const server = await new Promise<ReturnType<typeof app.listen>>((resolve) =>
 			resolve(app.listen(0)),
@@ -83,7 +83,7 @@ describe('VCI credential endpoint request parsing', () => {
 				decryptedRequest(result.value);
 				return { status, headers: { 'content-type': 'application/json' }, data };
 			});
-			const { vciRouter } = await import('./router');
+			const { vciRouter } = await import('./router.js');
 			const server = express().use(vciRouter).listen(0);
 			try {
 				const address = server.address();
