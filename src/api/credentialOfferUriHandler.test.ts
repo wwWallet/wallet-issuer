@@ -27,7 +27,7 @@ const loadHandlerModule = async () => {
 		},
 	}));
 
-	const { credentialOfferUriHandler } = await import('./credentialOfferUriHandler');
+	const { credentialOfferUriHandler } = await import('./credentialOfferUriHandler.js');
 	return { credentialOfferUriHandler };
 };
 

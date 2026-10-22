@@ -61,7 +61,7 @@ const loadLandingRouter = async (preAuthorizedCodeGrantTtlMs = 60000) => {
 		},
 	}));
 
-	const { landingRouter } = await import('./router');
+	const { landingRouter } = await import('./router.js');
 	return landingRouter as { stack: RouteLayer[] };
 };
 

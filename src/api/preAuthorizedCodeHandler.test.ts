@@ -28,7 +28,7 @@ const loadHandlerModule = async () => {
 		},
 	}));
 
-	const { preAuthorizedCodeHandler } = await import('./preAuthorizedCodeHandler');
+	const { preAuthorizedCodeHandler } = await import('./preAuthorizedCodeHandler.js');
 	return { preAuthorizedCodeHandler };
 };
 
