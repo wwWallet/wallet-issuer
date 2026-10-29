@@ -31,6 +31,9 @@ const plainData = {
 	proofs: { jwt: ['proof'] },
 };
 
+type ImportedKey = Awaited<ReturnType<typeof importJWK>>;
+const importedKey = {} as ImportedKey;
+
 describe('handleEncryptedCredentialRequest', () => {
 	beforeEach(() => {
 		vi.clearAllMocks();
@@ -54,7 +57,7 @@ describe('handleEncryptedCredentialRequest', () => {
 	});
 
 	it('normalizes decrypted requests to the plain request shape', async () => {
-		vi.mocked(importJWK).mockResolvedValue({} as CryptoKey);
+		vi.mocked(importJWK).mockResolvedValue(importedKey);
 		vi.mocked(compactDecrypt).mockResolvedValue({
 			plaintext: new TextEncoder().encode(JSON.stringify(plainData)),
 			protectedHeader: { enc: 'A256GCM' },
@@ -107,7 +110,7 @@ describe('handleEncryptedCredentialRequest', () => {
 
 	it('normalizes a decrypted deferred poll while preserving authorization and DPoP headers', async () => {
 		const poll = { transaction_id: 'pending-transaction' };
-		vi.mocked(importJWK).mockResolvedValue({} as CryptoKey);
+		vi.mocked(importJWK).mockResolvedValue(importedKey);
 		vi.mocked(compactDecrypt).mockResolvedValue({
 			plaintext: new TextEncoder().encode(JSON.stringify(poll)),
 			protectedHeader: { enc: 'A256GCM' },
@@ -145,7 +148,7 @@ describe('handleEncryptedCredentialRequest', () => {
 	});
 
 	it('returns an invalid request when decryption fails', async () => {
-		vi.mocked(importJWK).mockResolvedValue({} as CryptoKey);
+		vi.mocked(importJWK).mockResolvedValue(importedKey);
 		vi.mocked(compactDecrypt).mockRejectedValue(new Error('bad JWE'));
 
 		const result = await handleEncryptedCredentialRequest(
