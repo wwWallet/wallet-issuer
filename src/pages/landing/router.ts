@@ -1,5 +1,5 @@
 import { Response, Router } from 'express';
-import { importJWK, jwtVerify } from 'jose';
+import { importJWK, jwtVerify, type JWK } from 'jose';
 import { issuer } from '../../vci/issuer';
 import { fromBase64Url, GrantType } from 'wallet-common';
 import type { CredentialConfigurationSupported } from 'wallet-common';
@@ -56,6 +56,20 @@ async function storeOfferResult(result: OfferResult): Promise<string> {
 
 type VerifiedPayload = {
 	sub?: string;
+};
+
+type TokenResponse = {
+	error?: unknown;
+	id_token?: unknown;
+};
+
+type OpenIdDiscovery = {
+	issuer: string;
+	jwks_uri: string;
+};
+
+type JsonWebKeySet = {
+	keys?: JWK[];
 };
 
 type CredentialOfferDisplay = {
@@ -125,7 +139,7 @@ const decodeCredentialConfigurationId = (encodedId: string): string | null => {
 };
 
 async function verifyPayload(
-	tokenRequestBody: { error?: unknown; id_token?: unknown },
+	tokenRequestBody: TokenResponse,
 	res: Response,
 ): Promise<VerifiedPayload | null> {
 	const authErrorObj = {
@@ -164,7 +178,7 @@ async function verifyPayload(
 		return null;
 	}
 
-	const discovery = await discoveryResponse.json();
+	const discovery = (await discoveryResponse.json()) as OpenIdDiscovery;
 	const jwksResponse = await fetch(discovery.jwks_uri);
 	if (!jwksResponse.ok) {
 		console.log({
@@ -175,13 +189,13 @@ async function verifyPayload(
 		return null;
 	}
 
-	const jwks = await jwksResponse.json();
+	const jwks = (await jwksResponse.json()) as JsonWebKeySet;
 	const [header] = idToken.split('.');
 	const decodedHeader = JSON.parse(Buffer.from(header, 'base64url').toString('utf8')) as {
 		kid?: string;
 		alg?: string;
 	};
-	const jwk = jwks.keys?.find((key: any) => key.kid === decodedHeader.kid);
+	const jwk = jwks.keys?.find((key) => key.kid === decodedHeader.kid);
 	if (!jwk) {
 		console.log({
 			error: 'Invalid id_token',
@@ -358,7 +372,7 @@ landingRouter.get('/callback', async (req, res) => {
 		}),
 	});
 
-	const tokenRequestBody = await tokenResponse.json();
+	const tokenRequestBody = (await tokenResponse.json()) as TokenResponse;
 	const verifiedPayload = await verifyPayload(tokenRequestBody, res);
 	if (!verifiedPayload) {
 		return;

@@ -6,7 +6,7 @@ import {
 } from '../CredentialRequest/CredentialRequestError';
 import { validateDpopProof } from './validateDpopProof';
 import { PlainIssueCredentialRequestOptions } from '../IssuerOpenID4VCITypes';
-import { IntrospectionResponse } from '../types';
+import type { IntrospectionResponse } from '../types';
 
 /**
  * * Validates if access token is valid
@@ -29,10 +29,10 @@ export async function validateAccessToken(
 			prependToPath(createOpts.authorizationServerUrl, '.well-known/oauth-authorization-server') ??
 				'',
 		);
-		const authorizationServerMetadata = await authorizationServerMetadataResponse.json();
-		const { introspection_endpoint } = authorizationServerMetadata as {
+		const authorizationServerMetadata = (await authorizationServerMetadataResponse.json()) as {
 			introspection_endpoint: string;
 		};
+		const { introspection_endpoint } = authorizationServerMetadata;
 		const [tokenType, accessToken] = issueRequestOpts.request.headers['authorization'].split(' ');
 		const dpopProof = issueRequestOpts.request.headers['dpop'] as string | undefined;
 
@@ -46,9 +46,9 @@ export async function validateAccessToken(
 				},
 				body: new URLSearchParams({ token: accessToken, token_type_hint: tokenType }),
 			});
-			const introspectionPayload = await introspectionResponse.json();
+			const introspectionPayload = (await introspectionResponse.json()) as IntrospectionResponse;
 
-			const { active, scope, sub, cnf, client_id } = introspectionPayload as IntrospectionResponse;
+			const { active, scope, sub, cnf, client_id } = introspectionPayload;
 
 			console.log('Introspection response: ', introspectionPayload);
 			if (!active) {
@@ -87,7 +87,7 @@ export async function validateAccessToken(
 				);
 			}
 
-			const scopeArray = (scope as string).split(' ');
+			const scopeArray = scope.split(' ');
 			const configurationsSupportedFiltered = Object.keys(
 				metadata.credential_configurations_supported,
 			).filter(
@@ -102,7 +102,7 @@ export async function validateAccessToken(
 				);
 			}
 
-			return ok(introspectionPayload);
+			return ok({ ...introspectionPayload, scope, sub, client_id });
 		} catch {
 			return err(
 				CredentialRequestErrors.InternalServerError,
