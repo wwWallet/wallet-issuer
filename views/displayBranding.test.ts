@@ -37,8 +37,22 @@ describe('issuer display branding', () => {
 		expect(html).toContain('<title>PID Offer | Example Issuer</title>');
 	});
 
+	it('renders the configured site name and wwWallet attribution in the footer', () => {
+		const html = renderLayout();
+
+		expect(html).toContain('© ');
+		expect(html).toContain('Example Issuer.');
+		expect(html).toContain(
+			'<span>Powered by&nbsp;<a class="footer-powered-by" href="https://github.com/wwWallet" target="_blank" rel="noreferrer" aria-label="wwWallet on GitHub">wwWallet</a></span>',
+		);
+	});
+
 	it('uses the issuer display name for the site manifest', () => {
 		expect(config.siteConfig.name).toBe(config.display[0].name);
 		expect(config.siteConfig.short_name).toBe(config.display[0].name);
+	});
+
+	it('derives the display logo URI from the service URL', () => {
+		expect(config.display[0].logo.uri).toBe(`${config.url}/images/logo.png`);
 	});
 });
