@@ -7,34 +7,60 @@ import { CredentialRequestError, CredentialRequestErrors } from '../CredentialRe
 import { verifyProofKeyAttestation } from './verifyProofKeyAttestation';
 import { VerifyProofOptions } from './verifyProof';
 
-export async function verifyProofJwt(jwt: string, options: VerifyProofOptions): Promise<Result<{ attested_keys: JWK[] }, CredentialRequestError>> {
+export async function verifyProofJwt(
+	jwt: string,
+	options: VerifyProofOptions,
+): Promise<Result<{ attested_keys: JWK[] }, CredentialRequestError>> {
 	const dec = new TextDecoder();
 	const [attestationHeader, attestationPayload] = jwt.split('.');
-	const [parsedHeader, parsedPayload] = [JSON.parse(dec.decode(fromBase64Url(attestationHeader))), JSON.parse(dec.decode(fromBase64Url(attestationPayload)))] as [Record<string, unknown>, Record<string, unknown>];
+	const [parsedHeader, parsedPayload] = [
+		JSON.parse(dec.decode(fromBase64Url(attestationHeader))),
+		JSON.parse(dec.decode(fromBase64Url(attestationPayload))),
+	] as [Record<string, unknown>, Record<string, unknown>];
 
 	const attestedKeys: JWK[] = [];
 
-	if (!parsedHeader.typ || typeof parsedHeader.typ !== 'string' || parsedHeader.typ !== 'openid4vci-proof+jwt') {
-		return err(CredentialRequestErrors.InvalidProof, "Wrong proof jwt header. Expected 'openid4vci-proof+jwt'");
+	if (
+		!parsedHeader.typ ||
+		typeof parsedHeader.typ !== 'string' ||
+		parsedHeader.typ !== 'openid4vci-proof+jwt'
+	) {
+		return err(
+			CredentialRequestErrors.InvalidProof,
+			"Wrong proof jwt header. Expected 'openid4vci-proof+jwt'",
+		);
 	}
 
 	if (!parsedHeader.alg || typeof parsedHeader.alg !== 'string') {
 		return err(CredentialRequestErrors.InvalidProof, "Wrong proof jwt header. 'alg' is missing");
 	}
 
-	if (options.expectedNonce && (!parsedPayload.nonce || typeof parsedPayload.nonce !== 'string' || options.expectedNonce !== parsedPayload.nonce)) {
+	if (
+		options.expectedNonce &&
+		(!parsedPayload.nonce ||
+			typeof parsedPayload.nonce !== 'string' ||
+			options.expectedNonce !== parsedPayload.nonce)
+	) {
 		return err(CredentialRequestErrors.InvalidNonce, 'Wrong proof jwt payload. Invalid nonce.');
 	}
 
 	if (parsedHeader.jwk) {
-		const publicKey = await importJWK(parsedHeader.jwk, (parsedHeader.jwk as JWK).alg ?? parsedHeader.alg);
+		const publicKey = await importJWK(
+			parsedHeader.jwk,
+			(parsedHeader.jwk as JWK).alg ?? parsedHeader.alg,
+		);
 		try {
-			const { payload, protectedHeader } = await jwtVerify(jwt, publicKey, { clockTolerance: options.clockTolerance });
+			const { payload, protectedHeader } = await jwtVerify(jwt, publicKey, {
+				clockTolerance: options.clockTolerance,
+			});
 			if (protectedHeader.jwk) {
 				attestedKeys.push(protectedHeader.jwk);
 			}
 			if (!payload.nonce) {
-				return err(CredentialRequestErrors.InvalidProof, "missing 'nonce' from payload of jwt proof");
+				return err(
+					CredentialRequestErrors.InvalidProof,
+					"missing 'nonce' from payload of jwt proof",
+				);
 			}
 			if (options.expectedNonce && payload.nonce !== options.expectedNonce) {
 				return err(CredentialRequestErrors.InvalidProof, "invalid 'nonce' on payload of jwt proof");
@@ -46,16 +72,25 @@ export async function verifyProofJwt(jwt: string, options: VerifyProofOptions): 
 		const certs = await options.getAllTrustedPemCertificates();
 		const result = await verifyX5C(parsedHeader.x5c, certs);
 		if (!result) {
-			return err(CredentialRequestErrors.CredentialRequestDenied, "proof jwt could not be verified with this certificate in the 'x5c' header");
+			return err(
+				CredentialRequestErrors.CredentialRequestDenied,
+				"proof jwt could not be verified with this certificate in the 'x5c' header",
+			);
 		}
 		const leafCertPem = `-----BEGIN CERTIFICATE-----
 			${parsedHeader.x5c[0].match(/.{1,64}/g).join('\n')}
 		-----END CERTIFICATE-----`;
 		const publicKey = await importX509(leafCertPem, parsedHeader.alg);
 		try {
-			const { payload } = await jwtVerify(jwt, publicKey, { clockTolerance: options.clockTolerance, audience: options.credentialIssuerIdentifier });
+			const { payload } = await jwtVerify(jwt, publicKey, {
+				clockTolerance: options.clockTolerance,
+				audience: options.credentialIssuerIdentifier,
+			});
 			if (!payload.nonce) {
-				return err(CredentialRequestErrors.InvalidProof, "missing 'nonce' from payload of jwt proof");
+				return err(
+					CredentialRequestErrors.InvalidProof,
+					"missing 'nonce' from payload of jwt proof",
+				);
 			}
 			if (options.expectedNonce && payload.nonce !== options.expectedNonce) {
 				return err(CredentialRequestErrors.InvalidProof, "invalid 'nonce' on payload of jwt proof");

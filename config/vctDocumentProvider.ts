@@ -1,4 +1,10 @@
-import { createVctDocumentResolutionEngine, VctDocumentProvider, VctResolutionErrors, ok, err } from 'wallet-common';
+import {
+	createVctDocumentResolutionEngine,
+	VctDocumentProvider,
+	VctResolutionErrors,
+	ok,
+	err,
+} from 'wallet-common';
 import { config } from './index';
 import { logger } from '../src/logger';
 
@@ -13,7 +19,7 @@ const provider: VctDocumentProvider = {
 			return ok(json as any);
 		} catch (e) {
 			logger.error('Error in VCT SDJWT Metadata retrieval: ' + JSON.stringify(e));
-			return err(VctResolutionErrors.NotFound)
+			return err(VctResolutionErrors.NotFound);
 		}
 	},
 };

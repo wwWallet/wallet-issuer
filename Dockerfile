@@ -1,4 +1,4 @@
-FROM node:24-bullseye-slim AS builder
+FROM node:24-bookworm-slim AS builder
 
 WORKDIR /app
 
@@ -11,6 +11,9 @@ RUN apt-get update && apt-get install -y \
 	&& rm -rf /var/lib/apt/lists/*
 
 COPY . .
+
+ENV YARN_NETWORK_CONCURRENCY=1
+
 RUN yarn install --frozen-lockfile && \
 	yarn gen:qrcode-module && \
 	yarn build && \

@@ -1,4 +1,4 @@
-import { generateRandomIdentifier } from "wallet-common";
+import { generateRandomIdentifier } from 'wallet-common';
 
 type PendingClaims = {
 	sub: string;
@@ -28,7 +28,11 @@ export type ResolvedClaims<Claims> = {
 
 export type ClaimsFuture<Claims> = PendingClaims | RejectedClaims | ResolvedClaims<Claims>;
 
-export function createClaimsFuture<Claims>(sub: string, scope: string, data?: { claims: Claims }): ClaimsFuture<Claims> {
+export function createClaimsFuture<Claims>(
+	sub: string,
+	scope: string,
+	data?: { claims: Claims },
+): ClaimsFuture<Claims> {
 	const transaction_id = generateRandomIdentifier(12);
 	return data !== undefined
 		? {

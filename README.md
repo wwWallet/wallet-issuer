@@ -1,4 +1,5 @@
 # wwWallet Issuer
+
 wwWallet Issuer is a standalone digital credential issuer implementing OpenID4VCI.
 
 > [!NOTE]
@@ -7,11 +8,13 @@ wwWallet Issuer is a standalone digital credential issuer implementing OpenID4VC
 ## How to run
 
 Install dependencies
+
 ```
 yarn install
 ```
 
 Run in dev mode
+
 ```
 yarn run dev
 ```
@@ -55,28 +58,53 @@ high-privilege credential. The value becomes the access token subject (`sub`) an
 unchanged to the remote claims fetcher. It should be an opaque reference, not sensitive claims
 data.
 
-## Remote claims fetching
+## Claims sources
 
-Enable remote claims fetching explicitly:
+Claims sources can be selected per credential scope. Add
+`config/claimsSourceConfigurations.local.ts`; entries not listed there use
+`dataset/accounts.json`. This untracked file describes routing but does not contain endpoint
+values or secrets.
 
-```dotenv
-VC_CLAIMS_FETCHER_ENABLED=true
-VC_CLAIMS_FETCHER_URL=https://example.com/claims
-VC_CLAIMS_FETCHER_API_KEY=replace-with-a-random-secret
+```ts
+import { ClaimsSourceDefinition } from './claimsSourceConfigurations';
+
+export const claimsSourceConfigurations: Record<string, ClaimsSourceDefinition> = {
+  pid: {
+    type: 'remote',
+    urlEnvironmentVariable: 'PID_CLAIMS_URL',
+    apiKeyEnvironmentVariable: 'PID_CLAIMS_API_KEY',
+  },
+  ehic: {
+    type: 'remote',
+    urlEnvironmentVariable: 'EHIC_CLAIMS_URL',
+    apiKeyEnvironmentVariable: 'EHIC_CLAIMS_API_KEY',
+    apiKeyHeaderName: 'x-api-key', // optional; this is the default
+    fetchTimeoutMs: 8000, // optional; defaults to 5000
+  },
+  'local-demo': { type: 'filesystem' },
+};
 ```
 
-When `VC_CLAIMS_FETCHER_ENABLED` is not `true`, the issuer uses filesystem claims even if
-`VC_CLAIMS_FETCHER_URL` and `VC_CLAIMS_FETCHER_API_KEY` are present.
+Set the values independently in the `.env` file:
+
+```dotenv
+PID_CLAIMS_URL=https://pid.example/claims
+PID_CLAIMS_API_KEY=pid-secret
+EHIC_CLAIMS_URL=https://ehic.example/claims
+EHIC_CLAIMS_API_KEY=ehic-secret
+```
 
 ## Local credential configuration overrides
 
 You can add local-only credential configurations without changing tracked files.
 
 1. Create a local config `supportedCredentialConfigurations.local.ts` file like the following:
-```
+
+```ts
 import { OpenidCredentialIssuerMetadata, VerifiableCredentialFormat } from 'wallet-common';
 
-type CredentialConfigurationsSupported = OpenidCredentialIssuerMetadata['credential_configurations_supported'];
+type CredentialConfigurationsSupported =
+  OpenidCredentialIssuerMetadata['credential_configurations_supported'];
 type DisclosureFrameMap = Record<string, Record<string, unknown>>;
 
 // Copy to `supportedCredentialConfigurations.local.ts` and edit locally.
@@ -97,9 +125,11 @@ export const disclosureFrameMap: DisclosureFrameMap = {
   },
 };
 ```
+
 2. Restart the issuer.
 
 Notes:
+
 - `config/*.local.ts` is ignored by git in this repo.
 - Local entries are merged into the base `supportedCredentialConfigurations` at runtime.
 - If a local credential configuration id matches a base one, the local one overrides it.
@@ -122,8 +152,18 @@ pre-commit run --all-files
 git add -A
 ```
 
+#### Local checks without committing
+
+Run only the EditorConfig check, without running auto-fixers:
+
+```sh
+pre-commit run editorconfig-checker --all-files
+```
+
+Omit `--all-files` to check only staged files. The first run installs the pinned native checker in pre-commit's cache. This check reports violations without changing or staging files.
+
 #### What happens on commit
 
 - Auto-fixers run (e.g. add final newlines).
-- After the auto-fixers, the editorconfig-checker runs inside Docker to validate all staged files.
+- After the auto-fixers, editorconfig-checker validates staged files.
 - If violations remain, fix them manually until the commit passes.

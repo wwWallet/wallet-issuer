@@ -2,12 +2,8 @@ import { DateOnly } from '@owf/mdoc';
 
 const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/;
 
-export function normalizeMdocNamespace(
-	data: Record<string, unknown>
-): Record<string, unknown> {
-	return Object.fromEntries(
-		Object.entries(data).map(([k, v]) => [k, normalize(v)])
-	);
+export function normalizeMdocNamespace(data: Record<string, unknown>): Record<string, unknown> {
+	return Object.fromEntries(Object.entries(data).map(([k, v]) => [k, normalize(v)]));
 }
 
 function normalize(value: unknown): unknown {

@@ -9,7 +9,11 @@ export interface CredentialSigner {
 	 * @param disclosureFrame ex. { claimX: true, claimY: { claimR: false, claimH: true }}
 	 */
 	signSdJwtVc(payload: any, headers?: any, disclosureFrame?: any): Promise<{ credential: string }>;
-	signMsoMdoc(doctype: string, namespaces: Map<string, Record<string, unknown>>, holderPublicKeyJwk: JWK): Promise<{ credential: string }>;
+	signMsoMdoc(
+		doctype: string,
+		namespaces: Map<string, Record<string, unknown>>,
+		holderPublicKeyJwk: JWK,
+	): Promise<{ credential: string }>;
 	getPublicKeyJwk(): Promise<JWK>;
 	signer(): Signer;
 	hasherAndAlgorithm: HasherAndAlg;

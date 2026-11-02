@@ -13,8 +13,12 @@ import { calculateObjectSRI } from 'wallet-common';
 import { vctDocumentProvider } from '../config/vctDocumentProvider';
 import { normalizeMdocNamespace } from './lib/issuer/normalizeMdocNamespace';
 
-const issuerPrivateKeyPem = fs.readFileSync(path.join(__dirname, '../../keys/pem.key'), 'utf-8').toString();
-const issuerCertPem = fs.readFileSync(path.join(__dirname, '../../keys/pem.crt'), 'utf-8').toString() as string;
+const issuerPrivateKeyPem = fs
+	.readFileSync(path.join(__dirname, '../../keys/pem.key'), 'utf-8')
+	.toString();
+const issuerCertPem = fs
+	.readFileSync(path.join(__dirname, '../../keys/pem.crt'), 'utf-8')
+	.toString() as string;
 
 const parsePemCertificateChain = (pem: string) => {
 	const matches = pem.match(/-----BEGIN CERTIFICATE-----[\s\S]*?-----END CERTIFICATE-----/g);
@@ -26,12 +30,14 @@ const parsePemCertificateChain = (pem: string) => {
 		certPemBlock
 			.replace(/-----BEGIN CERTIFICATE-----/g, '')
 			.replace(/-----END CERTIFICATE-----/g, '')
-			.replace(/\r?\n|\r/g, '')
+			.replace(/\r?\n|\r/g, ''),
 	);
 };
 
 const issuerX5C = parsePemCertificateChain(issuerCertPem);
-const issuerCertDerChain = issuerX5C.map((certB64) => new Uint8Array(Buffer.from(certB64, 'base64')));
+const issuerCertDerChain = issuerX5C.map(
+	(certB64) => new Uint8Array(Buffer.from(certB64, 'base64')),
+);
 
 importPrivateKeyPem(issuerPrivateKeyPem, 'ES256'); // attempt to import the key
 importX509(issuerCertPem, 'ES256'); // attempt to import the public key
@@ -49,7 +55,10 @@ const key = async function () {
 const mdocContext = {
 	crypto: {
 		digest: async ({ digestAlgorithm, bytes }) => {
-			const digest = await webcrypto.subtle.digest(digestAlgorithm, bytes as Uint8Array<ArrayBuffer>);
+			const digest = await webcrypto.subtle.digest(
+				digestAlgorithm,
+				bytes as Uint8Array<ArrayBuffer>,
+			);
 			return new Uint8Array(digest);
 		},
 		random: (length: number) => {
@@ -77,12 +86,15 @@ const mdocContext = {
 		},
 		sign1: {
 			sign: async ({ key, toBeSigned }) => {
-				const privateKey = createPrivateKey({ format: 'jwk', key: key.jwk as Record<string, unknown> });
+				const privateKey = createPrivateKey({
+					format: 'jwk',
+					key: key.jwk as Record<string, unknown>,
+				});
 				return new Uint8Array(
 					sign(null, toBeSigned, {
 						dsaEncoding: 'ieee-p1363',
 						key: privateKey,
-					})
+					}),
 				);
 			},
 			verify: async () => {
@@ -114,7 +126,7 @@ export const signer: CredentialSigner = {
 
 		const issuerSigned = await issuer.sign({
 			signingKey: CoseKey.fromJwk({
-				...issuerPrivateKeyJwk
+				...issuerPrivateKeyJwk,
 			} as Record<string, unknown>),
 			certificates: issuerCertDerChain,
 			algorithm: SignatureAlgorithm.ES256,
@@ -142,12 +154,10 @@ export const signer: CredentialSigner = {
 			const vctIntegrity = await calculateObjectSRI(crypto.subtle, typeMetadata);
 			if (vctIntegrity) {
 				payload['vct#integrity'] = vctIntegrity;
-			}
-			else {
+			} else {
 				logger.warn(`Unable to calculate VCT integrity for vct ${payload.vct}`);
 			}
-		}
-		else {
+		} else {
 			logger.warn(`Unable to find VCT Metadata for vct ${payload.vct}`);
 		}
 
@@ -200,7 +210,9 @@ export const signer: CredentialSigner = {
 			return result;
 		}
 
-		const credential = await sdjwt.issue(payload, disclosureFrameConvert(disclosureFrame), { header: headers });
+		const credential = await sdjwt.issue(payload, disclosureFrameConvert(disclosureFrame), {
+			header: headers,
+		});
 		return { credential };
 	},
 	getPublicKeyJwk: async function () {

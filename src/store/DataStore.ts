@@ -1,5 +1,5 @@
-import Valkey from "iovalkey";
-import { GenericStore } from "wallet-common";
+import Valkey from 'iovalkey';
+import { GenericStore } from 'wallet-common';
 
 export interface SetStore<TValue> {
 	addToSet(key: string, value: TValue): Promise<void>;
@@ -36,18 +36,10 @@ export class DataStore<TValue> implements ConsumableStore<string, TValue>, SetSt
 		const builtKey = this.buildKey(key);
 		const serializedValue = this.serializeValue(value);
 
-		if(ttlMs !== undefined) {
-			await this.client.set(
-				builtKey,
-				serializedValue,
-				"PX",
-				ttlMs
-			);
+		if (ttlMs !== undefined) {
+			await this.client.set(builtKey, serializedValue, 'PX', ttlMs);
 		} else {
-			await this.client.set(
-				builtKey,
-				serializedValue
-			);
+			await this.client.set(builtKey, serializedValue);
 		}
 	}
 
@@ -74,8 +66,6 @@ export class DataStore<TValue> implements ConsumableStore<string, TValue>, SetSt
 	}
 
 	async getAll(): Promise<TValue[]> {
-		throw new Error(
-			"getAll() is not supported by DataStore.",
-		);
+		throw new Error('getAll() is not supported by DataStore.');
 	}
 }

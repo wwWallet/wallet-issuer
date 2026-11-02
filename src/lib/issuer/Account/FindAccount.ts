@@ -7,7 +7,11 @@ export type FindAccount = (
 		url: string;
 		method: string;
 		credentialRequestHelper: CredentialRequestHelper;
-		request: { client: { cliendId: string } | null; transactionId: string | null, introspectionResponse?: IntrospectionResponse, };
+		request: {
+			client: { cliendId: string } | null;
+			transactionId: string | null;
+			introspectionResponse?: IntrospectionResponse;
+		};
 	},
 	sub: string,
 	token: string,

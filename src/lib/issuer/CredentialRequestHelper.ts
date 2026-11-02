@@ -17,12 +17,17 @@ export type GenericClaims = {
 type CredentialRequestWithoutTransactionId = Omit<CredentialRequest, 'transaction_id'>;
 
 export interface CredentialRequestHelper {
-	submitCredentialRequest(request: CredentialRequestWithoutTransactionId): Promise<ClaimsFuture<GenericClaims>>;
+	submitCredentialRequest(
+		request: CredentialRequestWithoutTransactionId,
+	): Promise<ClaimsFuture<GenericClaims>>;
 	fulfilCredentialRequest(transaction_id: string, claims: GenericClaims): Promise<void>;
 	getCredentialRequests(transaction_id?: string): Promise<ClaimsFuture<GenericClaims>[]>;
 }
 
-export type CredentialRequestWithClaims = CredentialRequest & { claims: GenericClaims; status: 'resolved' | 'rejected' | 'pending' };
+export type CredentialRequestWithClaims = CredentialRequest & {
+	claims: GenericClaims;
+	status: 'resolved' | 'rejected' | 'pending';
+};
 
 const credentialRequestIndexKey = 'transaction_ids';
 
@@ -45,11 +50,19 @@ function toClaimsFuture(transaction: CredentialRequestWithClaims): ClaimsFuture<
 	};
 }
 
-export function createCredentialRequestHelper(store: GenericStore<string, CredentialRequestWithClaims>, transactionIdIndexStore: SetStore<string>): CredentialRequestHelper {
+export function createCredentialRequestHelper(
+	store: GenericStore<string, CredentialRequestWithClaims>,
+	transactionIdIndexStore: SetStore<string>,
+): CredentialRequestHelper {
 	return {
 		submitCredentialRequest: async (request) => {
 			const transaction_id = generateRandomIdentifier(12);
-			await store.set(transaction_id, { ...request, transaction_id, status: 'pending', claims: {} as GenericClaims });
+			await store.set(transaction_id, {
+				...request,
+				transaction_id,
+				status: 'pending',
+				claims: {} as GenericClaims,
+			});
 			await transactionIdIndexStore.addToSet(credentialRequestIndexKey, transaction_id);
 			return {
 				sub: request.sub,
@@ -73,7 +86,8 @@ export function createCredentialRequestHelper(store: GenericStore<string, Creden
 
 		getCredentialRequests: async (transaction_id?: string) => {
 			if (!transaction_id) {
-				const transactionIds = await transactionIdIndexStore.getSetMembers(credentialRequestIndexKey);
+				const transactionIds =
+					await transactionIdIndexStore.getSetMembers(credentialRequestIndexKey);
 				const transactions = await Promise.all(transactionIds.map((id) => store.get(id)));
 				return transactions.filter((transaction) => transaction !== undefined).map(toClaimsFuture);
 			}

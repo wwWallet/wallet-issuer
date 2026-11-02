@@ -4,34 +4,59 @@ import { LocalTrustedCertificatesManager } from './LocalTrustedCertificatesManag
 import fs from 'fs';
 import path from 'path';
 import { signer } from '../signer';
-import { disclosureFrameMap, supportedCredentialConfigurations } from '../../config/supportedCredentialConfigurations';
+import {
+	disclosureFrameMap,
+	supportedCredentialConfigurations,
+} from '../../config/supportedCredentialConfigurations';
+import { claimsSourceConfigurations } from '../../config/claimsSourceConfigurations';
 import { pemToBase64 } from '../util/pemToBase64';
 import { JWK } from 'jose';
 import { vctDocumentProvider } from '../../config/vctDocumentProvider';
-import { createCredentialRequestHelper, CredentialRequestWithClaims } from '../lib/issuer/CredentialRequestHelper';
+import {
+	createCredentialRequestHelper,
+	CredentialRequestWithClaims,
+} from '../lib/issuer/CredentialRequestHelper';
 import { createFindAccount } from '../claims/createFindAccount';
-import { ClaimsProvider } from '../claims/ClaimsProvider';
-import { FilesystemClaimsProvider } from '../claims/providers/FilesystemClaimsProvider';
-import { RemoteClaimsProvider } from '../claims/providers/RemoteClaimsProvider';
+import { ConfigurationClaimsProvider } from '../claims/providers/ConfigurationClaimsProvider';
 import { DataStore } from '../store/DataStore';
 import { dataStoreClient } from '../store/dataStoreClient';
 
 const localTrustedCertsManager = LocalTrustedCertificatesManager();
 
-const secret = fs.readFileSync(path.join(__dirname, '../../../keys/secret.hs512.b64'), 'utf-8').toString().trim();
+const secret = fs
+	.readFileSync(path.join(__dirname, '../../../keys/secret.hs512.b64'), 'utf-8')
+	.toString()
+	.trim();
 
-const privateKeyJwk = JSON.parse(fs.readFileSync(path.join(__dirname, '../../../keys/private.enc.ecdh.jwk'), 'utf-8').toString().trim()) as JWK;
+const privateKeyJwk = JSON.parse(
+	fs
+		.readFileSync(path.join(__dirname, '../../../keys/private.enc.ecdh.jwk'), 'utf-8')
+		.toString()
+		.trim(),
+) as JWK;
 
-const publicKeyJwk = JSON.parse(fs.readFileSync(path.join(__dirname, '../../../keys/public.enc.ecdh.jwk'), 'utf-8').toString().trim()) as JWK;
+const publicKeyJwk = JSON.parse(
+	fs
+		.readFileSync(path.join(__dirname, '../../../keys/public.enc.ecdh.jwk'), 'utf-8')
+		.toString()
+		.trim(),
+) as JWK;
 
-const credentialRequestStore = new DataStore<CredentialRequestWithClaims>(dataStoreClient, "credentialRequest");
-const credentialRequestIndexStore = new DataStore<string>(dataStoreClient, "credentialRequestIndex");
+const credentialRequestStore = new DataStore<CredentialRequestWithClaims>(
+	dataStoreClient,
+	'credentialRequest',
+);
+const credentialRequestIndexStore = new DataStore<string>(
+	dataStoreClient,
+	'credentialRequestIndex',
+);
 
-export const credentialRequestHelper = createCredentialRequestHelper(credentialRequestStore, credentialRequestIndexStore);
+export const credentialRequestHelper = createCredentialRequestHelper(
+	credentialRequestStore,
+	credentialRequestIndexStore,
+);
 
-const claimsProvider: ClaimsProvider = config.vcClaimsFetcherEnabled && config.vcClaimsFetcherUrl
-	? new RemoteClaimsProvider(config.vcClaimsFetcherUrl, { apiKey: config.vcClaimsFetcherApiKey })
-	: new FilesystemClaimsProvider();
+const claimsProvider = new ConfigurationClaimsProvider(claimsSourceConfigurations);
 
 claimsProvider.startBackgroundJobs?.(credentialRequestHelper);
 const configuredFindAccount = createFindAccount(claimsProvider);
@@ -57,8 +82,17 @@ export const issuer = createIssuerOpenID4VCI(config.issuerIdentifier, {
 			privateKeyJwk: privateKeyJwk,
 		},
 	},
+	credentialResponseEncryption: {
+		encryptionRequired: false,
+	},
 	display: config.display,
 	vctDocumentProvider: vctDocumentProvider,
 });
 
-Object.entries(supportedCredentialConfigurations).map(([credentialConfigurationId, conf]) => issuer.registerSupportedCredentialConfiguration(credentialConfigurationId, conf, disclosureFrameMap[credentialConfigurationId]));
+Object.entries(supportedCredentialConfigurations).map(([credentialConfigurationId, conf]) =>
+	issuer.registerSupportedCredentialConfiguration(
+		credentialConfigurationId,
+		conf,
+		disclosureFrameMap[credentialConfigurationId],
+	),
+);

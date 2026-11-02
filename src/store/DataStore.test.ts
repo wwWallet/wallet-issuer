@@ -84,10 +84,7 @@ describe('DataStore', () => {
 	});
 
 	it('returns deserialized set members', async () => {
-		mockClient.smembers.mockResolvedValueOnce([
-			JSON.stringify({ x: 1 }),
-			JSON.stringify({ x: 2 }),
-		]);
+		mockClient.smembers.mockResolvedValueOnce([JSON.stringify({ x: 1 }), JSON.stringify({ x: 2 })]);
 
 		await expect(store.getSetMembers('abc')).resolves.toEqual([{ x: 1 }, { x: 2 }]);
 		expect(mockClient.smembers).toHaveBeenCalledWith('test:abc');

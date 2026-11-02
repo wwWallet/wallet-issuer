@@ -1,11 +1,11 @@
-import { logger } from "../../logger";
+import { logger } from '../../logger';
 
 type AnyObj = Record<string, any>;
 
 function base64ToBstr(dataUrl: string): Uint8Array | undefined {
 	const base64Data = dataUrl.split(',')[1];
 	if (!base64Data) {
-		logger.error("Invalid Data URL format. Returning underfined");
+		logger.error('Invalid Data URL format. Returning underfined');
 		return undefined;
 	}
 	const buffer = Buffer.from(base64Data, 'base64');
@@ -35,8 +35,8 @@ export function convertPidSdJwtVcToMdoc(pid: AnyObj) {
 		issuance_date: pid?.date_of_issuance,
 		expiry_date: pid?.date_of_expiry,
 
-		age_over_18: ageEq?.["18"],
-		age_over_21: ageEq?.["21"],
+		age_over_18: ageEq?.['18'],
+		age_over_21: ageEq?.['21'],
 		age_in_years: pid?.age_in_years,
 		age_birth_year: pid?.age_birth_year,
 

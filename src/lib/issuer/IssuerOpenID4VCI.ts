@@ -1,10 +1,33 @@
 import { JWK } from 'jose';
 import { ProofTypeSupported } from './types/ProofTypeSupported';
 import { CredentialSigner } from './CredentialSigner';
-import { CredentialOfferCreateSuccess, IssueCredentialRequestOptions, IssueCredentialResponse, PlainIssueCredentialResponse } from './IssuerOpenID4VCITypes';
+import {
+	CredentialOfferCreateSuccess,
+	IssueCredentialRequestOptions,
+	IssueCredentialResponse,
+	PlainIssueCredentialResponse,
+} from './IssuerOpenID4VCITypes';
 import { State } from './State';
 import { FindAccount } from './Account/FindAccount';
-import { GenericStore, convertSdjwtvcToOpenid4vciClaims, CredentialConfigurationSupported, CredentialOffer, OpenidCredentialIssuerMetadata, OpenidCredentialIssuerMetadataSchema, ResponseMessage, convertSdjwtvcToOpenid4vciDisplay, toBase64Url, generateRandomIdentifier,VctDocumentProvider, VerifiableCredentialFormat, PreAuthorizedCodeGrant, AuthorizationCodeGrant, GrantType, Grants, TxCode } from 'wallet-common';
+import {
+	GenericStore,
+	convertSdjwtvcToOpenid4vciClaims,
+	CredentialConfigurationSupported,
+	CredentialOffer,
+	OpenidCredentialIssuerMetadata,
+	OpenidCredentialIssuerMetadataSchema,
+	ResponseMessage,
+	convertSdjwtvcToOpenid4vciDisplay,
+	toBase64Url,
+	generateRandomIdentifier,
+	VctDocumentProvider,
+	VerifiableCredentialFormat,
+	PreAuthorizedCodeGrant,
+	AuthorizationCodeGrant,
+	GrantType,
+	Grants,
+	TxCode,
+} from 'wallet-common';
 import { CredentialRequestErrors } from './CredentialRequest/CredentialRequestError';
 import { handleEncryptedCredentialRequest } from './CredentialRequest/handleEncryptedCredentialRequest';
 import { createMemorySecretManager } from './MemorySecretManager';
@@ -24,10 +47,10 @@ import { dataStoreClient } from '../../store/dataStoreClient';
 export interface PreAuthorizedCodeStoreItem extends PreAuthorizedCodeGrant {
 	exp?: number;
 	tx_value?: string | number;
-	credential_configuration_ids?: string [];
+	credential_configuration_ids?: string[];
 	account_id?: string;
 	scope?: string;
-};
+}
 
 export type CredentialIssuerCreateOptions = {
 	authorizationServerUrl: string;
@@ -69,25 +92,34 @@ type JWTVCIssuerMetadata = {
 	jwks?: {
 		keys: JWK[];
 	};
-}
+};
 
 export interface IssuerOpenID4VCI {
 	generateCredentialOffer(credentialOfferCreateOptions: {
-		credentialConfigurationId: string,
-		grant_type?: GrantType.AUTHORIZATION_CODE | GrantType.PRE_AUTHORIZED_CODE,
-		issuerState?: string,
-		accountId?: string,
-		scope?: string
+		credentialConfigurationId: string;
+		grant_type?: GrantType.AUTHORIZATION_CODE | GrantType.PRE_AUTHORIZED_CODE;
+		issuerState?: string;
+		accountId?: string;
+		scope?: string;
 	}): Promise<CredentialOfferCreateSuccess>;
 
 	getCredentialOffer(credentialOfferId: string, revoke: boolean): Promise<CredentialOffer | null>;
 
-	registerSupportedCredentialConfiguration(credentialConfigurationId: string, credConf: CredentialConfigurationSupported, discloseFrame?: Record<string, unknown>): void;
+	registerSupportedCredentialConfiguration(
+		credentialConfigurationId: string,
+		credConf: CredentialConfigurationSupported,
+		discloseFrame?: Record<string, unknown>,
+	): void;
 
-	getMetadata(): Promise<{ metadata: OpenidCredentialIssuerMetadata, jwtVcIssuerMetadata: JWTVCIssuerMetadata }>;
+	getMetadata(): Promise<{
+		metadata: OpenidCredentialIssuerMetadata;
+		jwtVcIssuerMetadata: JWTVCIssuerMetadata;
+	}>;
 	issueNonce(): Promise<ResponseMessage>;
 
-	issueCredential(issueCredentialOptions: IssueCredentialRequestOptions): Promise<IssueCredentialResponse>;
+	issueCredential(
+		issueCredentialOptions: IssueCredentialRequestOptions,
+	): Promise<IssueCredentialResponse>;
 
 	preAuthorizedCodeStore: ConsumableStore<string, PreAuthorizedCodeStoreItem>;
 }
@@ -109,19 +141,41 @@ export async function retrieveCredentialOffer(
  * @param credentialIssuerCreateOptions
  * @returns
  */
-export function createIssuerOpenID4VCI(url: string, credentialIssuerCreateOptions: CredentialIssuerCreateOptions): IssuerOpenID4VCI {
+export function createIssuerOpenID4VCI(
+	url: string,
+	credentialIssuerCreateOptions: CredentialIssuerCreateOptions,
+): IssuerOpenID4VCI {
 	const encoder = new TextEncoder();
 
-	const deferredCredentialResponseInterval = credentialIssuerCreateOptions.deferredCredentialResponseInterval ?? 60;
+	const deferredCredentialResponseInterval =
+		credentialIssuerCreateOptions.deferredCredentialResponseInterval ?? 60;
 
-	const store = credentialIssuerCreateOptions.stateStore ?? new DataStore(dataStoreClient, "credentialIssuerState");
-	const stateByTransactionIdStore = credentialIssuerCreateOptions.stateByTransactionIdStore ?? new DataStore<string>(dataStoreClient, "credentialIssuerStateByTransactionId");
-	const credentialOfferStore = credentialIssuerCreateOptions.credentialOfferStore ?? new DataStore<CredentialOffer>(dataStoreClient, "credentialOffer");
-	const preAuthorizedCodeStore = credentialIssuerCreateOptions.preAuthorizedCodeStore ?? new DataStore<PreAuthorizedCodeStoreItem>(dataStoreClient, "preAuthorizedCode");
-	const secretManager = createMemorySecretManager(credentialIssuerCreateOptions.secret, credentialIssuerCreateOptions.clockTolerance, credentialIssuerCreateOptions.nonceExpirationTime);
+	const store =
+		credentialIssuerCreateOptions.stateStore ??
+		new DataStore(dataStoreClient, 'credentialIssuerState');
+	const stateByTransactionIdStore =
+		credentialIssuerCreateOptions.stateByTransactionIdStore ??
+		new DataStore<string>(dataStoreClient, 'credentialIssuerStateByTransactionId');
+	const credentialOfferStore =
+		credentialIssuerCreateOptions.credentialOfferStore ??
+		new DataStore<CredentialOffer>(dataStoreClient, 'credentialOffer');
+	const preAuthorizedCodeStore =
+		credentialIssuerCreateOptions.preAuthorizedCodeStore ??
+		new DataStore<PreAuthorizedCodeStoreItem>(dataStoreClient, 'preAuthorizedCode');
+	const secretManager = createMemorySecretManager(
+		credentialIssuerCreateOptions.secret,
+		credentialIssuerCreateOptions.clockTolerance,
+		credentialIssuerCreateOptions.nonceExpirationTime,
+	);
 
-	if (credentialIssuerCreateOptions?.credentialRequestEncryption?.keypair?.publicKeyJwk !== undefined && !('kid' in credentialIssuerCreateOptions.credentialRequestEncryption.keypair.publicKeyJwk)) {
-		throw new Error("Could not create issuer because 'kid' is missing from credentialIssuerCreateOptions.credentialRequestEncryption?.publicKeyJwk");
+	if (
+		credentialIssuerCreateOptions?.credentialRequestEncryption?.keypair?.publicKeyJwk !==
+			undefined &&
+		!('kid' in credentialIssuerCreateOptions.credentialRequestEncryption.keypair.publicKeyJwk)
+	) {
+		throw new Error(
+			"Could not create issuer because 'kid' is missing from credentialIssuerCreateOptions.credentialRequestEncryption?.publicKeyJwk",
+		);
 	}
 
 	const metadata = buildMetadata(url, credentialIssuerCreateOptions);
@@ -138,10 +192,14 @@ export function createIssuerOpenID4VCI(url: string, credentialIssuerCreateOption
 			return;
 		}
 		for (const [confId, conf] of Object.entries(metadata.credential_configurations_supported)) {
-			if (conf.format === VerifiableCredentialFormat.DC_SDJWT || conf.format === VerifiableCredentialFormat.VC_SDJWT) {
+			if (
+				conf.format === VerifiableCredentialFormat.DC_SDJWT ||
+				conf.format === VerifiableCredentialFormat.VC_SDJWT
+			) {
 				const vct = conf.vct;
 				if (credentialIssuerCreateOptions.vctDocumentProvider) {
-					const doc = await credentialIssuerCreateOptions.vctDocumentProvider.getVctMetadataDocument(vct);
+					const doc =
+						await credentialIssuerCreateOptions.vctDocumentProvider.getVctMetadataDocument(vct);
 					if (doc?.ok) {
 						const cfg = metadata.credential_configurations_supported[confId];
 						if (!cfg) return;
@@ -155,106 +213,115 @@ export function createIssuerOpenID4VCI(url: string, credentialIssuerCreateOption
 
 		const signer = credentialIssuerCreateOptions.credentialSigner.signer();
 		const publicKeyJwk = await credentialIssuerCreateOptions.credentialSigner.getPublicKeyJwk();
-		const [header, payload] = [encoder.encode(JSON.stringify({ alg: publicKeyJwk.alg as string, x5c: credentialIssuerCreateOptions.x5c, typ: 'openidvci-issuer-metadata+jwt' })), encoder.encode(JSON.stringify({ ...metadata, iat: Math.floor(new Date().getTime() / 1000), sub: url }))];
+		const [header, payload] = [
+			encoder.encode(
+				JSON.stringify({
+					alg: publicKeyJwk.alg as string,
+					x5c: credentialIssuerCreateOptions.x5c,
+					typ: 'openidvci-issuer-metadata+jwt',
+				}),
+			),
+			encoder.encode(
+				JSON.stringify({ ...metadata, iat: Math.floor(new Date().getTime() / 1000), sub: url }),
+			),
+		];
 		const data = `${toBase64Url(header)}.${toBase64Url(payload)}`;
 		const signature = await signer(data);
 		metadata.signed_metadata = `${data}.${signature}`;
 		OpenidCredentialIssuerMetadataSchema.parse(metadata);
 
-		const issuerPublicKeyJwk = await credentialIssuerCreateOptions.credentialSigner.getPublicKeyJwk();
+		const issuerPublicKeyJwk =
+			await credentialIssuerCreateOptions.credentialSigner.getPublicKeyJwk();
 		jwtVcIssuerMetadata.jwks = {
-			keys: [ issuerPublicKeyJwk ]
+			keys: [issuerPublicKeyJwk],
 		};
 		metadataLoaded = true;
 	};
 
 	return {
 		generateCredentialOffer: async (credentialOfferCreateOptions: {
-			credentialConfigurationId: string,
+			credentialConfigurationId: string;
 			grant_type?: GrantType.AUTHORIZATION_CODE | GrantType.PRE_AUTHORIZED_CODE;
 			issuerState?: string;
 			accountId?: string;
 			scope?: string;
 		}): Promise<CredentialOfferCreateSuccess> => {
+			let grants: Grants;
+			let tx_value;
 
-				let grants: Grants;
-				let tx_value;
-
-				if (credentialOfferCreateOptions.grant_type === GrantType.AUTHORIZATION_CODE) {
-					const authorizationCodeGrant: AuthorizationCodeGrant = {};
-					if (credentialOfferCreateOptions.issuerState) {
-						authorizationCodeGrant.issuer_state = credentialOfferCreateOptions.issuerState;
-					}
-					grants = { authorization_code: authorizationCodeGrant };
+			if (credentialOfferCreateOptions.grant_type === GrantType.AUTHORIZATION_CODE) {
+				const authorizationCodeGrant: AuthorizationCodeGrant = {};
+				if (credentialOfferCreateOptions.issuerState) {
+					authorizationCodeGrant.issuer_state = credentialOfferCreateOptions.issuerState;
 				}
-				else if (credentialOfferCreateOptions.grant_type === GrantType.PRE_AUTHORIZED_CODE) {
+				grants = { authorization_code: authorizationCodeGrant };
+			} else if (credentialOfferCreateOptions.grant_type === GrantType.PRE_AUTHORIZED_CODE) {
+				const preAuthorizedCode = generateRandomIdentifier(18);
 
-					const preAuthorizedCode = generateRandomIdentifier(18);
+				let preAuthorizedCodeStoreItem: PreAuthorizedCodeStoreItem = {
+					'pre-authorized_code': preAuthorizedCode,
+					credential_configuration_ids: [credentialOfferCreateOptions.credentialConfigurationId],
+					account_id: credentialOfferCreateOptions.accountId,
+					exp: Date.now() + config.preAuthorizedCodeGrantTtlMs,
+					scope: credentialOfferCreateOptions.scope,
+				};
 
-					let preAuthorizedCodeStoreItem: PreAuthorizedCodeStoreItem = {
-						"pre-authorized_code": preAuthorizedCode,
-						credential_configuration_ids: [credentialOfferCreateOptions.credentialConfigurationId],
-						account_id: credentialOfferCreateOptions.accountId,
-						exp: Date.now() + config.preAuthorizedCodeGrantTtlMs,
-						scope: credentialOfferCreateOptions.scope
+				if (config.preAuthorizedCodeTxCodeLength > 0) {
+					const length = config.preAuthorizedCodeTxCodeLength ?? 4;
+					tx_value = generateNumericPin(length);
+					console.log(`tx_code: ${tx_value}`);
+
+					const txCodeObject: TxCode = {
+						input_mode: 'numeric',
+						length: length,
 					};
 
-					if (config.preAuthorizedCodeTxCodeLength > 0) {
-						const length = config.preAuthorizedCodeTxCodeLength ?? 4
-						tx_value = generateNumericPin(length);
-						console.log(`tx_code: ${tx_value}`);
+					preAuthorizedCodeStoreItem = {
+						...preAuthorizedCodeStoreItem,
+						tx_code: txCodeObject,
+						tx_value,
+					};
 
-						const txCodeObject: TxCode = {
-							'input_mode': 'numeric',
-							'length': length
-						};
-
-						preAuthorizedCodeStoreItem = {
-							...preAuthorizedCodeStoreItem,
+					grants = {
+						'urn:ietf:params:oauth:grant-type:pre-authorized_code': {
+							'pre-authorized_code': preAuthorizedCode,
 							tx_code: txCodeObject,
-							tx_value
-						};
-
-						grants = {
-							"urn:ietf:params:oauth:grant-type:pre-authorized_code": {
-								"pre-authorized_code": preAuthorizedCode,
-								"tx_code": txCodeObject
-							}
-						};
-					} else {
-						grants = {
-							"urn:ietf:params:oauth:grant-type:pre-authorized_code": {
-								"pre-authorized_code": preAuthorizedCode
-							}
-						};
-					}
-
-					await preAuthorizedCodeStore.set(preAuthorizedCode, preAuthorizedCodeStoreItem);
-
+						},
+					};
 				} else {
-					grants = {};
+					grants = {
+						'urn:ietf:params:oauth:grant-type:pre-authorized_code': {
+							'pre-authorized_code': preAuthorizedCode,
+						},
+					};
 				}
+
+				await preAuthorizedCodeStore.set(preAuthorizedCode, preAuthorizedCodeStoreItem);
+			} else {
+				grants = {};
+			}
 
 			const credentialOffer: CredentialOffer = {
 				credential_issuer: url,
 				credential_configuration_ids: [credentialOfferCreateOptions.credentialConfigurationId],
-				grants
+				grants,
 			};
 			const id = generateRandomIdentifier(18);
 			await credentialOfferStore.set(id, credentialOffer, config.credentialOfferTtlMs);
 			const container = new URL('openid-credential-offer://');
-			container.searchParams.append('credential_offer_uri', url + "/credential-offer/" + id);
+			container.searchParams.append('credential_offer_uri', url + '/credential-offer/' + id);
 
 			return {
 				credentialOfferId: id,
 				credentialOfferWithReference: container,
-				txCode: tx_value
+				txCode: tx_value,
 			};
 		},
 
-
-
-		getCredentialOffer: async (credentialOfferId: string, revoke: boolean = false): Promise<CredentialOffer | null> => {
+		getCredentialOffer: async (
+			credentialOfferId: string,
+			revoke: boolean = false,
+		): Promise<CredentialOffer | null> => {
 			return retrieveCredentialOffer(credentialOfferStore, credentialOfferId, revoke);
 		},
 
@@ -268,7 +335,11 @@ export function createIssuerOpenID4VCI(url: string, credentialIssuerCreateOption
 			};
 		},
 
-		registerSupportedCredentialConfiguration: (credentialConfigurationId, credConf, disclosureFrame) => {
+		registerSupportedCredentialConfiguration: (
+			credentialConfigurationId,
+			credConf,
+			disclosureFrame,
+		) => {
 			metadata.credential_configurations_supported[credentialConfigurationId] = {
 				...credConf,
 				proof_types_supported: {
@@ -296,9 +367,16 @@ export function createIssuerOpenID4VCI(url: string, credentialIssuerCreateOption
 
 		issueCredential: async (issueCredentialOpts): Promise<IssueCredentialResponse> => {
 			// decrypt credential request if received as encrypted
-			const issueCredentialOptionsResult = await handleEncryptedCredentialRequest(metadata, issueCredentialOpts, credentialIssuerCreateOptions.credentialRequestEncryption);
+			const issueCredentialOptionsResult = await handleEncryptedCredentialRequest(
+				metadata,
+				issueCredentialOpts,
+				credentialIssuerCreateOptions.credentialRequestEncryption,
+			);
 			if (!issueCredentialOptionsResult.ok) {
-				return sendError(issueCredentialOptionsResult.error, issueCredentialOptionsResult.error_description);
+				return sendError(
+					issueCredentialOptionsResult.error,
+					issueCredentialOptionsResult.error_description,
+				);
 			}
 			const issueCredentialOptions = issueCredentialOptionsResult.value;
 
@@ -309,7 +387,11 @@ export function createIssuerOpenID4VCI(url: string, credentialIssuerCreateOption
 
 			const result = await (async () => {
 				if ('credential_configuration_id' in issueCredentialOptions.request.data) {
-					return { state: null, credential_configuration_id: issueCredentialOptions.request.data.credential_configuration_id };
+					return {
+						state: null,
+						credential_configuration_id:
+							issueCredentialOptions.request.data.credential_configuration_id,
+					};
 				} else if ('transaction_id' in issueCredentialOptions.request.data) {
 					const transaction_id = issueCredentialOptions.request.data.transaction_id;
 					const stateId = await stateByTransactionIdStore.get(transaction_id);
@@ -324,14 +406,25 @@ export function createIssuerOpenID4VCI(url: string, credentialIssuerCreateOption
 			let { state } = result;
 
 			if (credential_configuration_id === null) {
-				return sendError(CredentialRequestErrors.InvalidRequest, 'No credential configuration is defined in the request');
+				return sendError(
+					CredentialRequestErrors.InvalidRequest,
+					'No credential configuration is defined in the request',
+				);
 			}
 
 			// access token validation
-			const accessTokenValidationResult = await validateAccessToken(credential_configuration_id, metadata, issueCredentialOptions, credentialIssuerCreateOptions);
+			const accessTokenValidationResult = await validateAccessToken(
+				credential_configuration_id,
+				metadata,
+				issueCredentialOptions,
+				credentialIssuerCreateOptions,
+			);
 
 			if (!accessTokenValidationResult.ok) {
-				return sendError(accessTokenValidationResult.error, accessTokenValidationResult.error_description);
+				return sendError(
+					accessTokenValidationResult.error,
+					accessTokenValidationResult.error_description,
+				);
 			}
 
 			const { sub, client_id, scope } = accessTokenValidationResult.value;
@@ -356,7 +449,11 @@ export function createIssuerOpenID4VCI(url: string, credentialIssuerCreateOption
 					method: 'POST',
 					url: '/credential',
 					credentialRequestHelper: credentialIssuerCreateOptions.credentialRequestHelper,
-					request: { client: { cliendId: client_id }, transactionId: state.transactionId, introspectionResponse: accessTokenValidationResult.value, },
+					request: {
+						client: { cliendId: client_id },
+						transactionId: state.transactionId,
+						introspectionResponse: accessTokenValidationResult.value,
+					},
 				},
 				sub,
 				'',
@@ -366,32 +463,74 @@ export function createIssuerOpenID4VCI(url: string, credentialIssuerCreateOption
 				return sendError(CredentialRequestErrors.CredentialRequestDenied, 'Not allowed');
 			}
 
-			if ('transaction_id' in issueCredentialOptions.request.data && state !== null && state.attestedKeys !== null) {
+			if (
+				'transaction_id' in issueCredentialOptions.request.data &&
+				state !== null &&
+				state.attestedKeys !== null
+			) {
 				const claimsFutureResult = account?.claims ? await account?.claims('issue', scope) : null;
 				if (claimsFutureResult === null) {
-					return sendError(CredentialRequestErrors.CredentialRequestDenied, 'Could not retrieve claims for this account');
+					return sendError(
+						CredentialRequestErrors.CredentialRequestDenied,
+						'Could not retrieve claims for this account',
+					);
 				}
 				if (!claimsFutureResult.ok) {
 					return sendError(claimsFutureResult.error, claimsFutureResult.error_description);
 				}
 
 				if (claimsFutureResult.value.status === 'pending') {
-					const responseOpts: PlainIssueCredentialResponse = { status: 202, headers: { 'content-type': 'application/json' }, data: { transaction_id: claimsFutureResult.value.transaction_id, interval: deferredCredentialResponseInterval } };
-					const send = await sendCredentialResponse(metadata, issueCredentialOptions, responseOpts, credentialIssuerCreateOptions);
+					const responseOpts: PlainIssueCredentialResponse = {
+						status: 202,
+						headers: { 'content-type': 'application/json' },
+						data: {
+							transaction_id: claimsFutureResult.value.transaction_id,
+							interval: deferredCredentialResponseInterval,
+						},
+					};
+					const send = await sendCredentialResponse(
+						metadata,
+						issueCredentialOptions,
+						responseOpts,
+						credentialIssuerCreateOptions,
+					);
 					if (!send.ok) {
 						return sendError(send.error, send.error_description);
 					}
 					return send.value;
 				} else if (claimsFutureResult.value.status === 'rejected') {
-					return sendError(CredentialRequestErrors.CredentialRequestDenied, 'Claims could not be retrieved becuase the request is rejected by the Credential Issuer');
+					return sendError(
+						CredentialRequestErrors.CredentialRequestDenied,
+						'Claims could not be retrieved becuase the request is rejected by the Credential Issuer',
+					);
 				} else if (claimsFutureResult.value.status === 'resolved') {
-					const credentialsBindingResult = await signCredentials(credential_configuration_id, metadata, claimsFutureResult.value.data.claims, state.attestedKeys, disclosureFrameMap, issueCredentialOptions, credentialIssuerCreateOptions);
+					const credentialsBindingResult = await signCredentials(
+						credential_configuration_id,
+						metadata,
+						claimsFutureResult.value.data.claims,
+						state.attestedKeys,
+						disclosureFrameMap,
+						issueCredentialOptions,
+						credentialIssuerCreateOptions,
+					);
 					if (!credentialsBindingResult.ok) {
-						return sendError(credentialsBindingResult.error, credentialsBindingResult.error_description);
+						return sendError(
+							credentialsBindingResult.error,
+							credentialsBindingResult.error_description,
+						);
 					}
 					const credentials = credentialsBindingResult.value;
-					const responseOpts: PlainIssueCredentialResponse = { status: 200, headers: { 'content-type': 'application/json' }, data: { credentials: credentials.map((credential: string) => ({ credential })) } };
-					const send = await sendCredentialResponse(metadata, issueCredentialOptions, responseOpts, credentialIssuerCreateOptions);
+					const responseOpts: PlainIssueCredentialResponse = {
+						status: 200,
+						headers: { 'content-type': 'application/json' },
+						data: { credentials: credentials.map((credential: string) => ({ credential })) },
+					};
+					const send = await sendCredentialResponse(
+						metadata,
+						issueCredentialOptions,
+						responseOpts,
+						credentialIssuerCreateOptions,
+					);
 					if (!send.ok) {
 						return sendError(send.error, send.error_description);
 					}
@@ -399,28 +538,49 @@ export function createIssuerOpenID4VCI(url: string, credentialIssuerCreateOption
 				}
 			}
 
-			if (!('proofs' in issueCredentialOptions.request.data) && credentialIssuerCreateOptions.requireKeyBindingInCredentialConfigurationIds.includes(credential_configuration_id)) {
+			if (
+				!('proofs' in issueCredentialOptions.request.data) &&
+				credentialIssuerCreateOptions.requireKeyBindingInCredentialConfigurationIds.includes(
+					credential_configuration_id,
+				)
+			) {
 				// check if key-binding is required and no proofs provided
 
-				return sendError(CredentialRequestErrors.CredentialRequestDenied, `Credetial configuration id '${credential_configuration_id}' can only be issued with key-binding.`);
+				return sendError(
+					CredentialRequestErrors.CredentialRequestDenied,
+					`Credetial configuration id '${credential_configuration_id}' can only be issued with key-binding.`,
+				);
 			}
 
 			// 'proofs' validation
-			if ('proofs' in issueCredentialOptions.request.data && issueCredentialOptions.request.data.proofs !== undefined) {
-				const proofsVerificationResult = await verifyProofsWrapper(issueCredentialOptions.request.data.proofs, {
-					clockTolerance: credentialIssuerCreateOptions.clockTolerance,
-					getAllTrustedPemCertificates: credentialIssuerCreateOptions.getAllTrustedPemCertificates,
-					requiredVerificationMechanisms: ['x5c'],
-					credentialIssuerIdentifier: url,
-				});
+			if (
+				'proofs' in issueCredentialOptions.request.data &&
+				issueCredentialOptions.request.data.proofs !== undefined
+			) {
+				const proofsVerificationResult = await verifyProofsWrapper(
+					issueCredentialOptions.request.data.proofs,
+					{
+						clockTolerance: credentialIssuerCreateOptions.clockTolerance,
+						getAllTrustedPemCertificates:
+							credentialIssuerCreateOptions.getAllTrustedPemCertificates,
+						requiredVerificationMechanisms: ['x5c'],
+						credentialIssuerIdentifier: url,
+					},
+				);
 
 				if (!proofsVerificationResult.ok) {
-					return sendError(proofsVerificationResult.error, proofsVerificationResult.error_description);
+					return sendError(
+						proofsVerificationResult.error,
+						proofsVerificationResult.error_description,
+					);
 				}
 				const { attested_keys } = proofsVerificationResult.value;
 				const claimsFutureResult = account?.claims ? await account?.claims('issue', scope) : null;
 				if (claimsFutureResult === null) {
-					return sendError(CredentialRequestErrors.CredentialRequestDenied, 'Could not retrieve claims for this account');
+					return sendError(
+						CredentialRequestErrors.CredentialRequestDenied,
+						'Could not retrieve claims for this account',
+					);
 				}
 				if (!claimsFutureResult.ok) {
 					return sendError(claimsFutureResult.error, claimsFutureResult.error_description);
@@ -434,24 +594,59 @@ export function createIssuerOpenID4VCI(url: string, credentialIssuerCreateOption
 
 				if (claimsFutureResult.value.status === 'pending') {
 					// if not resolved then respond with transaction_id
-					const responseOpts: PlainIssueCredentialResponse = { status: 202, headers: { 'content-type': 'application/json' }, data: { transaction_id: claimsFutureResult.value.transaction_id, interval: deferredCredentialResponseInterval } };
-					const send = await sendCredentialResponse(metadata, issueCredentialOptions, responseOpts, credentialIssuerCreateOptions);
+					const responseOpts: PlainIssueCredentialResponse = {
+						status: 202,
+						headers: { 'content-type': 'application/json' },
+						data: {
+							transaction_id: claimsFutureResult.value.transaction_id,
+							interval: deferredCredentialResponseInterval,
+						},
+					};
+					const send = await sendCredentialResponse(
+						metadata,
+						issueCredentialOptions,
+						responseOpts,
+						credentialIssuerCreateOptions,
+					);
 					if (!send.ok) {
 						return sendError(send.error, send.error_description);
 					}
 					return send.value;
 				}
 				if (claimsFutureResult.value.status === 'rejected') {
-					return sendError(CredentialRequestErrors.CredentialRequestDenied, 'Claims could not be retrieved becuase the request is rejected by the Credential Issuer');
+					return sendError(
+						CredentialRequestErrors.CredentialRequestDenied,
+						'Claims could not be retrieved becuase the request is rejected by the Credential Issuer',
+					);
 				}
 
-				const credentialsBindingResult = await signCredentials(credential_configuration_id, metadata, claimsFutureResult.value.data.claims, attested_keys, disclosureFrameMap, issueCredentialOptions, credentialIssuerCreateOptions);
+				const credentialsBindingResult = await signCredentials(
+					credential_configuration_id,
+					metadata,
+					claimsFutureResult.value.data.claims,
+					attested_keys,
+					disclosureFrameMap,
+					issueCredentialOptions,
+					credentialIssuerCreateOptions,
+				);
 				if (!credentialsBindingResult.ok) {
-					return sendError(credentialsBindingResult.error, credentialsBindingResult.error_description);
+					return sendError(
+						credentialsBindingResult.error,
+						credentialsBindingResult.error_description,
+					);
 				}
 				const credentials = credentialsBindingResult.value;
-				const responseOpts: PlainIssueCredentialResponse = { status: 200, headers: { 'content-type': 'application/json' }, data: { credentials: credentials.map((credential: string) => ({ credential })) } };
-				const send = await sendCredentialResponse(metadata, issueCredentialOptions, responseOpts, credentialIssuerCreateOptions);
+				const responseOpts: PlainIssueCredentialResponse = {
+					status: 200,
+					headers: { 'content-type': 'application/json' },
+					data: { credentials: credentials.map((credential: string) => ({ credential })) },
+				};
+				const send = await sendCredentialResponse(
+					metadata,
+					issueCredentialOptions,
+					responseOpts,
+					credentialIssuerCreateOptions,
+				);
 				if (!send.ok) {
 					return sendError(send.error, send.error_description);
 				}
@@ -459,12 +654,23 @@ export function createIssuerOpenID4VCI(url: string, credentialIssuerCreateOption
 			}
 
 			// check if proofs where not provided for a credential configuration id that exists in the requireKeyBindingInCredentialConfigurationIds array
-			if (!('proofs' in issueCredentialOptions.request.data) && credentialIssuerCreateOptions.requireKeyBindingInCredentialConfigurationIds.includes(credential_configuration_id)) {
-				return sendError(CredentialRequestErrors.InvalidRequest, 'The specific credential configuration requires key-binding');
+			if (
+				!('proofs' in issueCredentialOptions.request.data) &&
+				credentialIssuerCreateOptions.requireKeyBindingInCredentialConfigurationIds.includes(
+					credential_configuration_id,
+				)
+			) {
+				return sendError(
+					CredentialRequestErrors.InvalidRequest,
+					'The specific credential configuration requires key-binding',
+				);
 			}
-			return sendError(CredentialRequestErrors.InvalidRequest, 'No credential configuration is defined in the request');
+			return sendError(
+				CredentialRequestErrors.InvalidRequest,
+				'No credential configuration is defined in the request',
+			);
 		},
 
-		preAuthorizedCodeStore: preAuthorizedCodeStore
+		preAuthorizedCodeStore: preAuthorizedCodeStore,
 	};
 }

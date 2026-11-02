@@ -1,0 +1,4 @@
+{
+	"SpacesAfterTabs": true,
+	"Exclude": ["^(node_modules|assets|dist|build)/", "^public/js/qr\\.min\\.js$"]
+}

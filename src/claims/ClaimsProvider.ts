@@ -11,6 +11,10 @@ export type ClaimsResolutionContext = {
 
 export interface ClaimsProvider {
 	resolveAccountId(sub: string): Promise<string | null>;
-	resolveClaims(accountId: string, scope: string, context?: ClaimsResolutionContext): Promise<ClaimsProviderResult>;
+	resolveClaims(
+		accountId: string,
+		scope: string,
+		context?: ClaimsResolutionContext,
+	): Promise<ClaimsProviderResult>;
 	startBackgroundJobs?(credentialRequestHelper: CredentialRequestHelper): void;
 }
