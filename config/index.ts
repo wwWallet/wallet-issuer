@@ -2,6 +2,13 @@ import dotenv from 'dotenv';
 dotenv.config({ quiet: true });
 
 const url = String(process.env.SERVICE_URL || 'default_url');
+const issuerDisplay = {
+	name: String(process.env.DISPLAY_NAME || 'wwWallet Issuer'),
+	locale: String(process.env.DISPLAY_LOCALE || 'en-US'),
+	logo: {
+		uri: url + '/images/logo.png',
+	},
+};
 const supportedCredentialScopesWhitelist = (process.env.SUPPORTED_CREDENTIAL_SCOPES_WHITELIST ?? '')
 	.split(',')
 	.map((scope) => scope.trim())
@@ -50,15 +57,7 @@ export const config = {
 	dataStoreHost: dataStoreHost,
 	dataStorePort: dataStorePort,
 	dataStorePassword: dataStorePassword,
-	display: [
-		{
-			name: String(process.env.DISPLAY_NAME || 'wwWallet Issuer'),
-			locale: String(process.env.DISPLAY_LOCALE || 'en-US'),
-			logo: {
-				uri: String(process.env.DISPLAY_LOGO_URI || url + '/images/logo.png'),
-			},
-		},
-	],
+	display: [issuerDisplay],
 	wwwalletURL: process.env.WWWALLET_URL || 'http://localhost:3000',
 	clockTolerance: parseInt(process.env.CLOCK_TOLERANCE || '60', 10),
 	deferredCredentialResponseInterval: parseInt(
@@ -66,8 +65,8 @@ export const config = {
 		10,
 	),
 	siteConfig: {
-		name: process.env.SITE_NAME || 'wwWallet Issuer',
-		short_name: process.env.SITE_SHORT_NAME || 'wwWallet Issuer',
+		name: issuerDisplay.name,
+		short_name: issuerDisplay.name,
 		theme_color: process.env.SITE_THEME_COLOR || '#00246b',
 		background_color: process.env.SITE_BACKGROUND_COLOR || '#ffffff',
 	},

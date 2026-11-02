@@ -50,6 +50,8 @@ app.set('views', path.join(__dirname, '../../views'));
 
 app.use((req, res, next) => {
 	res.locals.locale = locale;
+	res.locals.displayName = config.display[0].name;
+	res.locals.displayLogoUri = config.display[0].logo.uri;
 	res.locals.currentPath = req.path;
 	next();
 });
