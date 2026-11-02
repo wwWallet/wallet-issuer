@@ -6,7 +6,7 @@ const issuerDisplay = {
 	name: String(process.env.DISPLAY_NAME || 'wwWallet Issuer'),
 	locale: String(process.env.DISPLAY_LOCALE || 'en-US'),
 	logo: {
-		uri: String(process.env.DISPLAY_LOGO_URI || url + '/images/logo.png'),
+		uri: url + '/images/logo.png',
 	},
 };
 const supportedCredentialScopesWhitelist = (process.env.SUPPORTED_CREDENTIAL_SCOPES_WHITELIST ?? '')
