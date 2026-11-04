@@ -149,7 +149,6 @@ describe('encrypted deferred issuance', () => {
 		expect(context.signSdJwtVc).toHaveBeenCalledExactlyOnceWith(
 			{ given_name: 'Alice', cnf: { jwk: context.holderJwk } },
 			{},
-			{},
 		);
 	});
 

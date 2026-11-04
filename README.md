@@ -105,7 +105,6 @@ import { OpenidCredentialIssuerMetadata, VerifiableCredentialFormat } from 'wall
 
 type CredentialConfigurationsSupported =
   OpenidCredentialIssuerMetadata['credential_configurations_supported'];
-type DisclosureFrameMap = Record<string, Record<string, unknown>>;
 
 // Copy to `supportedCredentialConfigurations.local.ts` and edit locally.
 export const supportedCredentialConfigurations: CredentialConfigurationsSupported = {
@@ -113,15 +112,6 @@ export const supportedCredentialConfigurations: CredentialConfigurationsSupporte
     scope: 'example',
     vct: 'urn:credential:example',
     format: VerifiableCredentialFormat.DC_SDJWT,
-  },
-};
-
-// Optional: add disclosure frames keyed by credential configuration id.
-export const disclosureFrameMap: DisclosureFrameMap = {
-  'urn:credential:example': {
-    family_name: true,
-    given_name: true,
-    picture: true,
   },
 };
 ```

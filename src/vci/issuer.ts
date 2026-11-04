@@ -4,10 +4,7 @@ import { LocalTrustedCertificatesManager } from './LocalTrustedCertificatesManag
 import fs from 'fs';
 import path from 'path';
 import { signer } from '../signer';
-import {
-	disclosureFrameMap,
-	supportedCredentialConfigurations,
-} from '../../config/supportedCredentialConfigurations';
+import { supportedCredentialConfigurations } from '../../config/supportedCredentialConfigurations';
 import { claimsSourceConfigurations } from '../../config/claimsSourceConfigurations';
 import { pemToBase64 } from '../util/pemToBase64';
 import { JWK } from 'jose';
@@ -90,9 +87,5 @@ export const issuer = createIssuerOpenID4VCI(config.issuerIdentifier, {
 });
 
 Object.entries(supportedCredentialConfigurations).map(([credentialConfigurationId, conf]) =>
-	issuer.registerSupportedCredentialConfiguration(
-		credentialConfigurationId,
-		conf,
-		disclosureFrameMap[credentialConfigurationId],
-	),
+	issuer.registerSupportedCredentialConfiguration(credentialConfigurationId, conf),
 );

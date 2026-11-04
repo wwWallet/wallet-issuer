@@ -19,7 +19,6 @@ export async function signCredentials(
 	metadata: OpenidCredentialIssuerMetadata,
 	claims: GenericClaims,
 	attestedKeys: JWK[],
-	disclosureFrameMap: Map<string, Record<string, unknown>>,
 	_requestOpts: PlainIssueCredentialRequestOptions,
 	createOpts: CredentialIssuerCreateOptions,
 ): Promise<Result<string[], CredentialRequestError>> {
@@ -36,19 +35,14 @@ export async function signCredentials(
 	switch (credentialConfigurationSupported.format) {
 		case VerifiableCredentialFormat.DC_SDJWT:
 			if (attestedKeys.length) {
-				const disclosureFrame = disclosureFrameMap.get(credentialConfigurationId);
 				const signedCredentials = await Promise.all(
 					attestedKeys.map((key) =>
-						createOpts.credentialSigner.signSdJwtVc(
-							{ ...claims, cnf: { jwk: key } },
-							{},
-							disclosureFrame ?? {},
-						),
+						createOpts.credentialSigner.signSdJwtVc({ ...claims, cnf: { jwk: key } }, {}),
 					),
 				);
 				return ok(signedCredentials.map((c) => c.credential));
 			} else {
-				const { credential } = await createOpts.credentialSigner.signSdJwtVc({ ...claims }, {}, {});
+				const { credential } = await createOpts.credentialSigner.signSdJwtVc({ ...claims }, {});
 				return ok([credential]);
 			}
 		case VerifiableCredentialFormat.MSO_MDOC:
