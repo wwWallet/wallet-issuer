@@ -9,7 +9,7 @@ import { importPrivateKeyPem } from './util/importPrivateKeyPem';
 import { calculateJwkThumbprint, exportJWK, importX509 } from 'jose';
 import { CoseKey, DeviceKey, Issuer, SignatureAlgorithm, type MdocContext } from '@owf/mdoc';
 import { logger } from './logger';
-import { calculateObjectSRI } from 'wallet-common';
+import { calculateObjectSRI, defaultHttpClient, getSdJwtVcMetadata } from 'wallet-common';
 import { vctDocumentProvider } from '../config/vctDocumentProvider';
 import { normalizeMdocNamespace } from './lib/issuer/normalizeMdocNamespace';
 import { createDisclosureFrame } from './lib/issuer/createDisclosureFrame';
@@ -153,8 +153,26 @@ export const signer: CredentialSigner = {
 		if (!doc.ok) {
 			throw new Error(`Unable to find VCT Metadata for vct ${payload.vct}`);
 		}
-		const typeMetadata = doc.value;
-		const vctIntegrity = await calculateObjectSRI(crypto.subtle, typeMetadata);
+		if (doc.value.vct !== payload.vct) {
+			throw new Error(`Resolved VCT Metadata does not match vct ${payload.vct}`);
+		}
+
+		const metadataResult = await getSdJwtVcMetadata(
+			vctDocumentProvider,
+			crypto.subtle,
+			defaultHttpClient,
+			payload.vct,
+			undefined,
+		);
+		if (
+			'error' in metadataResult ||
+			metadataResult.warnings.length > 0 ||
+			!metadataResult.credentialMetadata?.claims?.length
+		) {
+			throw new Error(`Unable to resolve VCT Metadata for vct ${payload.vct}`);
+		}
+		const typeMetadata = metadataResult.credentialMetadata;
+		const vctIntegrity = await calculateObjectSRI(crypto.subtle, doc.value);
 		if (vctIntegrity) {
 			payload['vct#integrity'] = vctIntegrity;
 		} else {

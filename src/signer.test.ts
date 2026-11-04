@@ -32,24 +32,32 @@ vi.mock('./util/importPrivateKeyPem', () => ({
 
 vi.mock('../config/vctDocumentProvider', () => ({
 	vctDocumentProvider: {
-		getVctMetadataDocument: vi.fn().mockResolvedValue({
+		getVctMetadataDocument: vi.fn(async (vct: string) => ({
 			ok: true,
-			value: {
-				vct: 'urn:test:signing',
-				claims: [
-					{ path: ['family_name'], sd: 'always' },
-					{ path: ['issuing_country'], sd: 'never' },
-					{ path: ['place_of_birth', 'country'], sd: 'always' },
-					{ path: ['place_of_birth', 'region'], sd: 'never' },
-					{ path: ['place_of_birth', 'locality'], sd: 'always' },
-					{ path: ['address', 'country'], sd: 'always' },
-					{ path: ['address', 'street', 'name'], sd: 'always' },
-					{ path: ['address', 'street', 'house_number'], sd: 'never' },
-					{ path: ['age_equal_or_over', '18'], sd: 'always' },
-					{ path: ['age_equal_or_over', '21'], sd: 'never' },
-				],
-			},
-		}),
+			value:
+				vct === 'urn:test:base'
+					? {
+							vct,
+							claims: [
+								{ path: ['family_name'], sd: 'always' },
+								{ path: ['issuing_country'], sd: 'never' },
+								{ path: ['place_of_birth', 'country'], sd: 'always' },
+								{ path: ['place_of_birth', 'region'], sd: 'never' },
+								{ path: ['place_of_birth', 'locality'], sd: 'always' },
+							],
+						}
+					: {
+							vct: 'urn:test:signing',
+							extends: 'urn:test:base',
+							claims: [
+								{ path: ['address', 'country'], sd: 'always' },
+								{ path: ['address', 'street', 'name'], sd: 'always' },
+								{ path: ['address', 'street', 'house_number'], sd: 'never' },
+								{ path: ['age_equal_or_over', '18'], sd: 'always' },
+								{ path: ['age_equal_or_over', '21'], sd: 'never' },
+							],
+						},
+		})),
 	},
 }));
 
