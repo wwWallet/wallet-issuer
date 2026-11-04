@@ -13,6 +13,7 @@ import { JWK } from 'jose';
 import { PlainIssueCredentialRequestOptions } from './IssuerOpenID4VCITypes';
 import { CredentialIssuerCreateOptions } from './IssuerOpenID4VCI';
 import { GenericClaims } from './CredentialRequestHelper';
+import { logger } from '../../logger';
 
 export async function signCredentials(
 	credentialConfigurationId: string,
@@ -31,40 +32,47 @@ export async function signCredentials(
 		);
 	}
 
-	// add error handling for signature generation
-	switch (credentialConfigurationSupported.format) {
-		case VerifiableCredentialFormat.DC_SDJWT:
-			if (attestedKeys.length) {
-				const signedCredentials = await Promise.all(
-					attestedKeys.map((key) =>
-						createOpts.credentialSigner.signSdJwtVc({ ...claims, cnf: { jwk: key } }, {}),
-					),
-				);
-				return ok(signedCredentials.map((c) => c.credential));
-			} else {
-				const { credential } = await createOpts.credentialSigner.signSdJwtVc({ ...claims }, {});
-				return ok([credential]);
-			}
-		case VerifiableCredentialFormat.MSO_MDOC:
-			if (attestedKeys.length) {
-				const { sub: _sub, ...claimsToBeSigned } = claims;
-				const signedCredentials = await Promise.all(
-					attestedKeys.map((key) =>
-						createOpts.credentialSigner.signMsoMdoc(
-							credentialConfigurationSupported.doctype,
-							new Map([[credentialConfigurationSupported.doctype, claimsToBeSigned]]),
-							key,
+	try {
+		switch (credentialConfigurationSupported.format) {
+			case VerifiableCredentialFormat.DC_SDJWT:
+				if (attestedKeys.length) {
+					const signedCredentials = await Promise.all(
+						attestedKeys.map((key) =>
+							createOpts.credentialSigner.signSdJwtVc({ ...claims, cnf: { jwk: key } }, {}),
 						),
-					),
-				);
-				return ok(signedCredentials.map((c) => c.credential));
-			} else {
+					);
+					return ok(signedCredentials.map((c) => c.credential));
+				} else {
+					const { credential } = await createOpts.credentialSigner.signSdJwtVc({ ...claims }, {});
+					return ok([credential]);
+				}
+			case VerifiableCredentialFormat.MSO_MDOC:
+				if (attestedKeys.length) {
+					const { sub: _sub, ...claimsToBeSigned } = claims;
+					const signedCredentials = await Promise.all(
+						attestedKeys.map((key) =>
+							createOpts.credentialSigner.signMsoMdoc(
+								credentialConfigurationSupported.doctype,
+								new Map([[credentialConfigurationSupported.doctype, claimsToBeSigned]]),
+								key,
+							),
+						),
+					);
+					return ok(signedCredentials.map((c) => c.credential));
+				} else {
+					return err(
+						CredentialRequestErrors.CredentialRequestDenied,
+						'Cannot issue mso_mdoc credential without key-binding',
+					);
+				}
+			default:
 				return err(
 					CredentialRequestErrors.CredentialRequestDenied,
-					'Cannot issue mso_mdoc credential without key-binding',
+					'Unsupported credential format',
 				);
-			}
-		default:
-			return err(CredentialRequestErrors.CredentialRequestDenied, 'Unsupported credential format');
+		}
+	} catch (error) {
+		logger.error('Credential signing failed', { error });
+		return err(CredentialRequestErrors.InternalServerError, 'Credential signing failed');
 	}
 }
