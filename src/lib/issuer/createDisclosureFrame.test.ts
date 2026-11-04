@@ -106,4 +106,17 @@ describe('createDisclosureFrame', () => {
 			}),
 		).toThrow(`Protected claim '${path[0]}' cannot be selectively disclosable`);
 	});
+
+	it.each([
+		{ path: ['a', 18], payload: { a: { '18': true } } },
+		{ path: ['a', '0'], payload: { a: ['value'] } },
+		{ path: ['a', null], payload: { a: { value: true } } },
+	])('rejects path $path when its segment types do not match the payload', ({ path, payload }) => {
+		expect(() =>
+			createDisclosureFrame(payload, {
+				vct: 'urn:test',
+				claims: [{ path, sd: 'always' }],
+			}),
+		).toThrow('Invalid Type Metadata path');
+	});
 });

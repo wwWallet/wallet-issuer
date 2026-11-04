@@ -26,19 +26,33 @@ const resolvePath = (
 
 	const segment = path[index];
 	if (segment === null) {
-		if (!Array.isArray(value)) return [];
+		if (!Array.isArray(value)) {
+			throw new Error(`Invalid Type Metadata path ${JSON.stringify(path)}: expected an array`);
+		}
 		return value.flatMap((item, itemIndex) =>
 			resolvePath(item, path, index + 1, [...resolved, itemIndex]),
 		);
 	}
 
-	if (
-		typeof value !== 'object' ||
-		value === null ||
-		!Object.prototype.hasOwnProperty.call(value, segment)
-	) {
-		return [];
+	if (Array.isArray(value)) {
+		if (typeof segment !== 'number') {
+			throw new Error(
+				`Invalid Type Metadata path ${JSON.stringify(path)}: array segment must be a number`,
+			);
+		}
+		if (!Object.prototype.hasOwnProperty.call(value, segment)) return [];
+		return resolvePath(value[segment], path, index + 1, [...resolved, segment]);
 	}
+
+	if (typeof value !== 'object' || value === null) {
+		throw new Error(`Invalid Type Metadata path ${JSON.stringify(path)}: expected an object`);
+	}
+	if (typeof segment !== 'string') {
+		throw new Error(
+			`Invalid Type Metadata path ${JSON.stringify(path)}: object segment must be a string`,
+		);
+	}
+	if (!Object.prototype.hasOwnProperty.call(value, segment)) return [];
 
 	return resolvePath((value as Record<string | number, unknown>)[segment], path, index + 1, [
 		...resolved,
