@@ -32,7 +32,24 @@ vi.mock('./util/importPrivateKeyPem', () => ({
 
 vi.mock('../config/vctDocumentProvider', () => ({
 	vctDocumentProvider: {
-		getVctMetadataDocument: vi.fn().mockResolvedValue({ ok: false }),
+		getVctMetadataDocument: vi.fn().mockResolvedValue({
+			ok: true,
+			value: {
+				vct: 'urn:test:signing',
+				claims: [
+					{ path: ['family_name'], sd: 'always' },
+					{ path: ['issuing_country'], sd: 'never' },
+					{ path: ['place_of_birth', 'country'], sd: 'always' },
+					{ path: ['place_of_birth', 'region'], sd: 'never' },
+					{ path: ['place_of_birth', 'locality'], sd: 'always' },
+					{ path: ['address', 'country'], sd: 'always' },
+					{ path: ['address', 'street', 'name'], sd: 'always' },
+					{ path: ['address', 'street', 'house_number'], sd: 'never' },
+					{ path: ['age_equal_or_over', '18'], sd: 'always' },
+					{ path: ['age_equal_or_over', '21'], sd: 'never' },
+				],
+			},
+		}),
 	},
 }));
 
@@ -40,7 +57,7 @@ const decodeBase64UrlJson = (encoded: string): Record<string, unknown> | unknown
 	JSON.parse(Buffer.from(encoded, 'base64url').toString('utf8'));
 
 describe('signSdJwtVc', () => {
-	it('issues selective, nested, and plaintext claims according to the disclosure frame', async () => {
+	it('issues selective, nested, and plaintext claims according to Type Metadata', async () => {
 		const { signer } = await import('./signer.js');
 		const claims = {
 			vct: 'urn:test:signing',
@@ -64,28 +81,7 @@ describe('signSdJwtVc', () => {
 			},
 			cnf: { jwk: { kty: 'EC', crv: 'P-256', x: 'x', y: 'y' } },
 		};
-		const disclosureFrame = {
-			family_name: true,
-			issuing_country: false,
-			place_of_birth: {
-				country: true,
-				region: false,
-				locality: true,
-			},
-			address: {
-				country: true,
-				street: {
-					name: true,
-					house_number: false,
-				},
-			},
-			age_equal_or_over: {
-				'18': true,
-				'21': false,
-			},
-		};
-
-		const { credential } = await signer.signSdJwtVc(claims, {}, disclosureFrame);
+		const { credential } = await signer.signSdJwtVc(claims, {});
 
 		const [encodedJwt, ...encodedDisclosuresWithTerminator] = credential.split('~');
 		const [encodedHeader, encodedPayload] = encodedJwt.split('.');
