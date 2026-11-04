@@ -5,6 +5,17 @@ export type DisclosureFrame = {
 	[key: string]: unknown;
 };
 
+const protectedClaims = new Set([
+	'iss',
+	'nbf',
+	'exp',
+	'cnf',
+	'vct',
+	'vct#integrity',
+	'aka_vcts',
+	'status',
+]);
+
 const resolvePath = (
 	value: unknown,
 	path: ClaimMetadataEntry['path'],
@@ -64,6 +75,10 @@ export const createDisclosureFrame = (
 
 	for (const claim of typeMetadata.claims ?? []) {
 		if (claim.sd === 'never') continue;
+		const rootClaim = claim.path[0];
+		if (typeof rootClaim === 'string' && protectedClaims.has(rootClaim)) {
+			throw new Error(`Protected claim '${rootClaim}' cannot be selectively disclosable`);
+		}
 		for (const path of resolvePath(payload, claim.path)) addPath(frame, path);
 	}
 

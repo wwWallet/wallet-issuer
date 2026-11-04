@@ -94,4 +94,16 @@ describe('createDisclosureFrame', () => {
 			email: payload.email,
 		});
 	});
+
+	it.each([
+		{ path: ['iss'], payload: { iss: 'https://issuer.example' } },
+		{ path: ['status', 'status_list'], payload: { status: { status_list: {} } } },
+	])('rejects selectively disclosable protected claim path $path', ({ path, payload }) => {
+		expect(() =>
+			createDisclosureFrame(payload, {
+				vct: 'urn:test',
+				claims: [{ path, sd: 'always' }],
+			}),
+		).toThrow(`Protected claim '${path[0]}' cannot be selectively disclosable`);
+	});
 });
