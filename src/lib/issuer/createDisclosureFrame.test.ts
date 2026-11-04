@@ -61,4 +61,37 @@ describe('createDisclosureFrame', () => {
 		expect(disclosureFrame).toEqual({ _sd: ['nationalities'] });
 		await expect(sdJwt.getClaims(presentation)).resolves.toEqual(payload);
 	});
+
+	it('presents only the requested selectively disclosable claim', async () => {
+		const payload = {
+			first_name: 'Alice',
+			last_name: 'Doe',
+			email: 'alice@example.com',
+		};
+		const typeMetadata: TypeMetadata = {
+			vct: 'urn:test',
+			claims: Object.keys(payload).map((claim) => ({ path: [claim], sd: 'always' })),
+		};
+		const disclosureFrame = createDisclosureFrame(payload, typeMetadata);
+		let salt = 0;
+		const sdJwt = new SDJwtInstance({
+			signer: async () => Buffer.from('signature').toString('base64url'),
+			hasher: digest,
+			hashAlg: 'sha-256',
+			signAlg: 'ES256',
+			saltGenerator: () => `salt-${salt++}`,
+		});
+
+		const credential = await sdJwt.issue(
+			payload,
+			disclosureFrame as CoreDisclosureFrame<typeof payload>,
+		);
+		const presentation = await sdJwt.present<{ email: string }>(credential, {
+			email: true,
+		});
+
+		await expect(sdJwt.getClaims(presentation)).resolves.toEqual({
+			email: payload.email,
+		});
+	});
 });
