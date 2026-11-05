@@ -3,10 +3,8 @@ import { config } from './index';
 
 type CredentialConfigurationsSupported =
 	OpenidCredentialIssuerMetadata['credential_configurations_supported'];
-type DisclosureFrameMap = Record<string, Record<string, unknown>>;
 type LocalSupportedCredentialConfigurations = {
 	supportedCredentialConfigurations?: CredentialConfigurationsSupported;
-	disclosureFrameMap?: DisclosureFrameMap;
 };
 
 const loadLocalSupportedCredentialConfigurations = (): LocalSupportedCredentialConfigurations => {
@@ -413,87 +411,6 @@ const baseSupportedCredentialConfigurations: CredentialConfigurationsSupported =
 	},
 };
 
-const baseDisclosureFrameMap: DisclosureFrameMap = {
-	'urn:eudi:pid:1:dc': {
-		family_name: true,
-		birth_family_name: true,
-		given_name: true,
-		birth_given_name: true,
-		personal_administrative_number: true,
-		place_of_birth: {
-			country: true,
-			region: true,
-			locality: true,
-		},
-		birthdate: true,
-		address: {
-			formatted: true,
-			country: true,
-			region: true,
-			locality: true,
-			postal_code: true,
-			street_address: true,
-			house_number: true,
-		},
-		age_equal_or_over: {
-			'14': true,
-			'18': true,
-			'16': true,
-			'65': true,
-			'21': true,
-		},
-		age_in_years: true,
-		age_birth_year: true,
-		issuing_authority: false,
-		issuing_country: false,
-		issuing_jurisdiction: false,
-		document_number: true,
-		date_of_issuance: true,
-		date_of_expiry: false,
-		sex: true,
-		nationalities: true,
-		email: true,
-		phone_number: true,
-		picture: true,
-		trust_anchor: false,
-	},
-	'urn:credential:diploma': {
-		family_name: true,
-		given_name: true,
-		title: true,
-		grade: true,
-		eqf_level: false,
-		graduation_date: true,
-	},
-	'urn:eudi:ehic:1': {
-		personal_administrative_number: true,
-		issuing_country: false,
-		issuing_authority: {
-			id: false,
-			name: false,
-		},
-		authentic_source: {
-			id: false,
-			name: false,
-		},
-		document_number: true,
-		date_of_issuance: false,
-		date_of_expiry: false,
-		starting_date: false,
-		ending_date: false,
-	},
-	'urn:eu.europa.ec.eudi:por:1': {
-		legal_person_identifier: true,
-		legal_name: true,
-		full_powers: true,
-		effective_until_date: true,
-		effective_from_date: true,
-		eService: true,
-		issuing_authority: true,
-		issuing_country: true,
-	},
-};
-
 const localSupportedCredentialConfigurations = loadLocalSupportedCredentialConfigurations();
 
 const filterSupportedCredentialConfigurationsByScopeWhitelist = (
@@ -507,26 +424,9 @@ const filterSupportedCredentialConfigurationsByScopeWhitelist = (
 	);
 };
 
-const filterDisclosureFrameMapBySupportedCredentialConfigurations = (
-	disclosureFrames: DisclosureFrameMap,
-	credentialConfigurations: CredentialConfigurationsSupported,
-): DisclosureFrameMap => {
-	const supportedCredentialConfigurationIds = new Set(Object.keys(credentialConfigurations));
-	return Object.fromEntries(
-		Object.entries(disclosureFrames).filter(([credentialConfigurationId]) => {
-			return supportedCredentialConfigurationIds.has(credentialConfigurationId);
-		}),
-	);
-};
-
 const allSupportedCredentialConfigurations: CredentialConfigurationsSupported = {
 	...baseSupportedCredentialConfigurations,
 	...(localSupportedCredentialConfigurations.supportedCredentialConfigurations ?? {}),
-};
-
-const allDisclosureFrameMap: DisclosureFrameMap = {
-	...baseDisclosureFrameMap,
-	...(localSupportedCredentialConfigurations.disclosureFrameMap ?? {}),
 };
 
 const supportedScopesWhitelist = new Set(config.supportedCredentialScopesWhitelist);
@@ -536,8 +436,3 @@ export const supportedCredentialConfigurations =
 		allSupportedCredentialConfigurations,
 		supportedScopesWhitelist,
 	);
-
-export const disclosureFrameMap = filterDisclosureFrameMapBySupportedCredentialConfigurations(
-	allDisclosureFrameMap,
-	supportedCredentialConfigurations,
-);

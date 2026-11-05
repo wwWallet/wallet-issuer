@@ -108,7 +108,6 @@ export interface IssuerOpenID4VCI {
 	registerSupportedCredentialConfiguration(
 		credentialConfigurationId: string,
 		credConf: CredentialConfigurationSupported,
-		discloseFrame?: Record<string, unknown>,
 	): void;
 
 	getMetadata(): Promise<{
@@ -182,8 +181,6 @@ export function createIssuerOpenID4VCI(
 	const jwtVcIssuerMetadata: JWTVCIssuerMetadata = {
 		issuer: url,
 	};
-
-	const disclosureFrameMap = new Map<string, Record<string, unknown>>();
 
 	let metadataLoaded = false;
 
@@ -335,11 +332,7 @@ export function createIssuerOpenID4VCI(
 			};
 		},
 
-		registerSupportedCredentialConfiguration: (
-			credentialConfigurationId,
-			credConf,
-			disclosureFrame,
-		) => {
+		registerSupportedCredentialConfiguration: (credentialConfigurationId, credConf) => {
 			metadata.credential_configurations_supported[credentialConfigurationId] = {
 				...credConf,
 				proof_types_supported: {
@@ -355,9 +348,6 @@ export function createIssuerOpenID4VCI(
 						: undefined,
 				},
 			};
-			if (disclosureFrame) {
-				disclosureFrameMap.set(credentialConfigurationId, disclosureFrame);
-			}
 		},
 
 		getMetadata: async () => {
@@ -509,7 +499,6 @@ export function createIssuerOpenID4VCI(
 						metadata,
 						claimsFutureResult.value.data.claims,
 						state.attestedKeys,
-						disclosureFrameMap,
 						issueCredentialOptions,
 						credentialIssuerCreateOptions,
 					);
@@ -625,7 +614,6 @@ export function createIssuerOpenID4VCI(
 					metadata,
 					claimsFutureResult.value.data.claims,
 					attested_keys,
-					disclosureFrameMap,
 					issueCredentialOptions,
 					credentialIssuerCreateOptions,
 				);

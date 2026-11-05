@@ -9,9 +9,10 @@ import { importPrivateKeyPem } from './util/importPrivateKeyPem';
 import { calculateJwkThumbprint, exportJWK, importX509 } from 'jose';
 import { CoseKey, DeviceKey, Issuer, SignatureAlgorithm, type MdocContext } from '@owf/mdoc';
 import { logger } from './logger';
-import { calculateObjectSRI } from 'wallet-common';
+import { calculateObjectSRI, defaultHttpClient, getSdJwtVcMetadata } from 'wallet-common';
 import { vctDocumentProvider } from '../config/vctDocumentProvider';
 import { normalizeMdocNamespace } from './lib/issuer/normalizeMdocNamespace';
+import { createDisclosureFrame } from './lib/issuer/createDisclosureFrame';
 
 const issuerPrivateKeyPem = fs
 	.readFileSync(path.join(__dirname, '../../keys/pem.key'), 'utf-8')
@@ -144,21 +145,38 @@ export const signer: CredentialSigner = {
 		const credential = issuerSigned.encodedForOid4Vci;
 		return { credential };
 	},
-	signSdJwtVc: async function (payload, headers, disclosureFrame) {
+	signSdJwtVc: async function (payload, headers) {
 		if (!payload?.vct) {
 			throw new Error('payload.vct is required in SD JWT VCs');
 		}
 		const doc = await vctDocumentProvider.getVctMetadataDocument(payload.vct);
-		if (doc?.ok) {
-			const typeMetadata = doc.value;
-			const vctIntegrity = await calculateObjectSRI(crypto.subtle, typeMetadata);
-			if (vctIntegrity) {
-				payload['vct#integrity'] = vctIntegrity;
-			} else {
-				logger.warn(`Unable to calculate VCT integrity for vct ${payload.vct}`);
-			}
+		if (!doc.ok) {
+			throw new Error(`Unable to find VCT Metadata for vct ${payload.vct}`);
+		}
+		if (doc.value.vct !== payload.vct) {
+			throw new Error(`Resolved VCT Metadata does not match vct ${payload.vct}`);
+		}
+
+		const metadataResult = await getSdJwtVcMetadata(
+			vctDocumentProvider,
+			crypto.subtle,
+			defaultHttpClient,
+			payload.vct,
+			undefined,
+		);
+		if (
+			'error' in metadataResult ||
+			metadataResult.warnings.length > 0 ||
+			!metadataResult.credentialMetadata?.claims?.length
+		) {
+			throw new Error(`Unable to resolve VCT Metadata for vct ${payload.vct}`);
+		}
+		const typeMetadata = metadataResult.credentialMetadata;
+		const vctIntegrity = await calculateObjectSRI(crypto.subtle, doc.value);
+		if (vctIntegrity) {
+			payload['vct#integrity'] = vctIntegrity;
 		} else {
-			logger.warn(`Unable to find VCT Metadata for vct ${payload.vct}`);
+			logger.warn(`Unable to calculate VCT integrity for vct ${payload.vct}`);
 		}
 
 		const issuanceDate = new Date();
@@ -167,10 +185,6 @@ export const signer: CredentialSigner = {
 
 		headers.x5c = issuerX5C;
 		headers.typ = 'dc+sd-jwt';
-
-		if (!disclosureFrame) {
-			throw new Error('Could not generate signature');
-		}
 
 		payload.iat = Math.floor(issuanceDate.getTime() / 1000);
 		payload.nbf = Math.floor(issuanceDate.getTime() / 1000);
@@ -181,6 +195,7 @@ export const signer: CredentialSigner = {
 		}
 		payload.sub = await calculateJwkThumbprint(payload.cnf.jwk);
 		payload.iss = config.issuerIdentifier;
+		const disclosureFrame = createDisclosureFrame(payload, typeMetadata);
 
 		const sdjwt = new SDJwtInstance({
 			signer: this.signer(),
@@ -190,29 +205,11 @@ export const signer: CredentialSigner = {
 			saltGenerator: this.saltGenerator,
 		});
 
-		// Helper function to convert df to work with newer lib
-		function disclosureFrameConvert(obj: any) {
-			const result: any = {};
-			const sd = [];
-
-			for (const [key, value] of Object.entries(obj)) {
-				if (value === true) {
-					sd.push(key);
-				} else if (typeof value === 'object' && value !== null) {
-					result[key] = disclosureFrameConvert(value);
-				}
-			}
-
-			if (sd.length > 0) {
-				result['_sd'] = sd;
-			}
-
-			return result;
-		}
-
-		const credential = await sdjwt.issue(payload, disclosureFrameConvert(disclosureFrame), {
-			header: headers,
-		});
+		const credential = await sdjwt.issue(
+			payload,
+			Object.keys(disclosureFrame).length ? disclosureFrame : undefined,
+			{ header: headers },
+		);
 		return { credential };
 	},
 	getPublicKeyJwk: async function () {

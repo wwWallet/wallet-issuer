@@ -24,7 +24,7 @@
   },
   "dependencies": {
     "@owf/mdoc": "^0.6.0",
-    "@sd-jwt/core": "^0.17.0",
+    "@sd-jwt/core": "^0.24.3",
     "@sd-jwt/crypto-nodejs": "^0.17.0",
     "@sd-jwt/types": "^0.17.0",
     "dotenv": "^17.2.3",
