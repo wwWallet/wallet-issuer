@@ -1,4 +1,4 @@
-import express, { Express } from 'express';
+import express, { Express, NextFunction, Request, Response } from 'express';
 import { config } from '../config';
 import path from 'node:path';
 import { landingRouter } from './pages/landing/router';
@@ -6,17 +6,24 @@ import { aboutRouter } from './pages/about/router';
 import { vciRouter } from './vci/router';
 import { locale } from '../config/locale';
 import { logger } from './logger';
+import { HttpLoggerMiddleware } from './middlewares/httpLogger.middleware';
 import { issuer } from './vci/issuer';
 import { apiRouter } from './api/router';
 
+const log = logger.child({ module: 'App' });
+
 const app: Express = express();
+
+if (config.logHttp) {
+	app.use(HttpLoggerMiddleware);
+}
 
 app.get('/.well-known/openid-credential-issuer/openid', async (_req, res) => {
 	try {
 		const { metadata } = await issuer.getMetadata();
 		res.status(200).send(metadata);
 	} catch (e) {
-		logger.error(JSON.stringify(e));
+		log.error({ err: e }, 'Failed to build credential issuer metadata');
 		res.status(500).send({ error: 'internal_server_error' });
 	}
 });
@@ -26,7 +33,7 @@ app.get('/.well-known/jwt-vc-issuer/openid', async (_req, res) => {
 		const { jwtVcIssuerMetadata } = await issuer.getMetadata();
 		res.status(200).send(jwtVcIssuerMetadata);
 	} catch (e) {
-		logger.error(JSON.stringify(e));
+		log.error({ err: e }, 'Failed to build JWT VC issuer metadata');
 		res.status(500).send({ error: 'internal_server_error' });
 	}
 });
@@ -86,6 +93,25 @@ app.get('/metadata/:filename', (req, res) => {
 	return res.send(manifest);
 });
 
+app.use((err: unknown, _req: Request, res: Response, next: NextFunction) => {
+	if (res.headersSent) {
+		return next(err);
+	}
+	// pino-http (LOG_HTTP=true) picks this up and logs the real error instead of a generic 500
+	res.err = err instanceof Error ? err : new Error(String(err));
+	log.error({ err }, 'Unhandled error in request handler');
+	res.status(500).send({ error: 'internal_server_error' });
+});
+
+process.on('unhandledRejection', (reason) => {
+	log.error({ err: reason }, 'Unhandled promise rejection');
+});
+
+process.on('uncaughtException', (err) => {
+	log.fatal({ err }, 'Uncaught exception, exiting');
+	logger.flush(() => process.exit(1));
+});
+
 app.listen(config.port, () => {
-	console.log(`Nodejs service listening on ${config.url}`);
+	log.info({ url: config.url, port: config.port }, 'Issuer listening');
 });

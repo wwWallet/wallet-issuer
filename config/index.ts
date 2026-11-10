@@ -1,6 +1,8 @@
 import dotenv from 'dotenv';
 dotenv.config({ quiet: true });
 
+import { logger } from '../src/logger';
+
 const url = String(process.env.SERVICE_URL || 'default_url');
 const supportedCredentialScopesWhitelist = (process.env.SUPPORTED_CREDENTIAL_SCOPES_WHITELIST ?? '')
 	.split(',')
@@ -32,7 +34,7 @@ const dataStorePort = Number(process.env.DATA_STORE_PORT) || 6379;
 const dataStorePassword = process.env.DATA_STORE_PASSWORD || null;
 
 if (process.env.NODE_ENV === 'production' && !dataStorePassword) {
-	console.error(`FATAL: Insecure data store found in production.`);
+	logger.fatal('Insecure data store found in production (DATA_STORE_PASSWORD is not set)');
 
 	process.exit(1);
 }
@@ -78,6 +80,7 @@ export const config = {
 	supportedCredentialScopesWhitelist,
 	revokeCredentialOffers: process.env.REVOKE_CREDENTIAL_OFFERS === 'true' || false,
 	preAuthorizedCodeApiEnabled,
+	logHttp: process.env.LOG_HTTP?.trim().toLowerCase() === 'true',
 	preAuthorizedCodeApiBearerToken: process.env.PRE_AUTHORIZED_CODE_API_BEARER_TOKEN || '',
 	preAuthorizedCodeTxCodeLength: !Number.isNaN(preAuthorizedCodeTxCodeLength)
 		? preAuthorizedCodeTxCodeLength

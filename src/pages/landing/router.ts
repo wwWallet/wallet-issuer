@@ -10,6 +10,8 @@ import { randomUUID } from 'node:crypto';
 import { DataStore } from '../../store/DataStore';
 import { dataStoreClient } from '../../store/dataStoreClient';
 
+const log = logger.child({ module: 'Landing' });
+
 export const landingRouter = Router();
 const decoder = new TextDecoder();
 
@@ -60,6 +62,7 @@ type VerifiedPayload = {
 
 type TokenResponse = {
 	error?: unknown;
+	error_description?: unknown;
 	id_token?: unknown;
 };
 
@@ -147,20 +150,20 @@ async function verifyPayload(
 		errorDescription: 'Please try again',
 	};
 	if (tokenRequestBody.error) {
-		console.log({
-			error: 'Token request failed',
-			errorDescription: JSON.stringify(tokenRequestBody, null, 2),
-		});
+		log.warn(
+			{
+				error: tokenRequestBody.error,
+				error_description: tokenRequestBody.error_description,
+			},
+			'Token request failed',
+		);
 		res.render('error', authErrorObj);
 		return null;
 	}
 
 	const idToken = String(tokenRequestBody.id_token || '');
 	if (!idToken) {
-		console.log({
-			error: 'Missing id_token',
-			errorDescription: 'Authorization server did not return an id_token.',
-		});
+		log.warn('Authorization server did not return an id_token');
 		res.render('error', authErrorObj);
 		return null;
 	}
@@ -169,10 +172,10 @@ async function verifyPayload(
 		`${config.authorizationServerUrl}/.well-known/openid-configuration`,
 	);
 	if (!discoveryResponse.ok) {
-		console.log({
-			error: 'Discovery failed',
-			errorDescription: `Unable to fetch OpenID configuration from ${config.authorizationServerUrl}`,
-		});
+		log.warn(
+			{ url: config.authorizationServerUrl, status: discoveryResponse.status },
+			'OpenID discovery failed',
+		);
 		res.render('error', authErrorObj);
 
 		return null;
@@ -181,10 +184,7 @@ async function verifyPayload(
 	const discovery = (await discoveryResponse.json()) as OpenIdDiscovery;
 	const jwksResponse = await fetch(discovery.jwks_uri);
 	if (!jwksResponse.ok) {
-		console.log({
-			error: 'JWKS fetch failed',
-			errorDescription: `Unable to fetch JWKS from ${discovery.jwks_uri}`,
-		});
+		log.warn({ url: discovery.jwks_uri, status: jwksResponse.status }, 'JWKS fetch failed');
 		res.render('error', authErrorObj);
 		return null;
 	}
@@ -197,10 +197,7 @@ async function verifyPayload(
 	};
 	const jwk = jwks.keys?.find((key) => key.kid === decodedHeader.kid);
 	if (!jwk) {
-		console.log({
-			error: 'Invalid id_token',
-			errorDescription: 'Unable to find a matching JWK for id_token header.',
-		});
+		log.warn({ kid: decodedHeader.kid }, 'Invalid id_token: no matching JWK');
 		res.render('error', authErrorObj);
 		return null;
 	}
@@ -214,20 +211,14 @@ async function verifyPayload(
 
 		const accountId = String(payload.sub ?? '');
 		if (!accountId) {
-			console.log({
-				error: 'Invalid id_token',
-				errorDescription: 'id_token is missing the subject (sub) claim.',
-			});
+			log.warn('Invalid id_token: missing sub claim');
 			res.render('error', authErrorObj);
 			return null;
 		}
 
 		return payload as VerifiedPayload;
 	} catch (error) {
-		console.log({
-			error: 'Invalid id_token',
-			errorDescription: String(error),
-		});
+		log.warn({ err: error }, 'Invalid id_token: verification failed');
 		res.render('error', authErrorObj);
 		return null;
 	}
@@ -272,7 +263,7 @@ landingRouter.get('/offer/:id', async (req, res) => {
 		credentialOfferWithReference,
 	);
 	if (!credentialOfferWithReferenceForWwwallet) {
-		logger.error('No credential offer reference found');
+		log.error('No credential offer reference found');
 		res.render('error', {
 			error: 'Invalid Credential Offer',
 			errorDescription:
@@ -316,7 +307,7 @@ landingRouter.get('/initialize-pre-authorized-offer/:id', async (req, res) => {
 	}
 	const scope = targetMetadata.scope;
 	if (!scope) {
-		logger.error(`Credential configuration ${credentialConfigurationId} does not define a scope`);
+		log.error({ credentialConfigurationId }, 'Credential configuration does not define a scope');
 		res.render('error', {
 			error: 'Credential Configuration Error',
 			errorDescription:
@@ -431,7 +422,7 @@ landingRouter.get('/callback', async (req, res) => {
 		credentialOfferWithReference,
 	);
 	if (!credentialOfferWithReferenceForWwwallet) {
-		logger.error('No credential offer reference found');
+		log.error('No credential offer reference found');
 		res.render('error', {
 			error: 'Invalid Credential Offer',
 			errorDescription:

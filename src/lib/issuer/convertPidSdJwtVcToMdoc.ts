@@ -1,11 +1,13 @@
 import { logger } from '../../logger';
 
+const log = logger.child({ module: 'PidMdoc' });
+
 type AnyObj = Record<string, any>;
 
 function base64ToBstr(dataUrl: string): Uint8Array | undefined {
 	const base64Data = dataUrl.split(',')[1];
 	if (!base64Data) {
-		logger.error('Invalid Data URL format. Returning underfined');
+		log.warn('Invalid data URL format, skipping image');
 		return undefined;
 	}
 	const buffer = Buffer.from(base64Data, 'base64');
