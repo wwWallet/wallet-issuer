@@ -55,26 +55,38 @@ export async function verifyProofJwt(
 		}
 		keyAttestationKeys = attestation.value.attested_keys;
 		if ('kid' in parsedHeader || 'x5c' in parsedHeader) {
-			return err(CredentialRequestErrors.InvalidProof, 'Conflicting key identifiers in KA-bound proof');
+			return err(
+				CredentialRequestErrors.InvalidProof,
+				'Conflicting key identifiers in KA-bound proof',
+			);
 		}
 		if ('jwk' in parsedHeader) {
 			if (!parsedHeader.jwk) {
-				return err(CredentialRequestErrors.InvalidProof, 'Proof jwk does not match attested_keys[0]');
+				return err(
+					CredentialRequestErrors.InvalidProof,
+					'Proof jwk does not match attested_keys[0]',
+				);
 			}
 			const headerJwkThumbprint = await calculateJwkThumbprint(parsedHeader.jwk as JWK);
 			const kaJwkThumbprint = await calculateJwkThumbprint(keyAttestationKeys[0]);
 			if (headerJwkThumbprint !== kaJwkThumbprint) {
-				return err(CredentialRequestErrors.InvalidProof, 'Proof jwk does not match attested_keys[0]');
+				return err(
+					CredentialRequestErrors.InvalidProof,
+					'Proof jwk does not match attested_keys[0]',
+				);
 			}
 		}
 	}
 
 	// A verified KA selects the proof key even when the outer header omits jwk.
-	const proofJwk = keyAttestationKeys?.[0] ?? parsedHeader.jwk as JWK | undefined;
+	const proofJwk = keyAttestationKeys?.[0] ?? (parsedHeader.jwk as JWK | undefined);
 	if (proofJwk) {
 		const publicKey = await importJWK(proofJwk, proofJwk.alg ?? parsedHeader.alg);
 		try {
-			const { payload, protectedHeader } = await jwtVerify(jwt, publicKey, { clockTolerance: options.clockTolerance, ...(keyAttestationKeys ? { audience: options.credentialIssuerIdentifier } : {}) });
+			const { payload, protectedHeader } = await jwtVerify(jwt, publicKey, {
+				clockTolerance: options.clockTolerance,
+				...(keyAttestationKeys ? { audience: options.credentialIssuerIdentifier } : {}),
+			});
 			if (protectedHeader.jwk) {
 				attestedKeys.push(protectedHeader.jwk);
 			}

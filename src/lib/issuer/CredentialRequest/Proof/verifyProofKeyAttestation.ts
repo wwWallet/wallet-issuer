@@ -48,7 +48,10 @@ export async function verifyProofKeyAttestation(
 	}
 
 	if (!options.requiredVerificationMechanisms.includes('x5c')) {
-		return err(CredentialRequestErrors.InvalidProof, 'No supported key attestation trust verification configured');
+		return err(
+			CredentialRequestErrors.InvalidProof,
+			'No supported key attestation trust verification configured',
+		);
 	}
 
 	// verify attestation signature using JWS 'x5c' header
