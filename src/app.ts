@@ -97,14 +97,47 @@ app.use((err: unknown, _req: Request, res: Response, next: NextFunction) => {
 	if (res.headersSent) {
 		return next(err);
 	}
+
 	// pino-http (LOG_HTTP=true) picks this up and logs the real error instead of a generic 500
-	res.err = err instanceof Error ? err : new Error(String(err));
-	log.error({ err }, 'Unhandled error in request handler');
-	res.status(500).send({ error: 'internal_server_error' });
+	if (err instanceof Error) {
+		res.err = err;
+	} else {
+		res.err = new Error(String(err));
+	}
+
+	// Respect the status attached to the error (e.g. by body-parser or http-errors),
+	// falling back to 500 if there is none or it is not a valid error status
+	let errStatus: unknown;
+	if (typeof err === 'object' && err !== null) {
+		if ('status' in err) {
+			errStatus = err.status;
+		} else if ('statusCode' in err) {
+			errStatus = err.statusCode;
+		}
+	}
+
+	let status = 500;
+	if (
+		typeof errStatus === 'number' &&
+		Number.isInteger(errStatus) &&
+		errStatus >= 400 &&
+		errStatus <= 599
+	) {
+		status = errStatus;
+	}
+
+	if (status >= 500) {
+		log.error({ err }, 'Unhandled error in request handler');
+		res.status(status).send({ error: 'internal_server_error' });
+	} else {
+		log.warn({ err, status }, 'Client error in request handler');
+		res.status(status).send({ error: 'bad_request' });
+	}
 });
 
 process.on('unhandledRejection', (reason) => {
-	log.error({ err: reason }, 'Unhandled promise rejection');
+	log.fatal({ err: reason }, 'Unhandled promise rejection, exiting');
+	logger.flush(() => process.exit(1));
 });
 
 process.on('uncaughtException', (err) => {
