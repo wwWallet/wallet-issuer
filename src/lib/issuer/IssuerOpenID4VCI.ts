@@ -269,7 +269,6 @@ export function createIssuerOpenID4VCI(
 				if (config.preAuthorizedCodeTxCodeLength > 0) {
 					const length = config.preAuthorizedCodeTxCodeLength ?? 4;
 					tx_value = generateNumericPin(length);
-					console.log(`tx_code: ${tx_value}`);
 
 					const txCodeObject: TxCode = {
 						input_mode: 'numeric',

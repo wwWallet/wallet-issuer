@@ -1,4 +1,4 @@
-import express, { Express } from 'express';
+import express, { Express, NextFunction, Request, Response } from 'express';
 import { config } from '../config';
 import path from 'node:path';
 import { landingRouter } from './pages/landing/router';
@@ -6,17 +6,24 @@ import { aboutRouter } from './pages/about/router';
 import { vciRouter } from './vci/router';
 import { locale } from '../config/locale';
 import { logger } from './logger';
+import { HttpLoggerMiddleware } from './middlewares/httpLogger.middleware';
 import { issuer } from './vci/issuer';
 import { apiRouter } from './api/router';
 
+const log = logger.child({ module: 'App' });
+
 const app: Express = express();
+
+if (config.logHttp) {
+	app.use(HttpLoggerMiddleware);
+}
 
 app.get('/.well-known/openid-credential-issuer/openid', async (_req, res) => {
 	try {
 		const { metadata } = await issuer.getMetadata();
 		res.status(200).send(metadata);
 	} catch (e) {
-		logger.error(JSON.stringify(e));
+		log.error({ err: e }, 'Failed to build credential issuer metadata');
 		res.status(500).send({ error: 'internal_server_error' });
 	}
 });
@@ -26,7 +33,7 @@ app.get('/.well-known/jwt-vc-issuer/openid', async (_req, res) => {
 		const { jwtVcIssuerMetadata } = await issuer.getMetadata();
 		res.status(200).send(jwtVcIssuerMetadata);
 	} catch (e) {
-		logger.error(JSON.stringify(e));
+		log.error({ err: e }, 'Failed to build JWT VC issuer metadata');
 		res.status(500).send({ error: 'internal_server_error' });
 	}
 });
@@ -86,6 +93,58 @@ app.get('/metadata/:filename', (req, res) => {
 	return res.send(manifest);
 });
 
+app.use((err: unknown, _req: Request, res: Response, next: NextFunction) => {
+	if (res.headersSent) {
+		return next(err);
+	}
+
+	// pino-http (LOG_HTTP=true) picks this up and logs the real error instead of a generic 500
+	if (err instanceof Error) {
+		res.err = err;
+	} else {
+		res.err = new Error(String(err));
+	}
+
+	// Respect the status attached to the error (e.g. by body-parser or http-errors),
+	// falling back to 500 if there is none or it is not a valid error status
+	let errStatus: unknown;
+	if (typeof err === 'object' && err !== null) {
+		if ('status' in err) {
+			errStatus = err.status;
+		} else if ('statusCode' in err) {
+			errStatus = err.statusCode;
+		}
+	}
+
+	let status = 500;
+	if (
+		typeof errStatus === 'number' &&
+		Number.isInteger(errStatus) &&
+		errStatus >= 400 &&
+		errStatus <= 599
+	) {
+		status = errStatus;
+	}
+
+	if (status >= 500) {
+		log.error({ err }, 'Unhandled error in request handler');
+		res.status(status).send({ error: 'internal_server_error' });
+	} else {
+		log.warn({ err, status }, 'Client error in request handler');
+		res.status(status).send({ error: 'bad_request' });
+	}
+});
+
+process.on('unhandledRejection', (reason) => {
+	log.fatal({ err: reason }, 'Unhandled promise rejection, exiting');
+	logger.flush(() => process.exit(1));
+});
+
+process.on('uncaughtException', (err) => {
+	log.fatal({ err }, 'Uncaught exception, exiting');
+	logger.flush(() => process.exit(1));
+});
+
 app.listen(config.port, () => {
-	console.log(`Nodejs service listening on ${config.url}`);
+	log.info({ url: config.url, port: config.port }, 'Issuer listening');
 });

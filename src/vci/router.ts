@@ -6,6 +6,8 @@ import { config } from '../../config';
 import fs from 'fs';
 import path from 'path';
 
+const log = logger.child({ module: 'VCI' });
+
 export const vciRouter = Router();
 
 const rawBase64CACert = fs
@@ -18,9 +20,9 @@ vciRouter.post('/nonce', async (_req, res) => {
 		const response = await issuer.issueNonce();
 		Object.entries(response.headers).map(([k, v]) => res.setHeader(k, v));
 		res.status(response.status).send(response.data);
-		logger.info('New c_nonce issued');
+		log.debug('New c_nonce issued');
 	} catch (e) {
-		logger.error(JSON.stringify(e));
+		log.error({ err: e }, 'Nonce endpoint failed');
 		res.status(500).send({ error: 'internal_server_error' });
 	}
 });
@@ -31,7 +33,7 @@ vciRouter.post(
 	express.json(),
 	async (req, res) => {
 		try {
-			logger.info('New credential request received');
+			log.debug('Credential request received');
 			const response = await issuer.issueCredential({
 				request: {
 					headers: req.headers as any,
@@ -39,12 +41,11 @@ vciRouter.post(
 				},
 			});
 
-			logger.info('Credential response sent');
+			log.info({ status: response.status }, 'Credential response sent');
 			Object.entries(response.headers).map(([k, v]) => res.setHeader(k, v));
 			res.status(response.status).send(response.data);
 		} catch (e) {
-			console.error(e);
-			logger.error(JSON.stringify(e));
+			log.error({ err: e }, 'Credential endpoint failed');
 			res.status(500).send({ error: 'internal_server_error' });
 		}
 	},
@@ -56,7 +57,7 @@ vciRouter.post(
 	express.json(),
 	async (req, res) => {
 		try {
-			logger.info('New deferred request received');
+			log.debug('Deferred credential request received');
 			const response = await issuer.issueCredential({
 				request: {
 					headers: req.headers as any,
@@ -64,12 +65,11 @@ vciRouter.post(
 				},
 			});
 
-			logger.info('Deferred response sent');
+			log.info({ status: response.status }, 'Deferred credential response sent');
 			Object.entries(response.headers).map(([k, v]) => res.setHeader(k, v));
 			res.status(response.status).send(response.data);
 		} catch (e) {
-			console.error(e);
-			logger.error(JSON.stringify(e));
+			log.error({ err: e }, 'Deferred credential endpoint failed');
 			res.status(500).send({ error: 'internal_server_error' });
 		}
 	},
@@ -84,7 +84,7 @@ vciRouter.get('/credential-offer/:id', async (req, res) => {
 		const obj = await issuer.getCredentialOffer(id, config.revokeCredentialOffers);
 		res.status(200).send(obj);
 	} catch (e) {
-		logger.error(JSON.stringify(e));
+		log.error({ err: e }, 'Credential offer retrieval failed');
 		res.status(500).send({ error: 'internal_server_error' });
 	}
 });

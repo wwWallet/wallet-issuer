@@ -1,5 +1,6 @@
 import fs from 'node:fs/promises';
 import path from 'path';
+import { logger } from '../../logger';
 import { ClaimsProvider, ClaimsProviderResult, ClaimsResolutionContext } from '../ClaimsProvider';
 import { convertPidSdJwtVcToMdoc } from '../../lib/issuer/convertPidSdJwtVcToMdoc';
 import { supportedCredentialConfigurations } from '../../../config/supportedCredentialConfigurations';
@@ -9,6 +10,8 @@ type AccountEntry = {
 	id: string;
 	[key: string]: unknown;
 };
+
+const log = logger.child({ module: 'FilesystemClaims' });
 
 const findSupportedCredentialByScope = (scope: string) => {
 	const result = Object.entries(supportedCredentialConfigurations).filter(
@@ -134,7 +137,7 @@ export class FilesystemClaimsProvider implements ClaimsProvider {
 						}),
 				);
 			} catch (error) {
-				console.error(error);
+				log.error({ err: error }, 'Deferred credential fulfilment failed');
 			}
 
 			await new Promise((resolve) => setImmediate(resolve));
