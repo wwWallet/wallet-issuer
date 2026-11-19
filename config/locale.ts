@@ -1,10 +1,4 @@
-// src/locale.ts
-
-export const locale = {
-	app: {
-		title: 'wwWallet Issuer',
-	},
-
+const baseLocale = {
 	nav: {
 		home: 'Home',
 		about: 'About',
@@ -43,7 +37,6 @@ export const locale = {
 	},
 
 	about: {
-		title: 'wwWallet Issuer',
 		subtitle: 'About this service',
 
 		intro: `
@@ -95,3 +88,57 @@ purposes (not valid for real-world use).
 		copyrightSuffix: 'wwWallet Issuer',
 	},
 };
+
+export type DeepPartial<T> = {
+	[P in keyof T]?: T[P] extends readonly unknown[]
+		? T[P]
+		: T[P] extends object
+			? DeepPartial<T[P]>
+			: T[P];
+};
+
+type LocalLocale = DeepPartial<Locale>;
+
+const loadLocalLocale = (): LocalLocale => {
+	let modulePath: string;
+	try {
+		modulePath = require.resolve('./locale.local');
+	} catch (error) {
+		if (
+			typeof error === 'object' &&
+			error !== null &&
+			'code' in error &&
+			error.code === 'MODULE_NOT_FOUND'
+		) {
+			return {};
+		}
+		throw error;
+	}
+	const localModule: unknown = require(modulePath);
+	if (!isRecord(localModule) || !isRecord(localModule.locale)) {
+		return {};
+	}
+	return localModule.locale as LocalLocale;
+};
+
+const isRecord = (value: unknown): value is Record<string, unknown> =>
+	typeof value === 'object' && value !== null && !Array.isArray(value);
+
+const mergeLocale = <T extends Record<string, unknown>>(base: T, override: DeepPartial<T>): T => {
+	const merged = { ...base } as Record<string, unknown>;
+
+	for (const [key, value] of Object.entries(override)) {
+		if (value === undefined) {
+			continue;
+		}
+
+		const baseValue = merged[key];
+		merged[key] = isRecord(baseValue) && isRecord(value) ? mergeLocale(baseValue, value) : value;
+	}
+
+	return merged as T;
+};
+
+export type Locale = typeof baseLocale;
+
+export const locale = mergeLocale(baseLocale, loadLocalLocale());
