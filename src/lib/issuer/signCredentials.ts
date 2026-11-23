@@ -72,7 +72,9 @@ export async function signCredentials(
 				);
 		}
 	} catch (error) {
-		logger.error('Credential signing failed', { error });
+		logger.error('Credential signing failed', {
+			error: error instanceof Error ? error.message : error,
+		});
 		return err(CredentialRequestErrors.InternalServerError, 'Credential signing failed');
 	}
 }

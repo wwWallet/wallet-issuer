@@ -91,7 +91,11 @@ export const createDisclosureFrame = (
 		if (claim.sd === 'never') continue;
 		const rootClaim = claim.path[0];
 		if (typeof rootClaim === 'string' && protectedClaims.has(rootClaim)) {
-			throw new Error(`Protected claim '${rootClaim}' cannot be selectively disclosable`);
+			if (claim.sd === 'always') {
+				throw new Error(`Protected claim '${rootClaim}' cannot be selectively disclosable`);
+			}
+			// Keep protected claims in plaintext when sd is allowed or omitted.
+			continue;
 		}
 		for (const path of resolvePath(payload, claim.path)) addPath(frame, path);
 	}

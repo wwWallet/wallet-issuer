@@ -43,7 +43,7 @@ describe('signCredentials', () => {
 		});
 		expect(result.ok ? '' : result.error_description).not.toContain(signingError.message);
 		expect(loggerError).toHaveBeenCalledWith('Credential signing failed', {
-			error: signingError,
+			error: signingError.message,
 		});
 	});
 });

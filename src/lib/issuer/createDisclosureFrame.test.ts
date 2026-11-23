@@ -107,6 +107,24 @@ describe('createDisclosureFrame', () => {
 		).toThrow(`Protected claim '${path[0]}' cannot be selectively disclosable`);
 	});
 
+	it.each([{ sd: 'allowed' as const }, { sd: undefined }])(
+		'keeps a protected claim in plaintext when sd is $sd',
+		({ sd }) => {
+			expect(
+				createDisclosureFrame(
+					{ iss: 'https://issuer.example', family_name: 'Doe' },
+					{
+						vct: 'urn:test',
+						claims: [
+							{ path: ['iss'], sd },
+							{ path: ['family_name'], sd: 'always' },
+						],
+					},
+				),
+			).toEqual({ _sd: ['family_name'] });
+		},
+	);
+
 	it.each([
 		{ path: ['a', 18], payload: { a: { '18': true } } },
 		{ path: ['a', '0'], payload: { a: ['value'] } },
