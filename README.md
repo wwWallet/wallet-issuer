@@ -134,6 +134,15 @@ Notes:
 - Local entries are merged into the base `supportedCredentialConfigurations` at runtime.
 - If a local credential configuration id matches a base one, the local one overrides it.
 
+## Logging
+
+Logs go to stdout via [pino](https://getpino.io): JSON when `NODE_ENV=production`, pretty-printed otherwise.
+
+| Variable    | Description                                                                        | Notes                                                                                                                            |
+| ----------- | ---------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
+| `LOG_LEVEL` | Minimum log level: `trace`, `debug`, `info`, `warn`, `error`, `fatal` or `silent`. | Default: `info`.                                                                                                                 |
+| `LOG_HTTP`  | Set to `true` to log every HTTP request (method, path, status, response time).     | Default: `false`. Static assets are skipped. The `Authorization`, `Cookie` and `DPoP` headers and all query values are redacted. |
+
 ## Pre-commit
 
 We use [pre-commit](https://pre-commit.com/) to enforce our `.editorconfig` (newline at EOF, no bad indentation, etc.) before code is committed.

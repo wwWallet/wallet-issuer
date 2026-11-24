@@ -2,6 +2,8 @@ import { ClaimsProvider, ClaimsProviderResult, ClaimsResolutionContext } from '.
 import { supportedCredentialConfigurations } from '../../../config/supportedCredentialConfigurations';
 import { logger } from '../../logger';
 
+const log = logger.child({ module: 'RemoteClaims' });
+
 type ClaimsPayload = Record<string, unknown>;
 type ClaimsFetchResult =
 	| { kind: 'success'; claims: ClaimsPayload }
@@ -101,7 +103,10 @@ export class RemoteClaimsProvider implements ClaimsProvider {
 
 		try {
 			const url = new URL(this.claimsFetcherUrl);
-			logger.debug('Fetching claims from remote service', { url: url.toString(), scope });
+			log.debug(
+				{ url: `${url.origin}${url.pathname}`, scope },
+				'Fetching claims from remote service',
+			);
 			const headers = new Headers();
 			headers.set('content-type', 'application/json');
 			if (this.apiKey) {
@@ -121,24 +126,24 @@ export class RemoteClaimsProvider implements ClaimsProvider {
 			});
 			if (!response.ok) {
 				const reason = this.resolveHttpFailureReason(response.status);
-				logger.warn('Remote claims fetch failed', { status: response.status, scope, reason });
+				log.warn({ status: response.status, scope, reason }, 'Remote claims fetch failed');
 				return { kind: 'failure', reason };
 			}
 
 			const body = (await response.json()) as unknown;
 			if (!this.isRecord(body) || !this.isRecord(body.data)) {
-				logger.warn('Remote claims fetch returned invalid payload', { scope });
+				log.warn({ scope }, 'Remote claims fetch returned invalid payload');
 				return { kind: 'failure', reason: 'invalid_response_payload' };
 			}
 
 			return { kind: 'success', claims: body.data as ClaimsPayload };
 		} catch (error) {
 			if (this.isAbortError(error)) {
-				logger.warn('Remote claims fetch timed out', { scope, timeoutMs: this.fetchTimeoutMs });
+				log.warn({ scope, timeoutMs: this.fetchTimeoutMs }, 'Remote claims fetch timed out');
 				return { kind: 'failure', reason: 'request_timeout' };
 			}
 
-			logger.error('Remote claims fetch failed', { scope, error });
+			log.error({ err: error, scope }, 'Remote claims fetch failed');
 			return { kind: 'failure', reason: 'request_failed' };
 		} finally {
 			clearTimeout(timeout);

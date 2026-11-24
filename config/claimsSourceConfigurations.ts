@@ -1,6 +1,8 @@
 import { supportedCredentialConfigurations } from './supportedCredentialConfigurations';
 import { logger } from '../src/logger';
 
+const log = logger.child({ module: 'Config' });
+
 export type ClaimsSourceDefinition =
 	| { type: 'filesystem' }
 	| {
@@ -58,7 +60,7 @@ if (localClaimsSources) {
 	);
 	for (const scope of Object.keys(localClaimsSources)) {
 		if (!supportedScopes.has(scope)) {
-			logger.warn('Ignoring claims source configuration for unknown scope', { scope });
+			log.warn({ scope }, 'Ignoring claims source configuration for unknown scope');
 		}
 	}
 

@@ -11,3 +11,8 @@
 	font-size: 0.85rem;
 	color: var(--muted);
 }
+
+.footer-powered-by {
+	color: inherit;
+	text-decoration: underline;
+}

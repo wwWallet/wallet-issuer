@@ -4,6 +4,8 @@ import { logger } from '../logger';
 import { ZodError, z } from 'zod';
 import { GrantType } from 'wallet-common';
 
+const log = logger.child({ module: 'CredentialOfferApi' });
+
 const PRE_AUTHORIZED_CODE_GRANT = 'urn:ietf:params:oauth:grant-type:pre-authorized_code';
 const AUTHORIZATION_CODE_GRANT = 'authorization_code';
 const INVALID_PARAMETERS_DESCRIPTION = 'Missing or invalid parameters';
@@ -42,18 +44,7 @@ const preAuthorizedCodeGrantSchema = z
 	.strict();
 
 const logUnexpectedError = (error: unknown) => {
-	if (error instanceof Error) {
-		logger.error('Failed to generate credential offer URI', {
-			error: {
-				name: error.name,
-				message: error.message,
-				stack: error.stack,
-			},
-		});
-		return;
-	}
-
-	logger.error('Failed to generate credential offer URI', { error });
+	log.error({ err: error }, 'Failed to generate credential offer URI');
 };
 
 export const credentialOfferUriHandler = async (req: express.Request, res: express.Response) => {

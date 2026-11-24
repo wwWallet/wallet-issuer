@@ -13,6 +13,8 @@ import { calculateObjectSRI } from 'wallet-common';
 import { vctDocumentProvider } from '../config/vctDocumentProvider';
 import { normalizeMdocNamespace } from './lib/issuer/normalizeMdocNamespace';
 
+const log = logger.child({ module: 'Signer' });
+
 const issuerPrivateKeyPem = fs
 	.readFileSync(path.join(__dirname, '../../keys/pem.key'), 'utf-8')
 	.toString();
@@ -155,10 +157,10 @@ export const signer: CredentialSigner = {
 			if (vctIntegrity) {
 				payload['vct#integrity'] = vctIntegrity;
 			} else {
-				logger.warn(`Unable to calculate VCT integrity for vct ${payload.vct}`);
+				log.warn({ vct: payload.vct }, 'Unable to calculate VCT integrity');
 			}
 		} else {
-			logger.warn(`Unable to find VCT Metadata for vct ${payload.vct}`);
+			log.warn({ vct: payload.vct }, 'Unable to find VCT metadata');
 		}
 
 		const issuanceDate = new Date();
@@ -176,7 +178,7 @@ export const signer: CredentialSigner = {
 		payload.nbf = Math.floor(issuanceDate.getTime() / 1000);
 		payload.exp = Math.floor(expirationDate.getTime() / 1000);
 		if (!payload?.cnf?.jwk) {
-			logger.error('payload.cnf.jwk is required in signSdJwtVc function call');
+			log.error('payload.cnf.jwk is required in signSdJwtVc function call');
 			throw new Error('payload.cnf.jwk is required in signSdJwtVc function call');
 		}
 		payload.sub = await calculateJwkThumbprint(payload.cnf.jwk);

@@ -1,6 +1,9 @@
 import express from 'express';
 import { issuer } from '../vci/issuer';
 import z, { ZodError } from 'zod';
+import { logger } from '../logger';
+
+const log = logger.child({ module: 'PreAuthorizedCodeApi' });
 
 const sendPreAuthorizedCodeHandlerError = (
 	res: express.Response,
@@ -71,7 +74,7 @@ export const preAuthorizedCodeHandler = async (req: express.Request, res: expres
 			);
 		}
 
-		console.log(`Error sending pre-authorized code: ${error}`);
+		log.error({ err: error }, 'Pre-authorized code grant lookup failed');
 		return sendPreAuthorizedCodeHandlerError(
 			res,
 			500,

@@ -7,6 +7,9 @@ import {
 import { validateDpopProof } from './validateDpopProof';
 import { PlainIssueCredentialRequestOptions } from '../IssuerOpenID4VCITypes';
 import type { IntrospectionResponse } from '../types';
+import { logger } from '../../../logger';
+
+const log = logger.child({ module: 'AccessToken' });
 
 /**
  * * Validates if access token is valid
@@ -50,7 +53,7 @@ export async function validateAccessToken(
 
 			const { active, scope, sub, cnf, client_id } = introspectionPayload;
 
-			console.log('Introspection response: ', introspectionPayload);
+			log.debug({ active, client_id, scope }, 'Access token introspected');
 			if (!active) {
 				return err(CredentialRequestErrors.InvalidRequest, 'Access token not active');
 			}
