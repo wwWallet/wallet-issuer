@@ -48,8 +48,7 @@ export async function signCredentials(
 				);
 				return ok(signedCredentials.map((c) => c.credential));
 			} else {
-				const { credential } = await createOpts.credentialSigner.signSdJwtVc({ ...claims }, {}, {});
-				return ok([credential]);
+				return err(CredentialRequestErrors.InvalidProof, 'Cannot issue a key-bound dc+sd-jwt credential without a verified holder key');
 			}
 		case VerifiableCredentialFormat.MSO_MDOC:
 			if (attestedKeys.length) {
